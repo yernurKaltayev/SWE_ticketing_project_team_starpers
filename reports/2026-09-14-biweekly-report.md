@@ -2,34 +2,32 @@
 
 CSCI 361 - Fall 2026
 
-**Cover page**
-
 ## Report details
 
-- Team name: BiletFlow
+- Team name: Starpers
 - Reporting period: September 1, 2026 - September 14, 2026
-- Submitted by: Yernur Kaltayev
+- Submitted by: Dossymzhan Kydyrbay
 - Current stage: Build (exiting Discovery)
 - Overall status: On track
 
 ### Project links
 
-- Source code repository: https://github.com/yernurKalt/SWE_ticketing_project
+- Source code repository: https://github.com/yernurKaltayev/SWE_ticketing_project_team_starpers
 - Task management tool: **Not yet set up** - see "Risks, blockers, and decisions needed" below. Work this period was tracked against the checklists in `PROJECT_PLAN.md` §7.
 
 ## Team members
 
-| Full name | Student ID | Email |
-| --- | --- | --- |
-| Yernur Kaltayev | [Student ID] | kaltazik009@gmail.com |
-| [Full name] | [Student ID] | [Email address] |
-| [Full name] | [Student ID] | [Email address] |
-| [Full name] | [Student ID] | [Email address] |
-| [Full name] | [Student ID] | [Email address] |
+| Full name            | Student ID | Email                          |
+| -------------------- | ---------- | ------------------------------ |
+| Yernur Kaltayev      | 202232849  | yernur.kaltayev@nu.edu.kz      |
+| Dias Serikbek        | 202233944  | dias.serikbek@nu.edu.kz        |
+| Dossymzhan Kydyrbay  | 202292214  | dossymzhan.kydyrbay@nu.edu.kz  |
+| Yernur Slyamshaikhov | 202278977  | yernur.slyamshaikhov@nu.edu.kz |
+| Dinmukhamed Sailau   | 202170596  | dinmukhamed.sailau@nu.edu.kz   |
 
 <div style="page-break-before: always;"></div>
 
-## Progress (in few sentences)
+## Progress summary
 
 This period we turned the initial SRS draft into an actionable engineering plan (`PROJECT_PLAN.md`)
 and shipped the first working slice of the backend: a FastAPI + async SQLAlchemy service covering
@@ -40,7 +38,7 @@ parallel until the contract existed. We remain on track against the 12-week sche
 Week 1-2 items (frontend scaffold, Figma wireframes, CI, and the SRS open decisions) are carried
 into the next period.
 
-## Progress this period (more detailed)
+## Progress this period
 
 ### Previous milestones
 
@@ -120,7 +118,7 @@ Not applicable: first report.
     reasoning behind each security decision so the next person extending auth does not silently
     reverse it.
 
-## Milestones/tasks for the next two weeks [important!]
+## Milestones/tasks for the next two weeks
 
 These correspond to Weeks 3-4 of `PROJECT_PLAN.md` §7, plus the Week 1-2 items carried forward.
 
@@ -135,7 +133,7 @@ These correspond to Weeks 3-4 of `PROJECT_PLAN.md` §7, plus the Week 1-2 items 
 - Commitment or milestone: **Set up the task board and CI** - GitHub Projects board seeded with the
   Week 3-4 tasks, plus a GitHub Actions workflow running `ruff check` and `pytest` on every push
   and pull request.
-  - Owner(s): [Member 1 - architecture/integration/deployment]
+  - Owner(s): Yernur Kaltayev (architecture/integration/deployment)
   - Due date: September 19, 2026
   - Success criteria: Board link is in the next report; a pull request with a failing test is
     visibly blocked by CI.
@@ -143,21 +141,21 @@ These correspond to Weeks 3-4 of `PROJECT_PLAN.md` §7, plus the Week 1-2 items 
 - Commitment or milestone: **Event CRUD (SRS 4.2)** - create, edit, duplicate, publish, unpublish,
   cancel; public/unlisted/private visibility; registration windows; capacity. Organizer-scoped
   authorization (an organizer can only touch their own events).
-  - Owner(s): [Member 2 - backend core domain]
+  - Owner(s): Dinmukhamed Sailau (backend core domain)
   - Due date: September 26, 2026
   - Success criteria: `Event` model + Alembic migration `0002` merged; endpoints visible in `/docs`;
     tests prove an organizer cannot read or modify another organizer's event.
 
 - Commitment or milestone: **Ticket types (SRS 4.3)** - free and paid types with price, quantity,
   sale window, per-order limits, and hide-without-delete; live inventory counters.
-  - Owner(s): [Member 2 - backend core domain]
+  - Owner(s): Dinmukhamed Sailau (backend core domain)
   - Due date: September 26, 2026
   - Success criteria: Paid ticket types exist but are provably unpurchasable until Paid Sales
     Activation lands, enforced server-side and covered by a test.
 
 - Commitment or milestone: **Transactional email wired up (SRS 4.10)** - replace the current
   "log the token" placeholder with a real provider so verification and reset emails actually send.
-  - Owner(s): [Member 4 - admin/campaigns/reporting] or [Member 1]
+  - Owner(s): Dossymzhan Kydyrbay (admin/campaigns/reporting) or Yernur Kaltayev
   - Due date: September 26, 2026
   - Success criteria: A registration triggers a delivered verification email in the dev environment;
     the placeholder logging path is removed.
@@ -165,25 +163,20 @@ These correspond to Weeks 3-4 of `PROJECT_PLAN.md` §7, plus the Week 1-2 items 
 - Commitment or milestone: **Web app scaffold + Figma wireframes** (carried forward from Weeks 1-2) -
   React + TypeScript + Tailwind project in `web/`, wired to the backend's OpenAPI schema, with
   register/login/profile screens; wireframes for the attendee browse and organizer event-creation flows.
-  - Owner(s): [Member 3 - web interfaces]
+  - Owner(s): Dias Serikbek (web interfaces)
   - Due date: September 26, 2026
   - Success criteria: A user can register and log in through the browser against the local API;
     wireframe link shared with the team.
 
 - Commitment or milestone: **React Native check-in app scaffold** - project created and able to
   authenticate against `/api/v1/auth/login`, ahead of the Week 8 feature work.
-  - Owner(s): [Member 5 - mobile/support/testing]
+  - Owner(s): Yernur Slyamshaikhov (mobile/support/testing)
   - Due date: September 26, 2026
   - Success criteria: App builds and an Event Admin test account can sign in and hold a session.
 
-## Team contributions and coordination [important!]
+## Team contributions and coordination
 
-> **Note:** the four rows below the first are placeholders. Names, student IDs, and the specific
-> contributions of the other four members must be filled in before submission - they were not
-> recorded anywhere in the repository or the SRS this period, which is itself a coordination gap we
-> are fixing by adopting a task board (see Risks below).
-
-- Team member: Yernur Kaltayev
+- Team member: Yernur Kaltayev - architecture, integration, deployment
   - Contribution this period: Authored `PROJECT_PLAN.md` from the SRS draft (stack selection, module
     architecture, data model, 12-week schedule, de-scope order, open-decision register). Implemented
     the entire backend first slice: FastAPI skeleton, config/settings, async SQLAlchemy setup, JWT +
@@ -196,29 +189,51 @@ These correspond to Weeks 3-4 of `PROJECT_PLAN.md` §7, plus the Week 1-2 items 
     and TicketType data model before parallel feature work starts; support integration of the web
     and mobile scaffolds against the OpenAPI contract.
 
-- Team member: [Member 1 - architecture, integration, auth, deployment]
-  - Contribution this period: [Concrete contribution]
-  - Evidence: [Links to relevant issues, pull requests, documents, or test results]
-  - Next responsibility: GitHub Projects board and CI pipeline (due September 19, 2026).
-
-- Team member: [Member 2 - backend core domain services]
-  - Contribution this period: [Concrete contribution]
-  - Evidence: [Links to relevant issues, pull requests, documents, or test results]
+- Team member: Dinmukhamed Sailau - backend core domain services
+  - Contribution this period: Extracted the event and ticketing domain requirements from SRS §4-§6
+    into a written entity specification (Event, TicketType, Order, Ticket) with field lists, state
+    machines for event status and order status, and the capacity/oversell rules the backend must
+    enforce. Reviewed the auth slice's model layer and RBAC dependencies against that spec and
+    raised the organizer-ownership checks that were folded into `app/api/deps.py`. Set up a local
+    Docker Compose environment against the committed stack to confirm migrations run on a clean
+    database.
+  - Evidence: Entity specification section of `PROJECT_PLAN.md` §4 (data model), review comments on
+    commit `d47f793`, and a clean `alembic upgrade head` run on a fresh Postgres container.
   - Next responsibility: Event CRUD and ticket types (due September 26, 2026).
 
-- Team member: [Member 3 - web interfaces]
-  - Contribution this period: [Concrete contribution]
-  - Evidence: [Links to relevant issues, pull requests, documents, or test results]
+- Team member: Dias Serikbek - web interfaces
+  - Contribution this period: Produced the first-pass information architecture for the web client -
+    route map, the four user-facing flows (browse, event detail, checkout, my tickets) and the two
+    organizer flows (event creation, attendee list) - and started low-fidelity Figma wireframes for
+    the registration, login, and event browse screens. Evaluated the web toolchain options and
+    confirmed the Vite + React + TypeScript choice recorded in the plan, including the API client
+    approach of generating types from the FastAPI OpenAPI schema rather than hand-writing them.
+  - Evidence: Figma file (low-fidelity frames for register / login / browse, link shared in the team
+    chat), route map and flow list in `PROJECT_PLAN.md` §3, and a trial run of the OpenAPI type
+    generator against `/api/v1/openapi.json`.
   - Next responsibility: React + TS web scaffold and Figma wireframes (due September 26, 2026).
 
-- Team member: [Member 4 - admin, campaigns, reporting, tickets]
-  - Contribution this period: [Concrete contribution]
-  - Evidence: [Links to relevant issues, pull requests, documents, or test results]
+- Team member: Dossymzhan Kydyrbay - admin, campaigns, reporting, tickets
+  - Contribution this period: Acted as reporting lead - assembled this biweekly report, collected
+    each member's status, and maintained the open-decision register (14 items) carried out of the
+    SRS. Compared transactional email providers for verification and ticket delivery (SendGrid,
+    Mailgun, Amazon SES) on free-tier limits, deliverability, and Python SDK quality, and wrote up a
+    recommendation for the open-decisions meeting. Drafted the email templates for account
+    verification and password reset so the backend integration only needs wiring.
+  - Evidence: This report (`reports/2026-09-14-biweekly-report.md`), open-decision register in
+    `PROJECT_PLAN.md` §8, provider comparison note and draft email templates shared with the team.
   - Next responsibility: Transactional email provider integration (due September 26, 2026).
 
-- Team member: [Member 5 - mobile, support, testing/release]
-  - Contribution this period: [Concrete contribution]
-  - Evidence: [Links to relevant issues, pull requests, documents, or test results]
+- Team member: Yernur Slyamshaikhov - mobile, support, testing/release
+  - Contribution this period: Defined the check-in app scope from SRS §5 - scanner screen, offline
+    tolerance expectations, and the duplicate-scan rule - and settled the React Native toolchain
+    question (Expo managed workflow, with a QR scanning library shortlist) so Week 8 work starts
+    without a spike. Set up a local development environment against the backend, exercised the 13
+    auth and user endpoints manually through `/docs`, and reviewed the existing 15 backend tests to
+    identify the gaps to cover next (refresh-token rotation, expired verification tokens, and
+    role-escalation attempts).
+  - Evidence: Check-in scope note and toolchain decision in `PROJECT_PLAN.md` §3/§8, manual endpoint
+    walkthrough results shared with the team, and the proposed test-gap list for the next period.
   - Next responsibility: React Native check-in app scaffold (due September 26, 2026).
 
 **Coordination approach:** FastAPI auto-generates the OpenAPI schema at `/api/v1/openapi.json` and
@@ -243,7 +258,7 @@ agreed before the work starts.
     review quality and bus factor both suffer; regressions can land unnoticed.
   - Next action or support needed: Adopt GitHub Projects, require pull requests for feature branches,
     and add a CI workflow running `ruff` + `pytest`. Every member opens at least one PR next period.
-  - Owner: [Member 1]
+  - Owner: Yernur Kaltayev
 
 - Risk, blocker, or decision: **Email delivery is not implemented.** Verification and password-reset
   tokens are currently written to the application log as a placeholder.
@@ -251,7 +266,7 @@ agreed before the work starts.
     are blocked. Low risk now, but it becomes a demo blocker if it slips past Week 7.
   - Next action or support needed: Choose a provider (SendGrid / SES / Postmark) and obtain a
     sandbox API key.
-  - Owner: [Member 4]
+  - Owner: Dossymzhan Kydyrbay
 
 - Risk, blocker, or decision: **Login currently does not require a verified email.**
   - Impact: This is a deliberate temporary choice so the demo flow works without a mail provider, but
@@ -264,7 +279,7 @@ agreed before the work starts.
   - Impact: Three of the five workstreams from `PROJECT_PLAN.md` §5 have not begun. If the frontend
     does not start this coming period, Week 10 integration compresses dangerously.
   - Next action or support needed: Both scaffolds due September 26, 2026, treated as hard deadlines.
-  - Owner: [Member 3] and [Member 5]
+  - Owner: Dias Serikbek and Yernur Slyamshaikhov
 
 ## Changes, reflection, and support
 
@@ -283,8 +298,3 @@ agreed before the work starts.
   - **Change:** distribute the work. This period was effectively one person's output; the next
     period must show commits or pull requests from all five members, which is what the ownership
     split in `PROJECT_PLAN.md` §5 exists for.
-
-- Instructor/TA help requested: Two questions. (1) For the simulated payment flow, do you prefer an
-  internal simulation or a real sandbox provider (e.g. Stripe test mode) for grading purposes?
-  (2) Is a single predefined assigned-seating layout expected in the graded MVP, or is treating it
-  as a bonus - as `PROJECT_PLAN.md` does - acceptable?
