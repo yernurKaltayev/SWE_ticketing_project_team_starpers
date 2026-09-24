@@ -1,0 +1,88 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Unbounded', 'Manrope', ui-sans-serif, sans-serif;
+
+  /* Ink: deep steppe-night navy used for text and dark surfaces. */
+  --color-ink-50: #f4f6fa;
+  --color-ink-100: #e6eaf2;
+  --color-ink-200: #cbd3e1;
+  --color-ink-300: #a2afc6;
+  --color-ink-400: #7384a3;
+  --color-ink-500: #52648a;
+  --color-ink-600: #3d4d70;
+  --color-ink-700: #2d3a58;
+  --color-ink-800: #1e2945;
+  --color-ink-900: #14213d;
+  --color-ink-950: #0b1428;
+
+  /* Sun: the golden accent from the Kazakh flag. */
+  --color-sun-50: #fef9e8;
+  --color-sun-100: #fdefc2;
+  --color-sun-200: #fbe08a;
+  --color-sun-300: #f8cb4d;
+  --color-sun-400: #f4b41a;
+  --color-sun-500: #de9a0b;
+  --color-sun-600: #b87607;
+  --color-sun-700: #93560b;
+
+  /* Sky: secondary accent, used for links and data marks. */
+  --color-sky-400: #3aaed8;
+  --color-sky-500: #1b94c2;
+  --color-sky-600: #1278a3;
+
+  --color-paper: #fbfaf7;
+}
+
+@layer base {
+  html {
+    @apply bg-paper text-ink-900 antialiased;
+  }
+  body {
+    @apply min-h-screen font-sans;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-sky-500;
+  }
+}
+
+/* Ticket stub edge: semicircle cut-outs on both sides of a divider. */
+.ticket-notch {
+  position: relative;
+}
+.ticket-notch::before,
+.ticket-notch::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: var(--color-paper);
+}
+.ticket-notch::before {
+  left: -12px;
+}
+.ticket-notch::after {
+  right: -12px;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  html,
+  body {
+    background: white !important;
+  }
+  .ticket-notch::before,
+  .ticket-notch::after {
+    background: white;
+  }
+}
