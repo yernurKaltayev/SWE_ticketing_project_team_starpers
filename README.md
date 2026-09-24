@@ -19,7 +19,7 @@ money moves, and demo payment records must never be presented as real transactio
 | Architecture & delivery plan | Done — `PROJECT_PLAN.md` |
 | Backend: auth, accounts, organizer profiles | Done — [`backend/`](backend/) |
 | Backend: events, ticketing, checkout, check-in, admin | Not started |
-| Web frontend (React + TS) | Not started |
+| Web frontend (React + TS) | Done — [`web/`](web/); auth & accounts on the real API, other features on a preview data layer |
 | Mobile check-in app (React Native) | Not started |
 
 The repository currently contains **one implemented slice**: the FastAPI backend's authentication
@@ -44,7 +44,8 @@ and account layer. Everything else is planned in `PROJECT_PLAN.md` §7.
 │   ├── tests/           # pytest suite (runs on in-memory SQLite)
 │   └── docker-compose.yml
 ├── reports/             # Biweekly team progress reports
-└── web/, mobile/        # Planned — not yet created
+├── web/                 # React + TS web app (Vite, Tailwind) — see web/README.md
+└── mobile/              # Planned — not yet created
 ```
 
 ## Technology stack
@@ -54,7 +55,7 @@ and account layer. Everything else is planned in `PROJECT_PLAN.md` §7.
 | Backend | FastAPI, Python 3.12+ (3.13 pinned locally), async SQLAlchemy 2.x, Alembic, Pydantic v2 |
 | Database | PostgreSQL 17 |
 | Auth | JWT access tokens + opaque, revocable refresh tokens; bcrypt password hashing |
-| Web frontend | React + TypeScript, Tailwind CSS *(planned)* |
+| Web frontend | React 19 + TypeScript, Vite, Tailwind CSS 4, TanStack Query |
 | Mobile | React Native — Event Admin check-in app *(planned)* |
 | Payments | Sandbox or internal simulation, KZT — never real money |
 | Tooling | uv, ruff, pytest, Docker Compose |

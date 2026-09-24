@@ -68,7 +68,7 @@ export function EventPoster({
       </svg>
       <div className="relative flex h-full flex-col justify-between p-5 text-white">
         <Icon className={size === 'lg' ? 'size-7' : 'size-5'} />
-        <div className="font-display leading-none">
+        <div className="font-display leading-none [text-shadow:0_2px_12px_rgb(0_0_0/0.45)]">
           <div className={size === 'lg' ? 'text-6xl font-bold' : 'text-4xl font-bold'}>{day}</div>
           <div className="mt-1 text-sm font-medium tracking-widest opacity-80">{month}</div>
         </div>

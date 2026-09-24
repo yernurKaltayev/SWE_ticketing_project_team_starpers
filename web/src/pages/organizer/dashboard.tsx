@@ -172,9 +172,12 @@ export function AnalyticsPanel({ analytics }: { analytics: Analytics }) {
             </thead>
             <tbody className="divide-y divide-ink-100">
               {analytics.campaigns.map((c) => (
-                <tr key={c.code + c.campaignName}>
+                <tr key={c.id}>
                   <td className="px-6 py-3 font-mono font-semibold">{c.code}</td>
-                  <td className="px-6 py-3">{c.campaignName || '—'}</td>
+                  <td className="px-6 py-3">
+                    {c.campaignName || '—'}
+                    <span className="block text-xs text-ink-500">{c.eventTitle}</span>
+                  </td>
                   <td className="px-6 py-3 text-right tabular-nums">{c.redemptions}</td>
                   <td className="px-6 py-3 text-right tabular-nums">{formatKzt(c.discount)}</td>
                 </tr>

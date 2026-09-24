@@ -18,7 +18,7 @@ export interface Analytics {
   orders: number
   byDay: DayPoint[]
   byTicketType: { name: string; sold: number; quantity: number; revenue: number }[]
-  campaigns: { code: string; campaignName: string; redemptions: number; discount: number }[]
+  campaigns: { id: string; eventTitle: string; code: string; campaignName: string; redemptions: number; discount: number }[]
 }
 
 const DAYS = 21
@@ -63,6 +63,8 @@ export async function organizerAnalytics(user: User, eventId?: string): Promise<
     .map((p) => {
       const redeemed = paid.filter((o) => o.promoCode === p.code && o.eventId === p.eventId)
       return {
+        id: p.id,
+        eventTitle: events.find((e) => e.id === p.eventId)?.title ?? '',
         code: p.code,
         campaignName: p.campaignName,
         redemptions: redeemed.length,

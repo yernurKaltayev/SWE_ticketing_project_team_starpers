@@ -137,7 +137,7 @@ function EventForm({ event }: { event?: BfEvent }) {
           <div>
             <p className="mb-1.5 text-sm font-semibold text-ink-800">Poster colour</p>
             <div className="flex items-center gap-4">
-              <EventPoster event={{ ...form, id: 'preview' }} className="h-24 w-20 shrink-0 rounded-xl" />
+              <EventPoster event={{ ...form, id: 'preview' }} className="h-32 w-32 shrink-0 rounded-xl" />
               <input
                 type="range"
                 min={0}
