@@ -4,7 +4,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { EventThumb, TicketStatusBadge } from '@/components/events'
-import { MockNotice } from '@/components/layout'
+import { DataNotice } from '@/components/layout'
 import { Alert, Badge, Button, Card, cx, EmptyState, errorText, LinkButton, PageHeader, Spinner } from '@/components/ui'
 import { useAuth } from '@/lib/auth'
 import { formatDateTime, formatEventDate, formatKzt, formatPrice, formatTime } from '@/lib/format'
@@ -16,11 +16,12 @@ export function MyTicketsPage() {
   const newOrderId = params.get('order')
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming')
 
-  const { data: orders, isLoading } = useQuery({
+  const { data: orders, isLoading, error } = useQuery({
     queryKey: ['my-orders', user!.id],
     queryFn: () => listMyOrders(user!),
   })
 
+  if (error) return <Alert tone="bad">{errorText(error)}</Alert>
   if (isLoading || !orders) return <Spinner />
 
   const now = Date.now()
@@ -36,7 +37,7 @@ export function MyTicketsPage() {
       {newOrder && (
         <Alert tone="good" title="You're going!" className="mb-6">
           {newOrder.tickets.length} ticket{newOrder.tickets.length > 1 ? 's' : ''} for {newOrder.event.title}{' '}
-          {newOrder.tickets.length > 1 ? 'are' : 'is'} ready below. A confirmation email is on its way.
+          {newOrder.tickets.length > 1 ? 'are' : 'is'} ready below and saved in your account.
         </Alert>
       )}
 
@@ -78,7 +79,7 @@ export function MyTicketsPage() {
         </div>
       )}
       <div className="mt-8">
-        <MockNotice />
+        <DataNotice />
       </div>
     </>
   )

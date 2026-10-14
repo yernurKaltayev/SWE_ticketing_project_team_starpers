@@ -16,7 +16,7 @@ import {
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { EventPoster, EventThumb } from '@/components/events'
-import { MockNotice } from '@/components/layout'
+import { DataNotice } from '@/components/layout'
 import { Alert, Badge, Button, Card, cx, errorText, Input, LinkButton, Spinner } from '@/components/ui'
 import { useAuth } from '@/lib/auth'
 import { categoryLabels, formatDateTime, formatEventDate, formatKzt, formatPrice, formatTime } from '@/lib/format'
@@ -357,7 +357,7 @@ export function CheckoutPage() {
   const promoCode = params.get('promo')
   const [outcome, setOutcome] = useState<PaymentOutcome>('approve')
 
-  const { data: event } = useQuery({ queryKey: ['event', id, user?.id], queryFn: () => getEvent(id, user) })
+  const { data: event, error: eventError } = useQuery({ queryKey: ['event', id, user?.id], queryFn: () => getEvent(id, user) })
   const { data: pricing, error: quoteError } = useQuery({
     queryKey: ['quote', id, selection, promoCode],
     queryFn: () => quote(id, selection, promoCode),
@@ -372,7 +372,8 @@ export function CheckoutPage() {
   })
 
   if (!event || !pricing) {
-    return quoteError ? <Alert tone="bad">{errorText(quoteError)}</Alert> : <Spinner />
+    const failure = eventError ?? quoteError
+    return failure ? <Alert tone="bad">{errorText(failure)}</Alert> : <Spinner />
   }
 
   const isFree = pricing.total === 0
@@ -393,7 +394,7 @@ export function CheckoutPage() {
         <div className="space-y-6">
           <Card className="p-6">
             <h2 className="text-lg font-semibold">Ticket holder</h2>
-            <p className="mt-1 text-sm text-ink-500">Tickets are issued to your account and emailed to you.</p>
+            <p className="mt-1 text-sm text-ink-500">Tickets are issued to your account.</p>
             <div className="mt-4 rounded-xl bg-ink-50 p-4 text-sm">
               <p className="font-semibold">{user?.full_name}</p>
               <p className="text-ink-600">{user?.email}</p>
@@ -478,7 +479,10 @@ export function CheckoutPage() {
                 </Alert>
               )}
               {order.isError && <Alert tone="bad">{errorText(order.error)}</Alert>}
-              <Button size="lg" variant="accent" className="w-full" loading={order.isPending} onClick={() => order.mutate()}>
+              {!user?.is_email_verified && <Alert tone="warn" title="Verify your email first">
+                Open the verification link in your inbox, or <Link to="/account" className="underline">request a new email from your account</Link>.
+              </Alert>}
+              <Button size="lg" variant="accent" className="w-full" disabled={!user?.is_email_verified || !lines.length} loading={order.isPending} onClick={() => order.mutate()}>
                 {order.isPending ? 'Processing…' : isFree ? 'Get free tickets' : `Pay ${formatKzt(pricing.total)}`}
               </Button>
               <p className="flex items-center justify-center gap-1.5 text-xs text-ink-500">
@@ -487,7 +491,7 @@ export function CheckoutPage() {
             </div>
           </Card>
           <div className="mt-4 text-center">
-            <MockNotice>Checkout runs on the preview data layer</MockNotice>
+            <DataNotice>Payments are simulated — no real charge</DataNotice>
           </div>
         </div>
       </div>

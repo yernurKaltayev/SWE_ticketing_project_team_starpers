@@ -185,11 +185,11 @@ export function RequireAuth({ roles, children }: { roles?: UserRole[]; children:
   return <>{children}</>
 }
 
-export function MockNotice({ children }: { children?: ReactNode }) {
+export function DataNotice({ children }: { children?: ReactNode }) {
   return (
     <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-ink-100 px-3 py-1 text-xs text-ink-600">
       <span className="size-1.5 rounded-full bg-sun-500" />
-      {children ?? 'Preview data — this backend module is not built yet'}
+      {children ?? 'Academic demo · payments are simulated'}
     </p>
   )
 }

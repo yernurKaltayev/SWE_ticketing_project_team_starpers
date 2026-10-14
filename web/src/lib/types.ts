@@ -37,7 +37,7 @@ export interface OrganizerProfileUpsert {
   description: string | null
 }
 
-// ---- Planned domain entities (PROJECT_PLAN.md §4), served by the mock layer for now ----
+// ---- Database-backed domain entities returned by the FastAPI API ----
 
 export type EventStatus = 'draft' | 'published' | 'cancelled' | 'suspended'
 export type Visibility = 'public' | 'unlisted' | 'private'
@@ -60,6 +60,8 @@ export interface TicketType {
   sold: number
   perOrderLimit: number
   hidden: boolean
+  saleStartsAt?: string | null
+  saleEndsAt?: string | null
 }
 
 export interface BfEvent {
@@ -80,6 +82,8 @@ export interface BfEvent {
   /** Hue (0–360) for the generated event poster. */
   posterHue: number
   paidSalesActive: boolean
+  registrationStartsAt?: string | null
+  registrationEndsAt?: string | null
   ticketTypes: TicketType[]
   createdAt: string
   updatedAt: string

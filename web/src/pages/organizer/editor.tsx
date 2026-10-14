@@ -47,12 +47,13 @@ function initialForm(event?: BfEvent): EventInput {
 export function EventEditorPage() {
   const { id } = useParams()
   const { user } = useAuth()
-  const { data: event, isLoading } = useQuery({
+  const { data: event, isLoading, error } = useQuery({
     queryKey: ['event', id, user?.id],
     queryFn: () => getEvent(id!, user),
     enabled: !!id,
   })
 
+  if (id && error) return <Alert tone="bad" title="Event unavailable">{errorText(error)}</Alert>
   if (id && (isLoading || !event)) return <Spinner />
   return <EventForm key={event?.id ?? 'new'} event={event} />
 }
@@ -194,6 +195,18 @@ function EventForm({ event }: { event?: BfEvent }) {
           <Field label="Address">
             {(id) => <Input id={id} required value={form.venueAddress} onChange={(e) => set('venueAddress', e.target.value)} />}
           </Field>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Registration opens" hint="Optional; Almaty time">
+              {(id) => <Input id={id} type="datetime-local"
+                value={form.registrationStartsAt ? toLocalInput(form.registrationStartsAt) : ''}
+                onChange={(e) => set('registrationStartsAt', e.target.value ? fromLocalInput(e.target.value) : null)} />}
+            </Field>
+            <Field label="Registration closes" hint="Optional; no later than event start">
+              {(id) => <Input id={id} type="datetime-local"
+                value={form.registrationEndsAt ? toLocalInput(form.registrationEndsAt) : ''}
+                onChange={(e) => set('registrationEndsAt', e.target.value ? fromLocalInput(e.target.value) : null)} />}
+            </Field>
+          </div>
         </Card>
 
         <Card className="p-6">
@@ -260,7 +273,19 @@ function EventForm({ event }: { event?: BfEvent }) {
                     )}
                   </Field>
                 </div>
-                <div className="mt-3 flex justify-end gap-2">
+                <div className="mt-3 flex flex-wrap justify-end gap-2">
+                  <div className="grid w-full gap-4 sm:grid-cols-2">
+                  <Field label="Sales open">
+                    {(id) => <Input id={id} type="datetime-local"
+                      value={ticket.saleStartsAt ? toLocalInput(ticket.saleStartsAt) : ''}
+                      onChange={(e) => setTicket(index, { saleStartsAt: e.target.value ? fromLocalInput(e.target.value) : null })} />}
+                  </Field>
+                  <Field label="Sales close">
+                    {(id) => <Input id={id} type="datetime-local"
+                      value={ticket.saleEndsAt ? toLocalInput(ticket.saleEndsAt) : ''}
+                      onChange={(e) => setTicket(index, { saleEndsAt: e.target.value ? fromLocalInput(e.target.value) : null })} />}
+                  </Field>
+                  </div>
                   <Button size="sm" variant="ghost" icon={EyeOff} onClick={() => setTicket(index, { hidden: !ticket.hidden })}>
                     {ticket.hidden ? 'Show on event page' : 'Hide from sale'}
                   </Button>

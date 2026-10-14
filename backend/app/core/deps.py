@@ -30,16 +30,29 @@ async def get_current_user(
         raise _UNAUTHENTICATED
     try:
         payload = decode_access_token(credentials.credentials)
-    except jwt.PyJWTError:
+        user_id = UUID(payload["sub"])
+    except (jwt.PyJWTError, ValueError, KeyError, TypeError):
         raise _UNAUTHENTICATED from None
 
-    user = await db.get(User, UUID(payload["sub"]))
+    user = await db.get(User, user_id)
     if user is None or not user.is_active:
         raise _UNAUTHENTICATED
     return user
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+async def get_optional_user(
+    db: DbSession,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)] = None,
+) -> User | None:
+    if credentials is None:
+        return None
+    return await get_current_user(db, credentials)
+
+
+OptionalUser = Annotated[User | None, Depends(get_optional_user)]
 
 
 def require_roles(*roles: UserRole) -> Callable[..., Coroutine[None, None, User]]:
