@@ -20,14 +20,25 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://biletflow:biletflow@db:5432/biletflow
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in backend/.env}
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      WEB_BASE_URL: http://localhost:5173
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     volumes:
       - ./:/code
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
 
 volumes:
   pgdata:

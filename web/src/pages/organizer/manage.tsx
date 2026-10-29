@@ -20,7 +20,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { useId, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { EventStatusBadge, TicketStatusBadge } from '@/components/events'
-import { MockNotice } from '@/components/layout'
+import { DataNotice } from '@/components/layout'
 import {
   Alert,
   Badge,
@@ -191,7 +191,7 @@ export function ManageEventPage() {
         </Card>
       )}
       <div className="mt-8">
-        <MockNotice />
+        <DataNotice />
       </div>
     </>
   )

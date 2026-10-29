@@ -3,7 +3,7 @@ import { ArrowRight, CalendarPlus, ChevronRight, Sparkles, UserRoundPen } from '
 import { Link } from 'react-router-dom'
 import { CapacityBars, SalesChart } from '@/components/charts'
 import { EventStatusBadge, EventThumb } from '@/components/events'
-import { MockNotice } from '@/components/layout'
+import { DataNotice } from '@/components/layout'
 import { Button, Card, EmptyState, LinkButton, PageHeader, Spinner, StatTile } from '@/components/ui'
 import { useAuth } from '@/lib/auth'
 import { formatDateTime, formatKzt } from '@/lib/format'
@@ -74,7 +74,7 @@ export function OrganizerDashboard() {
                 Create event
               </LinkButton>
               <Button variant="secondary" icon={Sparkles} loading={samples.isPending} onClick={() => samples.mutate()}>
-                Add sample events with sales
+                Add sample events
               </Button>
             </div>
           }
@@ -117,7 +117,7 @@ export function OrganizerDashboard() {
         </>
       )}
       <div className="mt-8">
-        <MockNotice>Events and analytics use preview data until those APIs ship</MockNotice>
+        <DataNotice>Academic demo · payments are simulated</DataNotice>
       </div>
     </>
   )

@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { CalendarCheck, MailCheck, QrCode, Ticket } from 'lucide-react'
-import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { Alert, Button, Card, cx, errorText, Field, Input } from '@/components/ui'
 import { useAuth } from '@/lib/auth'
@@ -314,6 +314,7 @@ export function ResetPasswordPage() {
 export function VerifyEmailPage() {
   const [params] = useSearchParams()
   const { refreshUser } = useAuth()
+  const submittedToken = useRef<string | null>(null)
   const urlToken = params.get('token')
   const [token, setToken] = useState(urlToken ?? '')
   const mutation = useMutation({
@@ -324,7 +325,10 @@ export function VerifyEmailPage() {
   // Links from the email carry the token: verify straight away.
   const { mutate } = mutation
   useEffect(() => {
-    if (urlToken) mutate(urlToken)
+    if (urlToken && submittedToken.current !== urlToken) {
+      submittedToken.current = urlToken
+      mutate(urlToken)
+    }
   }, [urlToken, mutate])
 
   return (
@@ -360,12 +364,12 @@ export function VerifyEmailPage() {
   )
 }
 
-/** Until an email provider is connected, the backend logs tokens instead of sending them. */
+/** Reminder for the account email flow. */
 function DevTokenHint() {
   if (!import.meta.env.DEV) return null
   return (
     <Alert tone="info" title="Local development">
-      Emails aren't sent yet — the token is printed in the backend (uvicorn) log.
+      Check your inbox for the verification or password-reset link.
     </Alert>
   )
 }

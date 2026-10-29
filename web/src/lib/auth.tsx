@@ -41,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const tokens = await post<TokenPair>('/auth/login', { email, password })
       tokenStore.set(tokens)
       const me = await api<User>('/users/me')
+      queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== 'me' })
       queryClient.setQueryData(ME_KEY, me)
       return me
     },
@@ -50,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     const tokens = tokenStore.get()
     tokenStore.set(null)
+    queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== 'me' })
     queryClient.setQueryData(ME_KEY, null)
     if (tokens) {
       await post('/auth/logout', { refresh_token: tokens.refresh_token }).catch(() => undefined)

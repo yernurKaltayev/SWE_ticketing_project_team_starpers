@@ -3,7 +3,7 @@ import { Ban, RotateCcw, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { EventStatusBadge } from '@/components/events'
-import { MockNotice } from '@/components/layout'
+import { DataNotice } from '@/components/layout'
 import { Alert, Badge, Button, Card, cx, errorText, Input, PageHeader, Spinner } from '@/components/ui'
 import { roleLabels, useAuth } from '@/lib/auth'
 import { formatDateTime, formatEventDate } from '@/lib/format'
@@ -117,7 +117,7 @@ function EventsModeration() {
         </div>
       </Card>
       <div className="mt-6">
-        <MockNotice />
+        <DataNotice />
       </div>
     </>
   )

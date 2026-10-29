@@ -1,0 +1,103 @@
+name: BiletFlow CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (${{ matrix.database }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        database: [sqlite, postgres]
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: biletflow
+          POSTGRES_PASSWORD: biletflow
+          POSTGRES_DB: biletflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U biletflow -d biletflow_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      JWT_SECRET: ci-only-secret-01234567890123456789012345
+      SMTP_ENABLED: "false"
+      DATABASE_URL: ${{ matrix.database == 'postgres' && 'postgresql+asyncpg://biletflow:biletflow@localhost:5432/biletflow_test' || 'sqlite+aiosqlite:///./ci.db' }}
+      TEST_DATABASE_URL: ${{ matrix.database == 'postgres' && 'postgresql+asyncpg://biletflow:biletflow@localhost:5432/biletflow_test' || '' }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: uv sync --frozen --python 3.12
+      - run: uv run ruff check .
+      - run: uv run alembic upgrade head
+      - run: uv run alembic check
+      - run: uv run pytest --junitxml=test-results.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-${{ matrix.database }}-results
+          path: backend/test-results.xml
+
+  web:
+    name: Web build and lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --directory ../backend --frozen --python 3.12
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
+  mobile:
+    name: Mobile sessions and native bundles
+    runs-on: ubuntu-latest
+    env:
+      CI: "1"
+      EXPO_NO_TELEMETRY: "1"
+      EXPO_OFFLINE: "1"
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - run: npx expo install --check
+      - run: npm run check
+      - run: npm test
+      - run: npm run build

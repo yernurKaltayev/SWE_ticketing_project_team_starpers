@@ -1,6 +1,7 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, BackgroundTasks, status
 
 from app.core.deps import DbSession
+from app.models.token import TokenPurpose
 from app.schemas.auth import (
     EmailRequest,
     LoginRequest,
@@ -13,13 +14,15 @@ from app.schemas.auth import (
 )
 from app.schemas.user import UserRead
 from app.services import auth as auth_service
+from app.services.email import send_account_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-async def register(data: RegisterRequest, db: DbSession) -> UserRead:
-    user, _ = await auth_service.register_user(db, data)
+async def register(data: RegisterRequest, db: DbSession, tasks: BackgroundTasks) -> UserRead:
+    user, token = await auth_service.register_user(db, data)
+    tasks.add_task(send_account_email, user.email, token, TokenPurpose.email_verification)
     return UserRead.model_validate(user)
 
 
@@ -46,15 +49,25 @@ async def verify_email(data: VerifyEmailRequest, db: DbSession) -> UserRead:
 
 
 @router.post("/resend-verification", response_model=MessageResponse)
-async def resend_verification(data: EmailRequest, db: DbSession) -> MessageResponse:
-    await auth_service.resend_verification_email(db, data.email)
-    return MessageResponse(detail="if the account exists and is unverified, an email was sent")
+async def resend_verification(
+    data: EmailRequest, db: DbSession, tasks: BackgroundTasks
+) -> MessageResponse:
+    result = await auth_service.resend_verification_email(db, data.email)
+    if result:
+        user, token = result
+        tasks.add_task(send_account_email, user.email, token, TokenPurpose.email_verification)
+    return MessageResponse(detail="if the account exists and is unverified, an email was requested")
 
 
 @router.post("/password-reset/request", response_model=MessageResponse)
-async def request_password_reset(data: EmailRequest, db: DbSession) -> MessageResponse:
-    await auth_service.request_password_reset(db, data.email)
-    return MessageResponse(detail="if the account exists, a reset email was sent")
+async def request_password_reset(
+    data: EmailRequest, db: DbSession, tasks: BackgroundTasks
+) -> MessageResponse:
+    result = await auth_service.request_password_reset(db, data.email)
+    if result:
+        user, token = result
+        tasks.add_task(send_account_email, user.email, token, TokenPurpose.password_reset)
+    return MessageResponse(detail="if the account exists, a reset email was requested")
 
 
 @router.post("/password-reset/confirm", response_model=MessageResponse)
