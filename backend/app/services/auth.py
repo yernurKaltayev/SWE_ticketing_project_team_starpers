@@ -1,4 +1,3 @@
-import logging
 from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, status
@@ -17,8 +16,6 @@ from app.models.token import RefreshToken, TokenPurpose, VerificationToken
 from app.models.user import User
 from app.schemas.auth import RegisterRequest, TokenPair
 
-logger = logging.getLogger(__name__)
-
 
 def normalize_email(email: str) -> str:
     return email.strip().lower()
@@ -34,9 +31,7 @@ async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
     return result.scalar_one_or_none()
 
 
-async def issue_verification_token(
-    db: AsyncSession, user: User, purpose: TokenPurpose
-) -> str:
+async def issue_verification_token(db: AsyncSession, user: User, purpose: TokenPurpose) -> str:
     ttl = (
         timedelta(hours=settings.verification_token_ttl_hours)
         if purpose is TokenPurpose.email_verification
@@ -52,9 +47,6 @@ async def issue_verification_token(
         )
     )
     await db.flush()
-    # Until the transactional email provider is wired up (SRS 4.10), the token is logged so
-    # the flow can be exercised locally.
-    logger.info("issued %s token for %s: %s", purpose.value, user.email, raw_token)
     return raw_token
 
 
@@ -162,18 +154,22 @@ async def verify_email(db: AsyncSession, raw_token: str) -> User:
     return user
 
 
-async def resend_verification_email(db: AsyncSession, email: str) -> None:
+async def resend_verification_email(db: AsyncSession, email: str) -> tuple[User, str] | None:
     user = await get_user_by_email(db, email)
     if user is not None and not user.is_email_verified:
-        await issue_verification_token(db, user, TokenPurpose.email_verification)
+        token = await issue_verification_token(db, user, TokenPurpose.email_verification)
         await db.commit()
+        return user, token
+    return None
 
 
-async def request_password_reset(db: AsyncSession, email: str) -> None:
+async def request_password_reset(db: AsyncSession, email: str) -> tuple[User, str] | None:
     user = await get_user_by_email(db, email)
     if user is not None:
-        await issue_verification_token(db, user, TokenPurpose.password_reset)
+        token = await issue_verification_token(db, user, TokenPurpose.password_reset)
         await db.commit()
+        return user, token
+    return None
 
 
 async def confirm_password_reset(db: AsyncSession, raw_token: str, new_password: str) -> None:

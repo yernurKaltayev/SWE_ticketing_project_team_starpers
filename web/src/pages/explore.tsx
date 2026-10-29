@@ -3,7 +3,7 @@ import { ArrowRight, Search, SearchX } from 'lucide-react'
 import { useDeferredValue, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { categoryIcons, EventCard } from '@/components/events'
-import { MockNotice } from '@/components/layout'
+import { DataNotice } from '@/components/layout'
 import { cx, EmptyState, Input, LinkButton, Select, Spinner } from '@/components/ui'
 import { useAuth } from '@/lib/auth'
 import { categoryLabels, cities } from '@/lib/format'
@@ -112,7 +112,7 @@ export function ExplorePage() {
         </EmptyState>
       )}
       <div className="mt-8 text-center">
-        <MockNotice>Sample events — the events API is not built yet</MockNotice>
+        <DataNotice>Sample events — the events API is not built yet</DataNotice>
       </div>
     </>
   )
