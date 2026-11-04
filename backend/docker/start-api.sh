@@ -1,0 +1,6 @@
+#!/bin/sh
+# Applies migrations, then replaces this shell with the API server.
+set -eu
+
+alembic upgrade head
+exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-access-log

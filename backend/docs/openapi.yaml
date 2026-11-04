@@ -1,0 +1,5582 @@
+openapi: 3.1.0
+info:
+  title: BiletFlow API
+  version: 0.1.0
+  description: 'Contract for the BiletFlow backend and the source of truth for all parts: change this
+    file first, then the code. tests/api/test_contract.py fails if a route is implemented but not declared
+    here.
+
+
+    Conventions: money is an integer in tiyn (1 KZT = 100) with a currency field. Timestamps are ISO 8601
+    with an offset. Every non-2xx response has the Error body with a stable `code`. Lists are paginated
+    with limit/offset unless noted. Every response carries X-Request-ID. Payments, payouts and identity
+    checks are simulated: `is_simulated` must be shown to users.'
+servers:
+- url: /api/v1
+tags:
+- name: auth
+- name: users
+- name: events
+- name: venues
+- name: ticket-types
+- name: holds
+- name: orders
+- name: payments
+- name: refunds
+- name: tickets
+- name: checkin
+- name: promos
+- name: notifications
+- name: support
+- name: admin
+- name: history
+- name: analytics
+- name: calendar
+- name: health
+security:
+- bearerAuth: []
+paths:
+  /auth/register:
+    post:
+      tags:
+      - auth
+      summary: Create an account and send a verification email
+      description: 'Owner: P1. Access: public.'
+      operationId: post_auth_register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterIn'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        '422':
+          $ref: '#/components/responses/Error'
+  /auth/verify-email:
+    post:
+      tags:
+      - auth
+      summary: Confirm an email address
+      description: 'Owner: P1. Access: public.'
+      operationId: post_auth_verify_email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
+        '422':
+          $ref: '#/components/responses/Error'
+  /auth/login:
+    post:
+      tags:
+      - auth
+      summary: Sign in (rate limited)
+      description: 'Owner: P1. Access: public.'
+      operationId: post_auth_login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenOut'
+        '422':
+          $ref: '#/components/responses/Error'
+  /auth/refresh:
+    post:
+      tags:
+      - auth
+      summary: Exchange a refresh token; the old one is revoked
+      description: 'Owner: P1. Access: public.'
+      operationId: post_auth_refresh
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenOut'
+        '422':
+          $ref: '#/components/responses/Error'
+  /auth/logout:
+    post:
+      tags:
+      - auth
+      summary: Revoke a refresh token
+      description: 'Owner: P1. Access: any signed-in user.'
+      operationId: post_auth_logout
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshIn'
+      responses:
+        '204':
+          description: Done
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /auth/forgot-password:
+    post:
+      tags:
+      - auth
+      summary: Send a reset email; responds the same for unknown addresses (rate limited)
+      description: 'Owner: P1. Access: public.'
+      operationId: post_auth_forgot_password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
+        '422':
+          $ref: '#/components/responses/Error'
+  /auth/reset-password:
+    post:
+      tags:
+      - auth
+      summary: Set a new password with a reset token
+      description: 'Owner: P1. Access: public.'
+      operationId: post_auth_reset_password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
+        '422':
+          $ref: '#/components/responses/Error'
+  /me:
+    get:
+      tags:
+      - users
+      summary: Current user
+      description: 'Owner: P1. Access: any signed-in user.'
+      operationId: get_me
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+    patch:
+      tags:
+      - users
+      summary: Update the current user
+      description: 'Owner: P1. Access: any signed-in user.'
+      operationId: patch_me
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /organizers/me:
+    get:
+      tags:
+      - users
+      summary: Own organizer profile
+      description: 'Owner: P1. Access: organizer.'
+      operationId: get_organizers_me
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizerProfileOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+    patch:
+      tags:
+      - users
+      summary: Update own organizer profile
+      description: 'Owner: P1. Access: organizer.'
+      operationId: patch_organizers_me
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizerProfileUpdate'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizerProfileOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/staff:
+    post:
+      tags:
+      - users
+      summary: Assign a user to an event's staff
+      description: 'Owner: P1. Access: event owner, platform admin, or staff (manager).'
+      operationId: post_events_event_id_staff
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffAssignIn'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffAssignmentOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/staff/{user_id}:
+    delete:
+      tags:
+      - users
+      summary: Remove a staff assignment
+      description: 'Owner: P1. Access: event owner, platform admin, or staff (manager).'
+      operationId: delete_events_event_id_staff_user_id
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Done
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events:
+    get:
+      tags:
+      - events
+      summary: Search public published events (q, category, city, date_from, date_to)
+      description: 'Owner: P2. Access: public.'
+      operationId: get_events
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageEventOut'
+        '422':
+          $ref: '#/components/responses/Error'
+    post:
+      tags:
+      - events
+      summary: Create a draft event
+      description: 'Owner: P2. Access: organizer.'
+      operationId: post_events
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventCreate'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /organizers/me/events:
+    get:
+      tags:
+      - events
+      summary: Own events, all statuses
+      description: 'Owner: P2. Access: organizer.'
+      operationId: get_organizers_me_events
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageEventOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/by-token/{share_token}:
+    get:
+      tags:
+      - events
+      summary: Open an unlisted or private event by its share link
+      description: 'Owner: P2. Access: public.'
+      operationId: get_events_by_token_share_token
+      parameters:
+      - name: share_token
+        in: path
+        required: true
+        schema:
+          type: string
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventOut'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}:
+    get:
+      tags:
+      - events
+      summary: Event details; drafts and private events need event access
+      description: 'Owner: P2. Access: public.'
+      operationId: get_events_event_id
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventOut'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+    patch:
+      tags:
+      - events
+      summary: Edit an event; price/capacity changes are audited
+      description: 'Owner: P2. Access: event owner, platform admin, or staff (manager).'
+      operationId: patch_events_event_id
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventUpdate'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/publish:
+    post:
+      tags:
+      - events
+      summary: Publish; needs at least one ticket type and capacity >= ticket quantities
+      description: 'Owner: P2. Access: event owner, platform admin, or staff (manager).'
+      operationId: post_events_event_id_publish
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/unpublish:
+    post:
+      tags:
+      - events
+      summary: Return to draft
+      description: 'Owner: P2. Access: event owner, platform admin, or staff (manager).'
+      operationId: post_events_event_id_unpublish
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/cancel:
+    post:
+      tags:
+      - events
+      summary: Cancel; triggers bulk refunds and notifications
+      description: 'Owner: P2. Access: event owner, platform admin, or staff (manager).'
+      operationId: post_events_event_id_cancel
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/duplicate:
+    post:
+      tags:
+      - events
+      summary: Copy configuration only, never orders, tickets, payments, check-ins or support
+      description: 'Owner: P2. Access: event owner, platform admin, or staff (manager).'
+      operationId: post_events_event_id_duplicate
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/images:
+    post:
+      tags:
+      - events
+      summary: Get a presigned upload URL for an event image
+      description: 'Owner: P2. Access: event owner, platform admin, or staff (manager).'
+      operationId: post_events_event_id_images
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageUploadIn'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageUploadOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /venues:
+    get:
+      tags:
+      - venues
+      summary: List venues
+      description: 'Owner: P4. Access: public.'
+      operationId: get_venues
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageVenueOut'
+        '422':
+          $ref: '#/components/responses/Error'
+  /venues/{venue_id}:
+    get:
+      tags:
+      - venues
+      summary: Venue details
+      description: 'Owner: P4. Access: public.'
+      operationId: get_venues_venue_id
+      parameters:
+      - name: venue_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenueOut'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /venues/{venue_id}/layouts:
+    get:
+      tags:
+      - venues
+      summary: Predefined layouts of a venue
+      description: 'Owner: P4. Access: public.'
+      operationId: get_venues_venue_id_layouts
+      parameters:
+      - name: venue_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageLayoutOut'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/seat-map:
+    get:
+      tags:
+      - venues
+      summary: Seats with status available, held or sold
+      description: 'Owner: P4. Access: public.'
+      operationId: get_events_event_id_seat_map
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeatMapOut'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/ticket-types:
+    get:
+      tags:
+      - ticket-types
+      summary: All ticket types with inventory counters
+      description: 'Owner: P3. Access: event owner, platform admin, or staff.'
+      operationId: get_events_event_id_ticket_types
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageTicketTypeOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+    post:
+      tags:
+      - ticket-types
+      summary: Add a ticket type
+      description: 'Owner: P3. Access: event owner, platform admin, or staff (manager).'
+      operationId: post_events_event_id_ticket_types
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketTypeIn'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketTypeOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/ticket-types/{ticket_type_id}:
+    patch:
+      tags:
+      - ticket-types
+      summary: Edit or hide a ticket type
+      description: 'Owner: P3. Access: event owner, platform admin, or staff (manager).'
+      operationId: patch_events_event_id_ticket_types_ticket_type_id
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: ticket_type_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketTypeUpdate'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketTypeOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/availability:
+    get:
+      tags:
+      - ticket-types
+      summary: Public availability of visible ticket types
+      description: 'Owner: P3. Access: public.'
+      operationId: get_events_event_id_availability
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security: []
+      responses:
+        '200':
+          description: Results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvailabilityOut'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/holds:
+    post:
+      tags:
+      - holds
+      summary: Hold seats; 409 if any seat is taken
+      description: 'Owner: P4. Access: any signed-in user.'
+      operationId: post_events_event_id_holds
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HoldIn'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HoldOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/holds/{hold_id}:
+    delete:
+      tags:
+      - holds
+      summary: Release own hold
+      description: 'Owner: P4. Access: any signed-in user.'
+      operationId: delete_events_event_id_holds_hold_id
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: hold_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Done
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /orders:
+    post:
+      tags:
+      - orders
+      summary: Create an order; free orders confirm at once. Send an Idempotency-Key header
+      description: 'Owner: P5. Access: any signed-in user.'
+      operationId: post_orders
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          type: string
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreate'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /orders/{order_id}:
+    get:
+      tags:
+      - orders
+      summary: Order details
+      description: 'Owner: P5. Access: order buyer, or event access.'
+      operationId: get_orders_order_id
+      parameters:
+      - name: order_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /orders/{order_id}/cancel:
+    post:
+      tags:
+      - orders
+      summary: Cancel a pending order or a free registration
+      description: 'Owner: P5. Access: order buyer, or event access.'
+      operationId: post_orders_order_id_cancel
+      parameters:
+      - name: order_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /me/orders:
+    get:
+      tags:
+      - orders
+      summary: Own orders
+      description: 'Owner: P5. Access: any signed-in user.'
+      operationId: get_me_orders
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOrderOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/orders:
+    get:
+      tags:
+      - orders
+      summary: Orders of an event
+      description: 'Owner: P5. Access: event owner, platform admin, or staff (support).'
+      operationId: get_events_event_id_orders
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOrderOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/attendees:
+    get:
+      tags:
+      - orders
+      summary: Attendee list (q, ticket_type_id, status)
+      description: 'Owner: P5. Access: event owner, platform admin, or staff (support/checkin).'
+      operationId: get_events_event_id_attendees
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageAttendeeOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/attendees.csv:
+    get:
+      tags:
+      - orders
+      summary: Attendee list as CSV
+      description: 'Owner: P5. Access: event owner, platform admin, or staff (support).'
+      operationId: get_events_event_id_attendees_csv
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: File
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /orders/{order_id}/payments:
+    post:
+      tags:
+      - payments
+      summary: Start a simulated payment
+      description: 'Owner: P6. Access: order buyer.'
+      operationId: post_orders_order_id_payments
+      parameters:
+      - name: order_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /payments/{payment_id}:
+    get:
+      tags:
+      - payments
+      summary: Payment status
+      description: 'Owner: P6. Access: order buyer, or event access.'
+      operationId: get_payments_payment_id
+      parameters:
+      - name: payment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /payments/webhooks/{provider}:
+    post:
+      tags:
+      - payments
+      summary: Provider callback; idempotent per provider_ref
+      description: 'Owner: P6. Access: provider signature.'
+      operationId: post_payments_webhooks_provider
+      parameters:
+      - name: provider
+        in: path
+        required: true
+        schema:
+          type: string
+      security: []
+      responses:
+        '204':
+          description: Done
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/activation:
+    get:
+      tags:
+      - payments
+      summary: Paid-sales activation checklist
+      description: 'Owner: P6. Access: event owner, platform admin, or staff (manager).'
+      operationId: get_events_event_id_activation
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+    patch:
+      tags:
+      - payments
+      summary: Link a payout account or accept terms
+      description: 'Owner: P6. Access: event owner, platform admin, or staff (manager).'
+      operationId: patch_events_event_id_activation
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivationUpdate'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/activation/verify-identity:
+    post:
+      tags:
+      - payments
+      summary: Run the simulated identity check
+      description: 'Owner: P6. Access: event owner, platform admin, or staff (manager).'
+      operationId: post_events_event_id_activation_verify_identity
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/activation/pay:
+    post:
+      tags:
+      - payments
+      summary: Start the simulated activation-fee payment
+      description: 'Owner: P6. Access: event owner, platform admin, or staff (manager).'
+      operationId: post_events_event_id_activation_pay
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/financials:
+    get:
+      tags:
+      - payments
+      summary: Gross sales, fees, refunds and estimated payout
+      description: 'Owner: P6. Access: event owner, platform admin, or staff (manager).'
+      operationId: get_events_event_id_financials
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialSummaryOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /organizers/me/payout-accounts:
+    get:
+      tags:
+      - payments
+      summary: Own payout accounts
+      description: 'Owner: P6. Access: organizer.'
+      operationId: get_organizers_me_payout_accounts
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PayoutAccountOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+    post:
+      tags:
+      - payments
+      summary: Add a simulated payout account
+      description: 'Owner: P6. Access: organizer.'
+      operationId: post_organizers_me_payout_accounts
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayoutAccountIn'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutAccountOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /organizers/me/payout-accounts/{account_id}:
+    patch:
+      tags:
+      - payments
+      summary: Edit a payout account
+      description: 'Owner: P6. Access: organizer.'
+      operationId: patch_organizers_me_payout_accounts_account_id
+      parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayoutAccountIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutAccountOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+    delete:
+      tags:
+      - payments
+      summary: Remove a payout account
+      description: 'Owner: P6. Access: organizer.'
+      operationId: delete_organizers_me_payout_accounts_account_id
+      parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Done
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /organizers/me/payouts:
+    get:
+      tags:
+      - payments
+      summary: Own payouts and their status
+      description: 'Owner: P6. Access: organizer.'
+      operationId: get_organizers_me_payouts
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagePayoutOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/refund-policy:
+    put:
+      tags:
+      - refunds
+      summary: Set the event's refund policy
+      description: 'Owner: P7. Access: event owner, platform admin, or staff (manager).'
+      operationId: put_events_event_id_refund_policy
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundPolicyIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /orders/{order_id}/refund:
+    post:
+      tags:
+      - refunds
+      summary: Full refund; tickets become invalid immediately
+      description: 'Owner: P7. Access: event owner, manager staff, or platform admin.'
+      operationId: post_orders_order_id_refund
+      parameters:
+      - name: order_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundIn'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/refunds:
+    get:
+      tags:
+      - refunds
+      summary: Refunds of an event
+      description: 'Owner: P7. Access: event owner, platform admin, or staff (manager).'
+      operationId: get_events_event_id_refunds
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageRefundOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /tickets/{ticket_id}:
+    get:
+      tags:
+      - tickets
+      summary: Ticket details
+      description: 'Owner: P8. Access: ticket owner, or event access.'
+      operationId: get_tickets_ticket_id
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /tickets/{ticket_id}/qr:
+    get:
+      tags:
+      - tickets
+      summary: QR image
+      description: 'Owner: P8. Access: ticket owner, or event access.'
+      operationId: get_tickets_ticket_id_qr
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: File
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /tickets/{ticket_id}/pdf:
+    get:
+      tags:
+      - tickets
+      summary: Printable A4 ticket
+      description: 'Owner: P8. Access: ticket owner, or event access.'
+      operationId: get_tickets_ticket_id_pdf
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: File
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /me/tickets:
+    get:
+      tags:
+      - tickets
+      summary: Own tickets
+      description: 'Owner: P8. Access: any signed-in user.'
+      operationId: get_me_tickets
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageTicketOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /checkin/verify:
+    post:
+      tags:
+      - checkin
+      summary: Verify a QR payload and check in atomically; rejects Campaign QR codes
+      description: 'Owner: P15. Access: event owner, platform admin, or staff (checkin).'
+      operationId: post_checkin_verify
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /checkin/{ticket_id}/undo:
+    post:
+      tags:
+      - checkin
+      summary: Undo an accidental check-in (audited)
+      description: 'Owner: P15. Access: event owner, platform admin, or staff (checkin).'
+      operationId: post_checkin_ticket_id_undo
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UndoCheckInIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/checkin/stats:
+    get:
+      tags:
+      - checkin
+      summary: Registered and checked-in totals
+      description: 'Owner: P15. Access: event owner, platform admin, or staff (checkin).'
+      operationId: get_events_event_id_checkin_stats
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckInStatsOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/campaigns:
+    get:
+      tags:
+      - promos
+      summary: Campaigns of an event
+      description: 'Owner: P16. Access: event owner, platform admin, or staff (manager).'
+      operationId: get_events_event_id_campaigns
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageCampaignOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+    post:
+      tags:
+      - promos
+      summary: Create a campaign with a generated code and QR
+      description: 'Owner: P16. Access: event owner, platform admin, or staff (manager).'
+      operationId: post_events_event_id_campaigns
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignIn'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /campaigns/{campaign_id}:
+    get:
+      tags:
+      - promos
+      summary: Campaign details
+      description: 'Owner: P16. Access: event owner, platform admin, or staff (manager).'
+      operationId: get_campaigns_campaign_id
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+    patch:
+      tags:
+      - promos
+      summary: Edit or disable a campaign
+      description: 'Owner: P16. Access: event owner, platform admin, or staff (manager).'
+      operationId: patch_campaigns_campaign_id
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignUpdate'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /campaigns/{campaign_id}/qr:
+    get:
+      tags:
+      - promos
+      summary: Campaign QR image
+      description: 'Owner: P16. Access: event owner, platform admin, or staff (manager).'
+      operationId: get_campaigns_campaign_id_qr
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: File
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /campaigns/{campaign_id}/report:
+    get:
+      tags:
+      - promos
+      summary: Redemptions, orders, tickets and revenue
+      description: 'Owner: P16. Access: event owner, platform admin, or staff (manager).'
+      operationId: get_campaigns_campaign_id_report
+      parameters:
+      - name: campaign_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignReportOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /promo/validate:
+    post:
+      tags:
+      - promos
+      summary: Check a code and compute the discount on the server
+      description: 'Owner: P16. Access: public.'
+      operationId: post_promo_validate
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromoValidateIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromoValidateOut'
+        '422':
+          $ref: '#/components/responses/Error'
+  /c/{token}:
+    servers:
+    - url: /
+    get:
+      tags:
+      - promos
+      summary: 'Campaign QR link: redirects to the event page with the promo applied'
+      description: 'Owner: P16. Access: public.'
+      operationId: get_c_token
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      security: []
+      responses:
+        '302':
+          description: Redirect to the event page
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /me/notifications:
+    get:
+      tags:
+      - notifications
+      summary: Own notifications (unread_only)
+      description: 'Owner: P9. Access: any signed-in user.'
+      operationId: get_me_notifications
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageNotificationOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /me/notifications/{notification_id}/read:
+    post:
+      tags:
+      - notifications
+      summary: Mark as read
+      description: 'Owner: P9. Access: any signed-in user.'
+      operationId: post_me_notifications_notification_id_read
+      parameters:
+      - name: notification_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /support/cases:
+    get:
+      tags:
+      - support
+      summary: Cases visible to the caller (status)
+      description: 'Owner: P10. Access: by role and relationship to the case.'
+      operationId: get_support_cases
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageCaseOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+    post:
+      tags:
+      - support
+      summary: Open a case; user/event/order/ticket context is attached
+      description: 'Owner: P10. Access: any signed-in user.'
+      operationId: post_support_cases
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaseCreate'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /support/cases/{case_id}:
+    get:
+      tags:
+      - support
+      summary: Case details
+      description: 'Owner: P10. Access: case participants.'
+      operationId: get_support_cases_case_id
+      parameters:
+      - name: case_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+    patch:
+      tags:
+      - support
+      summary: Change status or assignee (audited)
+      description: 'Owner: P10. Access: support staff of the event, or platform admin.'
+      operationId: patch_support_cases_case_id
+      parameters:
+      - name: case_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaseUpdate'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /support/cases/{case_id}/messages:
+    get:
+      tags:
+      - support
+      summary: Thread; poll with after=<message_id>
+      description: 'Owner: P10. Access: case participants.'
+      operationId: get_support_cases_case_id_messages
+      parameters:
+      - name: case_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: after
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupportMessageOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+    post:
+      tags:
+      - support
+      summary: Post a reply
+      description: 'Owner: P10. Access: case participants.'
+      operationId: post_support_cases_case_id_messages
+      parameters:
+      - name: case_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageIn'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportMessageOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/reports:
+    post:
+      tags:
+      - admin
+      summary: Report an event
+      description: 'Owner: P11. Access: any signed-in user.'
+      operationId: post_events_event_id_reports
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventReportIn'
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventReportOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/users:
+    get:
+      tags:
+      - admin
+      summary: Search users (q)
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: get_admin_users
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageUserOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/users/{user_id}/suspend:
+    post:
+      tags:
+      - admin
+      summary: Suspend or reinstate a user
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: post_admin_users_user_id_suspend
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuspendIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/events:
+    get:
+      tags:
+      - admin
+      summary: Search events (q, status)
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: get_admin_events
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageEventOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/events/{event_id}/suspend:
+    post:
+      tags:
+      - admin
+      summary: Suspend or reinstate an event
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: post_admin_events_event_id_suspend
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuspendIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/events/{event_id}/paid-sales/suspend:
+    post:
+      tags:
+      - admin
+      summary: Suspend or restore paid sales
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: post_admin_events_event_id_paid_sales_suspend
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuspendIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/orders:
+    get:
+      tags:
+      - admin
+      summary: Search orders (q, status)
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: get_admin_orders
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOrderOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/payments:
+    get:
+      tags:
+      - admin
+      summary: Search payments, including failures (status)
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: get_admin_payments
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagePaymentOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/refunds:
+    get:
+      tags:
+      - admin
+      summary: Monitor refunds (status)
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: get_admin_refunds
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageRefundOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/activations:
+    get:
+      tags:
+      - admin
+      summary: Inspect activation records (status)
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: get_admin_activations
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageActivationOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/reports:
+    get:
+      tags:
+      - admin
+      summary: Reported events (status)
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: get_admin_reports
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageEventReportOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/reports/{report_id}:
+    patch:
+      tags:
+      - admin
+      summary: Resolve a report
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: patch_admin_reports_report_id
+      parameters:
+      - name: report_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventReportUpdate'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventReportOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/support/cases:
+    get:
+      tags:
+      - admin
+      summary: Escalated support cases
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: get_admin_support_cases
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageCaseOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/campaigns:
+    get:
+      tags:
+      - admin
+      summary: Promo activity
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: get_admin_campaigns
+      parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageCampaignOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/settings:
+    get:
+      tags:
+      - admin
+      summary: Platform settings
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: get_admin_settings
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+    patch:
+      tags:
+      - admin
+      summary: Change platform settings (audited)
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: patch_admin_settings
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingsUpdate'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /admin/exports/{report}.csv:
+    get:
+      tags:
+      - admin
+      summary: Operational report as CSV
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: get_admin_exports_report_csv
+      parameters:
+      - name: report
+        in: path
+        required: true
+        schema:
+          type: string
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: File
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/history:
+    get:
+      tags:
+      - history
+      summary: Audit trail (date_from, date_to, action_type)
+      description: 'Owner: P12. Access: event owner, platform admin, or staff (manager).'
+      operationId: get_events_event_id_history
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Page of results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageAuditEntryOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/analytics:
+    get:
+      tags:
+      - analytics
+      summary: Analytics from DB records (date_from, date_to, ticket_type_id)
+      description: 'Owner: P13. Access: event owner, platform admin, or staff (manager).'
+      operationId: get_events_event_id_analytics
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/calendar.ics:
+    get:
+      tags:
+      - calendar
+      summary: iCalendar file; cancelled events have STATUS:CANCELLED
+      description: 'Owner: P14. Access: public.'
+      operationId: get_events_event_id_calendar_ics
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security: []
+      responses:
+        '200':
+          description: File
+          content:
+            text/calendar:
+              schema:
+                type: string
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /health:
+    servers:
+    - url: /
+    get:
+      tags:
+      - health
+      summary: Liveness and database check
+      description: 'Owner: P0. Access: public.'
+      operationId: get_health
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthOut'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Offset:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+  responses:
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorOut'
+  schemas:
+    ActivationOut:
+      properties:
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        status:
+          enum:
+          - incomplete
+          - active
+          - suspended
+          title: Status
+          type: string
+        identity_verified:
+          title: Identity Verified
+          type: boolean
+        payout_account_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Payout Account Id
+        activation_fee_paid:
+          title: Activation Fee Paid
+          type: boolean
+        terms_accepted_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Terms Accepted At
+        missing_steps:
+          items:
+            type: string
+          title: Missing Steps
+          type: array
+        is_simulated:
+          title: Is Simulated
+          type: boolean
+      required:
+      - event_id
+      - status
+      - identity_verified
+      - payout_account_id
+      - activation_fee_paid
+      - terms_accepted_at
+      - missing_steps
+      - is_simulated
+      title: ActivationOut
+      type: object
+    ActivationUpdate:
+      properties:
+        payout_account_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          default: null
+          title: Payout Account Id
+        accept_terms:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          default: null
+          title: Accept Terms
+      title: ActivationUpdate
+      type: object
+    AnalyticsOut:
+      properties:
+        capacity:
+          title: Capacity
+          type: integer
+        sold:
+          title: Sold
+          type: integer
+        remaining:
+          title: Remaining
+          type: integer
+        percent_sold:
+          title: Percent Sold
+          type: number
+        gross:
+          title: Gross
+          type: integer
+        discounts:
+          title: Discounts
+          type: integer
+        refunds:
+          title: Refunds
+          type: integer
+        net:
+          title: Net
+          type: integer
+        sales_over_time:
+          items:
+            $ref: '#/components/schemas/Point'
+          title: Sales Over Time
+          type: array
+        by_ticket_type:
+          items:
+            $ref: '#/components/schemas/Row'
+          title: By Ticket Type
+          type: array
+        campaigns:
+          items:
+            $ref: '#/components/schemas/CampaignStat'
+          title: Campaigns
+          type: array
+        checked_in:
+          title: Checked In
+          type: integer
+        absent:
+          title: Absent
+          type: integer
+        checkin_percent:
+          title: Checkin Percent
+          type: number
+      required:
+      - capacity
+      - sold
+      - remaining
+      - percent_sold
+      - gross
+      - discounts
+      - refunds
+      - net
+      - sales_over_time
+      - by_ticket_type
+      - campaigns
+      - checked_in
+      - absent
+      - checkin_percent
+      title: AnalyticsOut
+      type: object
+    AttendeeIn:
+      properties:
+        full_name:
+          title: Full Name
+          type: string
+        email:
+          format: email
+          title: Email
+          type: string
+      required:
+      - full_name
+      - email
+      title: AttendeeIn
+      type: object
+    AttendeeOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        order_id:
+          format: uuid
+          title: Order Id
+          type: string
+        full_name:
+          title: Full Name
+          type: string
+        email:
+          format: email
+          title: Email
+          type: string
+        ticket_type:
+          title: Ticket Type
+          type: string
+        ticket_status:
+          title: Ticket Status
+          type: string
+      required:
+      - id
+      - order_id
+      - full_name
+      - email
+      - ticket_type
+      - ticket_status
+      title: AttendeeOut
+      type: object
+    AuditEntryOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        occurred_at:
+          format: date-time
+          title: Occurred At
+          type: string
+        actor_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Actor Id
+        actor_role:
+          title: Actor Role
+          type: string
+        action_type:
+          title: Action Type
+          type: string
+        entity_type:
+          title: Entity Type
+          type: string
+        entity_id:
+          title: Entity Id
+          type: string
+        description:
+          title: Description
+          type: string
+        meta:
+          additionalProperties: true
+          title: Meta
+          type: object
+      required:
+      - id
+      - occurred_at
+      - actor_id
+      - actor_role
+      - action_type
+      - entity_type
+      - entity_id
+      - description
+      - meta
+      title: AuditEntryOut
+      type: object
+    AvailabilityOut:
+      description: 'Public view of a ticket type: no sales counters beyond what is left to buy.'
+      properties:
+        ticket_type_id:
+          format: uuid
+          title: Ticket Type Id
+          type: string
+        name:
+          title: Name
+          type: string
+        price_amount:
+          title: Price Amount
+          type: integer
+        currency:
+          title: Currency
+          type: string
+        available:
+          title: Available
+          type: integer
+        on_sale:
+          title: On Sale
+          type: boolean
+      required:
+      - ticket_type_id
+      - name
+      - price_amount
+      - currency
+      - available
+      - on_sale
+      title: AvailabilityOut
+      type: object
+    CampaignIn:
+      properties:
+        name:
+          title: Name
+          type: string
+        discount_type:
+          enum:
+          - percent
+          - fixed
+          title: Discount Type
+          type: string
+        discount_value:
+          title: Discount Value
+          type: integer
+        valid_from:
+          format: date-time
+          title: Valid From
+          type: string
+        valid_to:
+          format: date-time
+          title: Valid To
+          type: string
+        max_redemptions:
+          title: Max Redemptions
+          type: integer
+        ticket_type_ids:
+          items:
+            format: uuid
+            type: string
+          title: Ticket Type Ids
+          type: array
+      required:
+      - name
+      - discount_type
+      - discount_value
+      - valid_from
+      - valid_to
+      - max_redemptions
+      - ticket_type_ids
+      title: CampaignIn
+      type: object
+    CampaignOut:
+      properties:
+        name:
+          title: Name
+          type: string
+        discount_type:
+          enum:
+          - percent
+          - fixed
+          title: Discount Type
+          type: string
+        discount_value:
+          title: Discount Value
+          type: integer
+        valid_from:
+          format: date-time
+          title: Valid From
+          type: string
+        valid_to:
+          format: date-time
+          title: Valid To
+          type: string
+        max_redemptions:
+          title: Max Redemptions
+          type: integer
+        ticket_type_ids:
+          items:
+            format: uuid
+            type: string
+          title: Ticket Type Ids
+          type: array
+        id:
+          format: uuid
+          title: Id
+          type: string
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        code:
+          title: Code
+          type: string
+        redemptions_count:
+          title: Redemptions Count
+          type: integer
+        is_enabled:
+          title: Is Enabled
+          type: boolean
+        qr_url:
+          title: Qr Url
+          type: string
+      required:
+      - name
+      - discount_type
+      - discount_value
+      - valid_from
+      - valid_to
+      - max_redemptions
+      - ticket_type_ids
+      - id
+      - event_id
+      - code
+      - redemptions_count
+      - is_enabled
+      - qr_url
+      title: CampaignOut
+      type: object
+    CampaignReportOut:
+      properties:
+        redemptions:
+          title: Redemptions
+          type: integer
+        orders:
+          title: Orders
+          type: integer
+        tickets_sold:
+          title: Tickets Sold
+          type: integer
+        gross_revenue:
+          title: Gross Revenue
+          type: integer
+        discount:
+          title: Discount
+          type: integer
+        net_revenue:
+          title: Net Revenue
+          type: integer
+      required:
+      - redemptions
+      - orders
+      - tickets_sold
+      - gross_revenue
+      - discount
+      - net_revenue
+      title: CampaignReportOut
+      type: object
+    CampaignStat:
+      properties:
+        campaign_id:
+          format: uuid
+          title: Campaign Id
+          type: string
+        name:
+          title: Name
+          type: string
+        redemptions:
+          title: Redemptions
+          type: integer
+        revenue:
+          title: Revenue
+          type: integer
+      required:
+      - campaign_id
+      - name
+      - redemptions
+      - revenue
+      title: CampaignStat
+      type: object
+    CampaignUpdate:
+      description: 'Partial update: only the fields sent are changed.'
+      properties:
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Name
+        valid_from:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Valid From
+        valid_to:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Valid To
+        max_redemptions:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Max Redemptions
+        is_enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          default: null
+          title: Is Enabled
+      title: CampaignUpdate
+      type: object
+    CaseCreate:
+      properties:
+        category:
+          title: Category
+          type: string
+        subject:
+          title: Subject
+          type: string
+        event_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          default: null
+          title: Event Id
+        order_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          default: null
+          title: Order Id
+        ticket_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          default: null
+          title: Ticket Id
+        message:
+          title: Message
+          type: string
+      required:
+      - category
+      - subject
+      - message
+      title: CaseCreate
+      type: object
+    CaseOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        requester_id:
+          format: uuid
+          title: Requester Id
+          type: string
+        audience:
+          title: Audience
+          type: string
+        category:
+          title: Category
+          type: string
+        status:
+          title: Status
+          type: string
+        assignee_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Assignee Id
+        event_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Event Id
+        order_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Order Id
+        ticket_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Ticket Id
+        subject:
+          title: Subject
+          type: string
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+      required:
+      - id
+      - requester_id
+      - audience
+      - category
+      - status
+      - assignee_id
+      - event_id
+      - order_id
+      - ticket_id
+      - subject
+      - created_at
+      title: CaseOut
+      type: object
+    CaseUpdate:
+      properties:
+        status:
+          anyOf:
+          - enum:
+            - open
+            - in_progress
+            - waiting_customer
+            - resolved
+            type: string
+          - type: 'null'
+          default: null
+          title: Status
+        assignee_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          default: null
+          title: Assignee Id
+      title: CaseUpdate
+      type: object
+    CheckInStatsOut:
+      properties:
+        registered:
+          title: Registered
+          type: integer
+        checked_in:
+          title: Checked In
+          type: integer
+      required:
+      - registered
+      - checked_in
+      title: CheckInStatsOut
+      type: object
+    ErrorOut:
+      description: Body of every non-2xx response.
+      properties:
+        code:
+          title: Code
+          type: string
+        message:
+          title: Message
+          type: string
+        details:
+          default: null
+          title: Details
+      required:
+      - code
+      - message
+      title: ErrorOut
+      type: object
+    EventCreate:
+      properties:
+        title:
+          title: Title
+          type: string
+        description:
+          title: Description
+          type: string
+        category:
+          title: Category
+          type: string
+        venue_id:
+          format: uuid
+          title: Venue Id
+          type: string
+        layout_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          default: null
+          title: Layout Id
+        starts_at:
+          format: date-time
+          title: Starts At
+          type: string
+        ends_at:
+          format: date-time
+          title: Ends At
+          type: string
+        timezone:
+          title: Timezone
+          type: string
+        visibility:
+          default: public
+          enum:
+          - public
+          - unlisted
+          - private
+          title: Visibility
+          type: string
+        seating_mode:
+          default: general_admission
+          enum:
+          - general_admission
+          - assigned
+          title: Seating Mode
+          type: string
+        capacity:
+          title: Capacity
+          type: integer
+        registration_opens_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Registration Opens At
+        registration_closes_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Registration Closes At
+      required:
+      - title
+      - description
+      - category
+      - venue_id
+      - starts_at
+      - ends_at
+      - timezone
+      - capacity
+      title: EventCreate
+      type: object
+    EventOut:
+      properties:
+        title:
+          title: Title
+          type: string
+        description:
+          title: Description
+          type: string
+        category:
+          title: Category
+          type: string
+        venue_id:
+          format: uuid
+          title: Venue Id
+          type: string
+        layout_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          default: null
+          title: Layout Id
+        starts_at:
+          format: date-time
+          title: Starts At
+          type: string
+        ends_at:
+          format: date-time
+          title: Ends At
+          type: string
+        timezone:
+          title: Timezone
+          type: string
+        visibility:
+          default: public
+          enum:
+          - public
+          - unlisted
+          - private
+          title: Visibility
+          type: string
+        seating_mode:
+          default: general_admission
+          enum:
+          - general_admission
+          - assigned
+          title: Seating Mode
+          type: string
+        capacity:
+          title: Capacity
+          type: integer
+        registration_opens_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Registration Opens At
+        registration_closes_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Registration Closes At
+        id:
+          format: uuid
+          title: Id
+          type: string
+        status:
+          title: Status
+          type: string
+        paid_sales_status:
+          title: Paid Sales Status
+          type: string
+        share_token:
+          title: Share Token
+          type: string
+        images:
+          items:
+            type: string
+          title: Images
+          type: array
+      required:
+      - title
+      - description
+      - category
+      - venue_id
+      - starts_at
+      - ends_at
+      - timezone
+      - capacity
+      - id
+      - status
+      - paid_sales_status
+      - share_token
+      - images
+      title: EventOut
+      type: object
+    EventReportIn:
+      properties:
+        reason:
+          title: Reason
+          type: string
+      required:
+      - reason
+      title: EventReportIn
+      type: object
+    EventReportOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        reporter_id:
+          format: uuid
+          title: Reporter Id
+          type: string
+        reason:
+          title: Reason
+          type: string
+        status:
+          title: Status
+          type: string
+      required:
+      - id
+      - event_id
+      - reporter_id
+      - reason
+      - status
+      title: EventReportOut
+      type: object
+    EventReportUpdate:
+      properties:
+        status:
+          enum:
+          - reviewed
+          - dismissed
+          - actioned
+          title: Status
+          type: string
+      required:
+      - status
+      title: EventReportUpdate
+      type: object
+    EventUpdate:
+      description: 'Partial update: only the fields sent are changed.'
+      properties:
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Title
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Description
+        category:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Category
+        venue_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          default: null
+          title: Venue Id
+        layout_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          default: null
+          title: Layout Id
+        starts_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Starts At
+        ends_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Ends At
+        timezone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Timezone
+        visibility:
+          anyOf:
+          - enum:
+            - public
+            - unlisted
+            - private
+            type: string
+          - type: 'null'
+          default: null
+          title: Visibility
+        seating_mode:
+          anyOf:
+          - enum:
+            - general_admission
+            - assigned
+            type: string
+          - type: 'null'
+          default: null
+          title: Seating Mode
+        capacity:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Capacity
+        registration_opens_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Registration Opens At
+        registration_closes_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Registration Closes At
+      title: EventUpdate
+      type: object
+    FinancialSummaryOut:
+      properties:
+        gross:
+          title: Gross
+          type: integer
+        fees:
+          title: Fees
+          type: integer
+        refunds:
+          title: Refunds
+          type: integer
+        estimated_payout:
+          title: Estimated Payout
+          type: integer
+        currency:
+          title: Currency
+          type: string
+        is_simulated:
+          title: Is Simulated
+          type: boolean
+      required:
+      - gross
+      - fees
+      - refunds
+      - estimated_payout
+      - currency
+      - is_simulated
+      title: FinancialSummaryOut
+      type: object
+    ForgotPasswordIn:
+      properties:
+        email:
+          format: email
+          title: Email
+          type: string
+      required:
+      - email
+      title: ForgotPasswordIn
+      type: object
+    HealthOut:
+      type: object
+      required:
+      - status
+      - database
+      - version
+      properties:
+        status:
+          type: string
+        database:
+          type: string
+        version:
+          type: string
+    HoldIn:
+      properties:
+        seat_ids:
+          items:
+            format: uuid
+            type: string
+          title: Seat Ids
+          type: array
+      required:
+      - seat_ids
+      title: HoldIn
+      type: object
+    HoldOut:
+      properties:
+        hold_ids:
+          items:
+            format: uuid
+            type: string
+          title: Hold Ids
+          type: array
+        expires_at:
+          format: date-time
+          title: Expires At
+          type: string
+      required:
+      - hold_ids
+      - expires_at
+      title: HoldOut
+      type: object
+    ImageUploadIn:
+      properties:
+        filename:
+          title: Filename
+          type: string
+        content_type:
+          title: Content Type
+          type: string
+      required:
+      - filename
+      - content_type
+      title: ImageUploadIn
+      type: object
+    ImageUploadOut:
+      properties:
+        upload_url:
+          title: Upload Url
+          type: string
+        image_url:
+          title: Image Url
+          type: string
+      required:
+      - upload_url
+      - image_url
+      title: ImageUploadOut
+      type: object
+    LayoutOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        venue_id:
+          format: uuid
+          title: Venue Id
+          type: string
+        name:
+          title: Name
+          type: string
+      required:
+      - id
+      - venue_id
+      - name
+      title: LayoutOut
+      type: object
+    LoginIn:
+      properties:
+        email:
+          format: email
+          title: Email
+          type: string
+        password:
+          title: Password
+          type: string
+      required:
+      - email
+      - password
+      title: LoginIn
+      type: object
+    MessageIn:
+      properties:
+        body:
+          title: Body
+          type: string
+      required:
+      - body
+      title: MessageIn
+      type: object
+    MessageOut:
+      properties:
+        message:
+          title: Message
+          type: string
+      required:
+      - message
+      title: MessageOut
+      type: object
+    NotificationOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        type:
+          title: Type
+          type: string
+        title:
+          title: Title
+          type: string
+        body:
+          title: Body
+          type: string
+        payload:
+          additionalProperties: true
+          title: Payload
+          type: object
+        read_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Read At
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+      required:
+      - id
+      - type
+      - title
+      - body
+      - payload
+      - read_at
+      - created_at
+      title: NotificationOut
+      type: object
+    OrderCreate:
+      properties:
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        items:
+          items:
+            $ref: '#/components/schemas/OrderItemIn'
+          title: Items
+          type: array
+        attendees:
+          items:
+            $ref: '#/components/schemas/AttendeeIn'
+          title: Attendees
+          type: array
+        promo_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Promo Code
+      required:
+      - event_id
+      - items
+      - attendees
+      title: OrderCreate
+      type: object
+    OrderItemIn:
+      properties:
+        ticket_type_id:
+          format: uuid
+          title: Ticket Type Id
+          type: string
+        quantity:
+          title: Quantity
+          type: integer
+        seat_ids:
+          default: []
+          items:
+            format: uuid
+            type: string
+          title: Seat Ids
+          type: array
+      required:
+      - ticket_type_id
+      - quantity
+      title: OrderItemIn
+      type: object
+    OrderItemOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        ticket_type_id:
+          format: uuid
+          title: Ticket Type Id
+          type: string
+        seat:
+          anyOf:
+          - $ref: '#/components/schemas/SeatRef'
+          - type: 'null'
+        unit_price:
+          title: Unit Price
+          type: integer
+        quantity:
+          title: Quantity
+          type: integer
+        line_total:
+          title: Line Total
+          type: integer
+      required:
+      - id
+      - ticket_type_id
+      - seat
+      - unit_price
+      - quantity
+      - line_total
+      title: OrderItemOut
+      type: object
+    OrderOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        order_number:
+          title: Order Number
+          type: string
+        status:
+          title: Status
+          type: string
+        subtotal:
+          title: Subtotal
+          type: integer
+        discount_amount:
+          title: Discount Amount
+          type: integer
+        processing_fee:
+          title: Processing Fee
+          type: integer
+        total:
+          title: Total
+          type: integer
+        currency:
+          title: Currency
+          type: string
+        is_simulated:
+          title: Is Simulated
+          type: boolean
+        items:
+          items:
+            $ref: '#/components/schemas/OrderItemOut'
+          title: Items
+          type: array
+        tickets:
+          items:
+            $ref: '#/components/schemas/TicketOut'
+          title: Tickets
+          type: array
+      required:
+      - id
+      - order_number
+      - status
+      - subtotal
+      - discount_amount
+      - processing_fee
+      - total
+      - currency
+      - is_simulated
+      - items
+      - tickets
+      title: OrderOut
+      type: object
+    OrganizerProfileOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        organization_name:
+          title: Organization Name
+          type: string
+        contact_email:
+          format: email
+          title: Contact Email
+          type: string
+        contact_phone:
+          title: Contact Phone
+          type: string
+        verification_status:
+          title: Verification Status
+          type: string
+        terms_accepted_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Terms Accepted At
+      required:
+      - id
+      - organization_name
+      - contact_email
+      - contact_phone
+      - verification_status
+      - terms_accepted_at
+      title: OrganizerProfileOut
+      type: object
+    OrganizerProfileUpdate:
+      properties:
+        organization_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Organization Name
+        contact_email:
+          anyOf:
+          - format: email
+            type: string
+          - type: 'null'
+          default: null
+          title: Contact Email
+        contact_phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Contact Phone
+      title: OrganizerProfileUpdate
+      type: object
+    PageActivationOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivationOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageAttendeeOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendeeOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageAuditEntryOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEntryOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageCampaignOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CampaignOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageCaseOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CaseOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageEventOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageEventReportOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventReportOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageLayoutOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LayoutOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageNotificationOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageOrderOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PagePaymentOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PagePayoutOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayoutOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageRefundOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefundOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageTicketOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TicketOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageTicketTypeOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TicketTypeOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageUserOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageVenueOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/VenueOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PaymentOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        kind:
+          enum:
+          - ticket
+          - activation_fee
+          title: Kind
+          type: string
+        status:
+          title: Status
+          type: string
+        amount:
+          title: Amount
+          type: integer
+        fee_amount:
+          title: Fee Amount
+          type: integer
+        currency:
+          title: Currency
+          type: string
+        is_simulated:
+          title: Is Simulated
+          type: boolean
+        checkout_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Checkout Url
+        failure_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Failure Reason
+      required:
+      - id
+      - kind
+      - status
+      - amount
+      - fee_amount
+      - currency
+      - is_simulated
+      - checkout_url
+      - failure_reason
+      title: PaymentOut
+      type: object
+    PayoutAccountIn:
+      properties:
+        bank_name:
+          title: Bank Name
+          type: string
+        iban:
+          title: Iban
+          type: string
+        holder_name:
+          title: Holder Name
+          type: string
+      required:
+      - bank_name
+      - iban
+      - holder_name
+      title: PayoutAccountIn
+      type: object
+    PayoutAccountOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        bank_name:
+          title: Bank Name
+          type: string
+        iban_last4:
+          title: Iban Last4
+          type: string
+        holder_name:
+          title: Holder Name
+          type: string
+        is_verified:
+          title: Is Verified
+          type: boolean
+        is_simulated:
+          title: Is Simulated
+          type: boolean
+      required:
+      - id
+      - bank_name
+      - iban_last4
+      - holder_name
+      - is_verified
+      - is_simulated
+      title: PayoutAccountOut
+      type: object
+    PayoutOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        gross:
+          title: Gross
+          type: integer
+        fees:
+          title: Fees
+          type: integer
+        refunds:
+          title: Refunds
+          type: integer
+        net:
+          title: Net
+          type: integer
+        currency:
+          title: Currency
+          type: string
+        status:
+          title: Status
+          type: string
+        scheduled_for:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Scheduled For
+        paid_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Paid At
+      required:
+      - id
+      - event_id
+      - gross
+      - fees
+      - refunds
+      - net
+      - currency
+      - status
+      - scheduled_for
+      - paid_at
+      title: PayoutOut
+      type: object
+    Point:
+      properties:
+        date:
+          format: date
+          title: Date
+          type: string
+        tickets:
+          title: Tickets
+          type: integer
+        revenue:
+          title: Revenue
+          type: integer
+      required:
+      - date
+      - tickets
+      - revenue
+      title: Point
+      type: object
+    PromoValidateIn:
+      properties:
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        code:
+          title: Code
+          type: string
+        ticket_type_ids:
+          items:
+            format: uuid
+            type: string
+          title: Ticket Type Ids
+          type: array
+      required:
+      - event_id
+      - code
+      - ticket_type_ids
+      title: PromoValidateIn
+      type: object
+    PromoValidateOut:
+      properties:
+        valid:
+          title: Valid
+          type: boolean
+        discount_amount:
+          title: Discount Amount
+          type: integer
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+      required:
+      - valid
+      - discount_amount
+      - reason
+      title: PromoValidateOut
+      type: object
+    RefreshIn:
+      properties:
+        refresh_token:
+          title: Refresh Token
+          type: string
+      required:
+      - refresh_token
+      title: RefreshIn
+      type: object
+    RefundIn:
+      properties:
+        reason:
+          title: Reason
+          type: string
+      required:
+      - reason
+      title: RefundIn
+      type: object
+    RefundOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        order_id:
+          format: uuid
+          title: Order Id
+          type: string
+        amount:
+          title: Amount
+          type: integer
+        currency:
+          title: Currency
+          type: string
+        reason:
+          title: Reason
+          type: string
+        status:
+          title: Status
+          type: string
+        completed_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Completed At
+      required:
+      - id
+      - order_id
+      - amount
+      - currency
+      - reason
+      - status
+      - completed_at
+      title: RefundOut
+      type: object
+    RefundPolicyIn:
+      properties:
+        summary:
+          title: Summary
+          type: string
+        refundable_until:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Refundable Until
+      required:
+      - summary
+      title: RefundPolicyIn
+      type: object
+    RegisterIn:
+      properties:
+        email:
+          format: email
+          title: Email
+          type: string
+        password:
+          minLength: 8
+          title: Password
+          type: string
+        full_name:
+          title: Full Name
+          type: string
+        role:
+          enum:
+          - attendee
+          - organizer
+          title: Role
+          type: string
+      required:
+      - email
+      - password
+      - full_name
+      - role
+      title: RegisterIn
+      type: object
+    ResetPasswordIn:
+      properties:
+        token:
+          title: Token
+          type: string
+        new_password:
+          minLength: 8
+          title: New Password
+          type: string
+      required:
+      - token
+      - new_password
+      title: ResetPasswordIn
+      type: object
+    Row:
+      properties:
+        ticket_type_id:
+          format: uuid
+          title: Ticket Type Id
+          type: string
+        name:
+          title: Name
+          type: string
+        sold:
+          title: Sold
+          type: integer
+        revenue:
+          title: Revenue
+          type: integer
+      required:
+      - ticket_type_id
+      - name
+      - sold
+      - revenue
+      title: Row
+      type: object
+    SeatMapOut:
+      properties:
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        layout_id:
+          format: uuid
+          title: Layout Id
+          type: string
+        seats:
+          items:
+            $ref: '#/components/schemas/SeatStatusOut'
+          title: Seats
+          type: array
+      required:
+      - event_id
+      - layout_id
+      - seats
+      title: SeatMapOut
+      type: object
+    SeatRef:
+      properties:
+        seat_id:
+          format: uuid
+          title: Seat Id
+          type: string
+        section_name:
+          title: Section Name
+          type: string
+        row_label:
+          title: Row Label
+          type: string
+        seat_number:
+          title: Seat Number
+          type: integer
+      required:
+      - seat_id
+      - section_name
+      - row_label
+      - seat_number
+      title: SeatRef
+      type: object
+    SeatStatusOut:
+      properties:
+        seat_id:
+          format: uuid
+          title: Seat Id
+          type: string
+        section_name:
+          title: Section Name
+          type: string
+        row_label:
+          title: Row Label
+          type: string
+        number:
+          title: Number
+          type: integer
+        price_category:
+          title: Price Category
+          type: string
+        is_accessible:
+          title: Is Accessible
+          type: boolean
+        status:
+          enum:
+          - available
+          - held
+          - sold
+          title: Status
+          type: string
+      required:
+      - seat_id
+      - section_name
+      - row_label
+      - number
+      - price_category
+      - is_accessible
+      - status
+      title: SeatStatusOut
+      type: object
+    SettingsOut:
+      properties:
+        settings:
+          additionalProperties: true
+          title: Settings
+          type: object
+      required:
+      - settings
+      title: SettingsOut
+      type: object
+    SettingsUpdate:
+      properties:
+        settings:
+          additionalProperties: true
+          title: Settings
+          type: object
+      required:
+      - settings
+      title: SettingsUpdate
+      type: object
+    StaffAssignIn:
+      properties:
+        user_id:
+          format: uuid
+          title: User Id
+          type: string
+        role:
+          enum:
+          - manager
+          - checkin
+          - support
+          title: Role
+          type: string
+      required:
+      - user_id
+      - role
+      title: StaffAssignIn
+      type: object
+    StaffAssignmentOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        user_id:
+          format: uuid
+          title: User Id
+          type: string
+        role:
+          title: Role
+          type: string
+      required:
+      - id
+      - event_id
+      - user_id
+      - role
+      title: StaffAssignmentOut
+      type: object
+    SupportMessageOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        case_id:
+          format: uuid
+          title: Case Id
+          type: string
+        author_id:
+          format: uuid
+          title: Author Id
+          type: string
+        body:
+          title: Body
+          type: string
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+      required:
+      - id
+      - case_id
+      - author_id
+      - body
+      - created_at
+      title: SupportMessageOut
+      type: object
+    SuspendIn:
+      properties:
+        suspended:
+          title: Suspended
+          type: boolean
+        reason:
+          title: Reason
+          type: string
+      required:
+      - suspended
+      - reason
+      title: SuspendIn
+      type: object
+    TicketOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        ticket_number:
+          title: Ticket Number
+          type: string
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        ticket_type:
+          title: Ticket Type
+          type: string
+        attendee_name:
+          title: Attendee Name
+          type: string
+        seat:
+          anyOf:
+          - $ref: '#/components/schemas/SeatRef'
+          - type: 'null'
+        status:
+          title: Status
+          type: string
+        qr_url:
+          title: Qr Url
+          type: string
+        pdf_url:
+          title: Pdf Url
+          type: string
+      required:
+      - id
+      - ticket_number
+      - event_id
+      - ticket_type
+      - attendee_name
+      - seat
+      - status
+      - qr_url
+      - pdf_url
+      title: TicketOut
+      type: object
+    TicketTypeIn:
+      properties:
+        name:
+          title: Name
+          type: string
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Description
+        price_amount:
+          default: 0
+          title: Price Amount
+          type: integer
+        quantity_total:
+          title: Quantity Total
+          type: integer
+        sales_start:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Sales Start
+        sales_end:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Sales End
+        max_per_order:
+          default: 10
+          title: Max Per Order
+          type: integer
+        is_hidden:
+          default: false
+          title: Is Hidden
+          type: boolean
+        price_category:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Price Category
+      required:
+      - name
+      - quantity_total
+      title: TicketTypeIn
+      type: object
+    TicketTypeOut:
+      properties:
+        name:
+          title: Name
+          type: string
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Description
+        price_amount:
+          default: 0
+          title: Price Amount
+          type: integer
+        quantity_total:
+          title: Quantity Total
+          type: integer
+        sales_start:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Sales Start
+        sales_end:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Sales End
+        max_per_order:
+          default: 10
+          title: Max Per Order
+          type: integer
+        is_hidden:
+          default: false
+          title: Is Hidden
+          type: boolean
+        price_category:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Price Category
+        id:
+          format: uuid
+          title: Id
+          type: string
+        available:
+          title: Available
+          type: integer
+        reserved:
+          title: Reserved
+          type: integer
+        sold:
+          title: Sold
+          type: integer
+        refunded:
+          title: Refunded
+          type: integer
+        checked_in:
+          title: Checked In
+          type: integer
+      required:
+      - name
+      - quantity_total
+      - id
+      - available
+      - reserved
+      - sold
+      - refunded
+      - checked_in
+      title: TicketTypeOut
+      type: object
+    TicketTypeUpdate:
+      description: 'Partial update: only the fields sent are changed.'
+      properties:
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Name
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Description
+        price_amount:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Price Amount
+        quantity_total:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Quantity Total
+        sales_start:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Sales Start
+        sales_end:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Sales End
+        max_per_order:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          default: null
+          title: Max Per Order
+        is_hidden:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          default: null
+          title: Is Hidden
+        price_category:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Price Category
+      title: TicketTypeUpdate
+      type: object
+    TokenOut:
+      properties:
+        access_token:
+          title: Access Token
+          type: string
+        refresh_token:
+          title: Refresh Token
+          type: string
+        token_type:
+          default: bearer
+          title: Token Type
+          type: string
+      required:
+      - access_token
+      - refresh_token
+      title: TokenOut
+      type: object
+    UndoCheckInIn:
+      properties:
+        reason:
+          title: Reason
+          type: string
+      required:
+      - reason
+      title: UndoCheckInIn
+      type: object
+    UserOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        email:
+          format: email
+          title: Email
+          type: string
+        full_name:
+          title: Full Name
+          type: string
+        phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone
+        role:
+          title: Role
+          type: string
+        email_verified_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Email Verified At
+      required:
+      - id
+      - email
+      - full_name
+      - phone
+      - role
+      - email_verified_at
+      title: UserOut
+      type: object
+    UserUpdate:
+      properties:
+        full_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Full Name
+        phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Phone
+      title: UserUpdate
+      type: object
+    VenueOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+        address:
+          title: Address
+          type: string
+        city:
+          title: City
+          type: string
+        lat:
+          anyOf:
+          - type: number
+          - type: string
+          - type: 'null'
+          title: Lat
+        lng:
+          anyOf:
+          - type: number
+          - type: string
+          - type: 'null'
+          title: Lng
+      required:
+      - id
+      - name
+      - address
+      - city
+      - lat
+      - lng
+      title: VenueOut
+      type: object
+    VerifyEmailIn:
+      properties:
+        token:
+          title: Token
+          type: string
+      required:
+      - token
+      title: VerifyEmailIn
+      type: object
+    VerifyIn:
+      properties:
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        qr_payload:
+          title: Qr Payload
+          type: string
+      required:
+      - event_id
+      - qr_payload
+      title: VerifyIn
+      type: object
+    VerifyOut:
+      properties:
+        result:
+          enum:
+          - accepted
+          - already_used
+          - invalid
+          - refunded
+          - wrong_event
+          - not_a_ticket
+          title: Result
+          type: string
+        ticket:
+          anyOf:
+          - $ref: '#/components/schemas/TicketOut'
+          - type: 'null'
+        message:
+          title: Message
+          type: string
+      required:
+      - result
+      - ticket
+      - message
+      title: VerifyOut
+      type: object

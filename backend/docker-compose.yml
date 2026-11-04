@@ -1,0 +1,112 @@
+# Local and demo stack. Every secret below is a development default: override them for any
+# deployment, in the shell or in a .env file next to this one.
+name: biletflow
+
+x-app: &app
+  build: .
+  environment: &app-env
+    ENVIRONMENT: ${ENVIRONMENT:-local}
+    DATABASE_URL: postgresql+asyncpg://biletflow:${POSTGRES_PASSWORD:-biletflow}@postgres:5432/biletflow
+    JWT_SECRET: ${JWT_SECRET:-dev-only-jwt-secret-0123456789abcdef0123}
+    TICKET_SIGNING_SECRET: ${TICKET_SIGNING_SECRET:-dev-only-ticket-secret-0123456789abcdef}
+    SMTP_HOST: mailhog
+    SMTP_PORT: "1025"
+    S3_ENDPOINT_URL: http://minio:9000
+    S3_ACCESS_KEY: ${MINIO_ROOT_USER:-biletflow}
+    S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-biletflow-dev}
+    S3_BUCKET: biletflow
+
+services:
+  api:
+    <<: *app
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      mailhog:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request as u; u.urlopen('http://localhost:8000/health', timeout=3)"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  worker:
+    <<: *app
+    command: ["python", "-m", "app.tasks.worker"]
+    depends_on:
+      api:
+        condition: service_healthy # the API applies migrations on start
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: biletflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-biletflow}
+      POSTGRES_DB: biletflow
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U biletflow -d biletflow"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # The official minio/minio images are no longer published; this is a maintained build of it.
+  minio:
+    image: cgr.dev/chainguard/minio:latest
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-biletflow}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-biletflow-dev}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio-data:/data
+
+  # One-shot: creates the bucket, then exits.
+  minio-init:
+    <<: *app
+    command: ["python", "-m", "scripts.init_storage"]
+    depends_on:
+      minio:
+        condition: service_started
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    platform: linux/amd64 # no arm64 image is published; runs emulated on Apple Silicon
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+
+  # Daily pg_dump. Opt in with: docker compose --profile ops up -d
+  backup:
+    image: postgres:17-alpine
+    profiles: ["ops"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGUSER: biletflow
+      PGPASSWORD: ${POSTGRES_PASSWORD:-biletflow}
+      PGDATABASE: biletflow
+    volumes:
+      - ./scripts/backup.sh:/usr/local/bin/backup.sh:ro
+      - ./backups:/backups
+    entrypoint: ["/bin/sh", "-c", "while true; do backup.sh; sleep 86400; done"]
+
+volumes:
+  postgres-data:
+  minio-data:
