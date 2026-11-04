@@ -81,7 +81,7 @@ their own.
 | `audit(db, *, action_type, entity_type, entity_id, description, ...)` | `services/audit_service.py` | Working |
 | `require_event_access()` / `check_event_access()` | `core/deps.py` | Working |
 | `notify(db, event_type, user, context)` | `services/notification_service.py` | Stub: logs only |
-| `issue_tickets(db, order)` | `services/ticket_service.py` | Raises `NotImplementedError` |
+| `issue_tickets(db, order)` | `services/ticket_service.py` | Working (P8): idempotent, does not commit |
 | `apply_promo(db, order, code)` | `services/promo_service.py` | Raises `NotImplementedError` |
 | `release_inventory(db, order)` | `services/inventory_service.py` | Raises `NotImplementedError` |
 | `PaymentProvider` | `services/payments/base.py` | Abstract class |
