@@ -1,8 +1,11 @@
 """Base classes shared by all request/response schemas."""
 
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, StringConstraints
+
+Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+Phone = Annotated[str, StringConstraints(strip_whitespace=True, max_length=32)]
 
 
 class OrmModel(BaseModel):

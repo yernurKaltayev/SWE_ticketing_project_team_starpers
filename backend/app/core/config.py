@@ -21,9 +21,8 @@ Secret = Annotated[SecretStr, AfterValidator(_long_enough)]
 
 
 class Settings(BaseSettings):
-    
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
-    
+
     app_name: str = "BiletFlow API"
     app_version: str = "0.1.0"
     environment: Literal["local", "test", "staging", "production"] = "local"
@@ -32,7 +31,7 @@ class Settings(BaseSettings):
     log_json: bool = True
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
     web_base_url: str = "http://localhost:5173"
-    
+
     database_url: str = "postgresql+asyncpg://biletflow:biletflow@localhost:5432/biletflow"
     database_pool_size: int = 10
 
@@ -42,6 +41,13 @@ class Settings(BaseSettings):
     refresh_token_ttl_days: int = 14
     # Signs ticket QR payloads (P8). Separate from the JWT key so either can rotate alone.
     ticket_signing_secret: Secret
+    email_verify_token_ttl_hours: int = 24
+    password_reset_token_ttl_minutes: int = 60
+
+    # Attempts per window on the public auth endpoints: see app/core/rate_limit.py.
+    auth_rate_limit_window_seconds: int = 300
+    auth_rate_limit_per_account: int = 10
+    auth_rate_limit_per_ip: int = 100
 
     smtp_host: str = "localhost"
     smtp_port: int = 1025
@@ -70,6 +76,8 @@ class Settings(BaseSettings):
             for name in ("jwt_secret", "ticket_signing_secret"):
                 if getattr(self, name).get_secret_value().startswith(DEV_SECRET_PREFIX):
                     raise ValueError(f"{name} must not be a development value in production")
+            if self.smtp_username and not self.smtp_starttls:
+                raise ValueError("smtp_starttls must be on: the login would be sent unencrypted")
         return self
 
 
