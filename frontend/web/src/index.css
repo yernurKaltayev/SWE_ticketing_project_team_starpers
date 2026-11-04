@@ -1,0 +1,144 @@
+@import "tailwindcss";
+@theme {
+  --color-ink: #192c2a;
+  --color-paper: #fafbf9;
+  --color-accent: #176756;
+}
+:root {
+  font-family: system-ui, sans-serif;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  line-height: 1.6;
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+}
+::selection {
+  background: #d8eee3;
+  color: #102f24;
+}
+a {
+  color: #135d4b;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+a:hover {
+  color: #0a3b2e;
+}
+:focus-visible {
+  outline: 3px solid #176756;
+  outline-offset: 4px;
+}
+h1 {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  line-height: 1.2;
+  font-weight: 650;
+  margin: 0 0 1rem;
+  text-wrap: balance;
+}
+h2 {
+  font-size: 1.25rem;
+  font-weight: 650;
+  margin: 2rem 0 0.6rem;
+}
+p {
+  max-width: 70ch;
+  margin: 0 0 1rem;
+}
+button,
+select,
+input {
+  font: inherit;
+}
+button,
+select {
+  min-height: 44px;
+  border: 1px solid #70837b;
+  border-radius: 5px;
+  padding: 0.5rem 0.8rem;
+  background: #fff;
+}
+button {
+  cursor: pointer;
+  color: #fff;
+  background: #176756;
+  border-color: #176756;
+}
+button:hover {
+  background: #11503f;
+}
+button:disabled {
+  cursor: default;
+  background: #d9e1dc;
+  border-color: #bdc9c1;
+  color: #43594d;
+}
+select {
+  max-width: 100%;
+}
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem max(1.25rem, calc((100vw - 960px) / 2));
+  border-bottom: 1px solid #d7dfd8;
+}
+.brand {
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.language-control {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 5vw, 3rem) 1.25rem 4rem;
+}
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -5rem;
+  padding: 0.5rem;
+  background: white;
+  z-index: 1;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+  margin: 1rem 0;
+}
+.controls label {
+  display: grid;
+  gap: 0.35rem;
+}
+.notice {
+  padding: 0.8rem 0;
+  border-block: 1px solid #d7dfd8;
+  margin: 1rem 0;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.9rem;
+  padding: 1rem;
+  background: #eef2ed;
+  border-radius: 5px;
+  max-width: 100%;
+  font-variant-numeric: tabular-nums;
+}

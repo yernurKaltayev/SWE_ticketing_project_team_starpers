@@ -1,6 +1,6 @@
 # BiletFlow Frontend — Implementation Plan
 
-**Status:** frontend implementation plan for Yernur Slyamshaikhov and Dias. No frontend is implemented yet.
+**Status:** frontend implementation plan for Yernur Slyamshaikhov and Dias. The F0 web/mobile foundation is implemented on `feat/frontend-f0`; real backend/session integration, phone launches and Yernur Slyamshaikhov's F0 wireframe/translation review remain pending. Track evidence in [frontend/docs/F0_CHECKLIST.md](frontend/docs/F0_CHECKLIST.md).
 
 **Basis:** all five supplied BiletFlow SRS v0.3 PDF extracts, reviewed in full, plus the implementation interfaces in [CLAUDE.md](CLAUDE.md). PDF references below use printed page numbers and original SRS section/use-case identifiers. These are initial-draft requirements; proposed implementation details and unresolved decisions are identified separately.
 
@@ -18,7 +18,7 @@
 
 **Backend integration contacts:** Yernur (backend), Dos (backend), and Dima (backend). Yernur (backend) and Yernur Slyamshaikhov are different students; only Yernur Slyamshaikhov and Dias receive frontend implementation assignments in this document.
 
-**Schedule:** Weeks 1–2, Weeks 3–4, Weeks 5–6, Week 7, and Remaining. Remaining contains the source delivery plan's Weeks 8–12 milestones. The frontend framework remains undecided; the proposed stack below follows the PDF recommendations and adds Vite for the web build.
+**Schedule:** Weeks 1–2, Weeks 3–4, Weeks 5–6, Week 7, and Remaining. Remaining contains the source delivery plan's Weeks 8–12 milestones. The stack is user-confirmed: React/TypeScript/Vite/Tailwind for web and React Native/TypeScript/Expo for mobile.
 
 ## 1. Goal and working assumptions
 
@@ -29,7 +29,7 @@ The frontend plan is needed because these users share authentication, permission
 Working assumptions, to revisit when the team agrees otherwise:
 
 - Yernur Slyamshaikhov and Dias implement the frontend in parallel. Backend integration is coordinated with Yernur (backend), Dos (backend), and Dima (backend).
-- React + TypeScript for web and React Native + TypeScript for the Event Admin app follow the source recommendations. Confirm web build tooling, optional Expo, and target-device access in Weeks 1–2.
+- React/TypeScript/Vite/Tailwind and React Native/TypeScript/Expo are confirmed. The user has Android and iPhone devices; actual launch and OS-version evidence remains pending.
 - The first checkout requires an attendee account, matching the backend plan's MVP default. Guest checkout remains an open product decision.
 - The initial customer-facing UI must support Kazakh and Russian; English is an additional locale. Externalize strings from the start and verify critical flows in all three locales. Localization polish may be reduced if behind; Kazakh/Russian support is not replaced by an English-only baseline. [S2 p.6 §5]
 - The Event Admin app targets selected current iOS and Android versions, with online verification and central synchronization. Native attendee/organizer apps, app-store publication, production offline synchronization, a venue-layout designer/arbitrary imports, real financial/identity processing, and advanced refund/dispute workflows are excluded. Chat uses REST polling; attachments and enhanced real-time delivery are stretch. [S2 pp.4,6; S5 pp.1–2 §8]
@@ -46,22 +46,22 @@ Also excluded from the initial MVP: resale/transfer marketplace, affiliate marke
 
 ## Frontend ownership overview
 
-Each module has a frontend lead. Where a module spans attendee and organizer/admin screens, the split below identifies who implements each area. Both students review each other's PRs and test their own modules.
+Each module has exactly one frontend owner: its named lead implements all of that module's screens, API wiring, fixtures, tests, documentation and acceptance work. There is no work split within a module. Owners agree interfaces between modules and consume one another's published helpers/components without taking over implementation. Peer review and backend coordination do not change ownership; defects are assigned back to the owner of the affected module.
 
-| Module | Frontend lead | Work split |
+| Module | Frontend lead (sole owner) | Responsibilities owned entirely by this person |
 |---|---|---|
-| F0 — Foundation/contracts | Yernur Slyamshaikhov | Yernur Slyamshaikhov: web/mobile setup, shared API types, separate session adapters, CI and iOS/Android launch proof. Dias: Figma wireframes, fixtures, shared web styling/layouts and locale resources. |
-| F1 — Shared UI/authentication | Yernur Slyamshaikhov | Authentication, session, profiles, permissions, and reusable UI; Dias reviews and reuses the shared forms/layouts. |
-| F2 — Discovery/event setup | Dias | Public event discovery/detail, organizer event/ticket editors, publishing, and uploads; Yernur Slyamshaikhov connects session/access helpers. |
-| F3 — Checkout/orders/tickets | Yernur Slyamshaikhov | Attendee checkout, order recovery/history, QR/PDF tickets; Dias connects event/ticket selection data from F2. |
-| F4 — Payments/activation/payouts | Yernur Slyamshaikhov | Yernur Slyamshaikhov: attendee simulated payment and status recovery. Dias: organizer activation checklist, payout accounts, and financial/payout views. |
-| F5 — Seating/holds (bonus) | Dias | If core is stable: layout/category configuration, seat map/list, hold lifecycle; Yernur Slyamshaikhov connects holds to checkout/recovery. |
-| F6 — Refunds/organizer orders | Dias | Organizer orders/attendee lists, exports, cancellation and refund controls; Yernur Slyamshaikhov connects resulting attendee order/ticket state changes. |
-| F7 — Event Admin mobile app/check-in | Yernur Slyamshaikhov | React Native iOS/Android app, mobile session, assigned events, camera/manual search, counts and undo. Dias connects organizer staff-assignment screens and assists device acceptance tests. |
-| F8 — Promotions | Dias | Campaign management, codes/QR, links and reporting fields; Yernur Slyamshaikhov connects validation/discount feedback to checkout. |
-| F9 — Notifications/support | Dias | Notification center, attendee/organizer support, staff/admin case inbox and polling; Yernur Slyamshaikhov connects shared permissions and navigation. |
-| F10 — Analytics/history/admin | Dias | Dias: organizer analytics and event history. Yernur Slyamshaikhov: platform admin screens, settings, moderation, and operational exports. |
-| F11 — Calendar/final delivery | Yernur Slyamshaikhov | Yernur Slyamshaikhov: deployment, run instructions and integrated smoke checks. Dias: optional calendar, responsive/accessibility review. Both fix and verify their assigned screens. |
+| F0 — Foundation/contracts | Yernur Slyamshaikhov | Web/mobile setup, shared API types, session adapters, CI, Figma wireframes, fixtures, shared styles/layouts, locales and Android/iPhone launch evidence. |
+| F1 — Shared UI/authentication | Yernur Slyamshaikhov | Authentication, session lifecycle, profiles, permissions and reusable UI. |
+| F2 — Discovery/event setup | Dias | Public discovery/detail, organizer event/ticket editors, publishing, uploads and this module's access integration. |
+| F3 — Checkout/orders/tickets | Yernur Slyamshaikhov | Attendee selection/checkout, order recovery/history, QR/PDF tickets and integration with agreed seating/promo interfaces. |
+| F4 — Payments/activation/payouts | Yernur Slyamshaikhov | Attendee simulated payment/status recovery, organizer activation checklist, payout accounts and financial/payout views. |
+| F5 — Seating/holds (bonus) | Dias | Conditional layout/category setup, seat map/list, hold lifecycle and the seating interface consumed by checkout. |
+| F6 — Refunds/organizer orders | Dias | Organizer orders/attendees, exports, cancellation/refund controls and resulting record/cache updates through agreed interfaces. |
+| F7 — Event Admin mobile app/check-in | Yernur Slyamshaikhov | Native app, sessions, assigned events, organizer staff-assignment screens, camera/manual search, counts, undo and device verification. |
+| F8 — Promotions | Dias | Campaigns, codes/QR, links, validation, automatic promo application, discount feedback and the promotion interface consumed by checkout. |
+| F9 — Notifications/support | Dias | Notification center, contextual support, staff/admin inbox, polling, permissions and navigation within this module. |
+| F10 — Analytics/history/admin | Dias | Organizer analytics/history and all platform admin screens, settings, moderation and operational exports. |
+| F11 — Calendar/final delivery | Yernur Slyamshaikhov | Optional calendar, cross-application checks, responsive/accessibility verification, deployment, documentation and demo coordination; fixes in other modules return to their owners. |
 
 ## 2. Proposed technical approach
 
@@ -76,7 +76,7 @@ Each module has a frontend lead. Where a module spans attendee and organizer/adm
 | API types | `openapi-typescript` from the agreed OpenAPI specification | Shared request/response types; generated files are not hand-edited |
 | Development mocks | Mock Service Worker (MSW) | Build screens before endpoints are ready using the same HTTP client |
 | Verification | Vitest/React Testing Library and Playwright for web; React Native component checks and iOS/Android device journeys | Interface, payment and QR behavior plus actual cross-application integration; mobile testing tool choice is settled in F0 |
-| Tooling | npm lockfile, ESLint, formatting, supported Node.js LTS | Reproducible local development and CI |
+| Tooling | npm workspace lockfile, Oxlint, TypeScript checks and Node.js 24 LTS | Reproducible local development and CI; F0 records the selected tooling |
 
 This SPA approach is a project-specific recommendation for an academic MVP with an existing backend boundary. Public search indexing and rich social-link previews are a tradeoff: if these become required deliverables, choose server rendering/prerendering before scaffolding. Confirm the stack in F0 and keep it stable through the first working journey.
 
@@ -117,11 +117,11 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F0 — Contracts, setup, and development workflow [A]
 
-**Frontend lead:** Yernur Slyamshaikhov for web/mobile infrastructure; Dias owns wireframes, mock fixtures, locale resources and the shared web styling/layout foundation.
+**Frontend lead:** Yernur Slyamshaikhov — sole owner of all F0 tasks, including wireframes, fixtures, styles/layouts, locale review, infrastructure and acceptance evidence.
 
 **Backend dependencies:** Yernur (backend), Dos (backend), and Dima (backend); P0.
 
-- Agree the F0/first-integration subset of section 6 first. Record exact API paths and examples in the backend OpenAPI document, which is planned but not yet present. Settle later-feature contracts when needed.
+- Agree the F0/first-integration subset using the existing `backend/docs/openapi.yaml`. Generate from the static contract: the live specification currently describes only implemented health. Track feature/auth readiness and transport decisions in [frontend/docs/API_CONTRACT.md](frontend/docs/API_CONTRACT.md).
 - Create `frontend/web`, `frontend/mobile`, and a small shared-contract area with agreed routing, environment validation, lint/typecheck/build scripts and CI. The web/admin application and mobile verifier consume the same backend.
 - Produce Figma wireframes in Weeks 1–2 for organizer creation, event detail, checkout, ticket/PDF access, mobile scanning and operational views. Define web/mobile navigation and loading/error states before parallel implementation. [S2 p.7 §6]
 - Agree API/error contracts with platform-specific session/storage adapters. Verify web session recovery and a mobile authenticated request; document supported iOS/Android targets, device/build access, and the demo launch method.
@@ -161,7 +161,7 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F3 — Free checkout, orders, and attendee tickets [A]
 
-**Frontend lead:** Yernur Slyamshaikhov; Dias connects event/ticket selection from F2.
+**Frontend lead:** Yernur Slyamshaikhov — sole owner, including checkout's use of agreed event/ticket, seating and promotion interfaces.
 
 **Backend dependencies:** Dos (backend) for orders/inventory; Dima (backend) for ticket issuance/QR/PDF; Yernur (backend) for notifications; P3/P5/P8/P9.
 
@@ -176,7 +176,7 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F4 — Paid-sales activation, simulated checkout, and payouts [B]
 
-**Frontend lead:** Yernur Slyamshaikhov for attendee payment/status recovery. Dias owns organizer activation and payout screens.
+**Frontend lead:** Yernur Slyamshaikhov — sole owner of attendee payment/status recovery and organizer activation/payout screens.
 
 **Backend dependencies:** Dima (backend), with Yernur (backend) for suspension/settings; P6/P11.
 
@@ -190,7 +190,7 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F5 — Assigned seating and hold recovery [Bonus]
 
-**Frontend lead:** Dias; Yernur Slyamshaikhov connects holds to checkout/recovery.
+**Frontend lead:** Dias — sole owner of seating/holds and its public interface; F3 consumes that interface within its own checkout code.
 
 **Backend dependencies:** Dos (backend), coordinating payment timing with Dima (backend); P4/P5/P6.
 
@@ -206,7 +206,7 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F6 — Refunds, cancellation, and organizer order operations [B]
 
-**Frontend lead:** Dias; Yernur Slyamshaikhov connects attendee order/ticket state updates.
+**Frontend lead:** Dias — sole owner of refund/cancellation/order operations and record/cache updates through agreed interfaces.
 
 **Backend dependencies:** Dos (backend) for order lists; Dima (backend) for refund lifecycle; Yernur (backend) for notifications/audit; P5/P7/P9/P12.
 
@@ -220,7 +220,7 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F7 — Dedicated Event Admin mobile app and online check-in [Required]
 
-**Frontend lead:** Yernur Slyamshaikhov for the React Native app. Dias connects organizer staff-assignment web screens and assists cross-platform device verification.
+**Frontend lead:** Yernur Slyamshaikhov — sole owner of the native app, organizer staff-assignment web screens and cross-platform verification.
 
 **Backend dependencies:** Yernur (backend) for assignments/permissions; Dima (backend) for check-in; P1/P15.
 
@@ -236,7 +236,7 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F8 — Promotions and campaign QR [B]
 
-**Frontend lead:** Dias; Yernur Slyamshaikhov connects promotion validation to checkout.
+**Frontend lead:** Dias — sole owner of promotion UI/validation and its public interface; F3 consumes that interface within checkout.
 
 **Backend dependencies:** Dima (backend), with Yernur (backend) for reporting; P16/P13.
 
@@ -248,7 +248,7 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F9 — Notifications and support cases [C]
 
-**Frontend lead:** Dias; Yernur Slyamshaikhov connects shared permissions/navigation.
+**Frontend lead:** Dias — sole owner, including this module's use of shared permission/navigation helpers.
 
 **Backend dependencies:** Yernur (backend); P9/P10.
 
@@ -262,7 +262,7 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F10 — Analytics, history, and platform administration [C]
 
-**Frontend lead:** Dias for organizer analytics/history. Yernur Slyamshaikhov owns platform administration.
+**Frontend lead:** Dias — sole owner of organizer analytics/history and platform administration.
 
 **Backend dependencies:** Yernur (backend); P11/P12/P13.
 
@@ -275,7 +275,7 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F11 — Optional calendar and final delivery [A–C, throughout]
 
-**Frontend lead:** Yernur Slyamshaikhov for deployment/integration checks. Dias owns optional calendar and the responsive/accessibility review; both students fix their own modules.
+**Frontend lead:** Yernur Slyamshaikhov — sole owner of optional calendar, responsive/accessibility verification and final delivery. Defects in another module are returned to its owner rather than implemented as shared F11 work.
 
 **Backend dependencies:** Dos (backend) for P14; Yernur (backend), Dos (backend), and Dima (backend) for integration/P0.
 
@@ -291,18 +291,18 @@ Keep the agreed grouped format. S5 pp.4–5 §13 provides a suggested 10–12-we
 
 | Phase | Yernur Slyamshaikhov — frontend | Dias — frontend | Phase outcome |
 |---|---|---|---|
-| **Weeks 1–2** | F0: scaffold web/mobile clients, shared API types, web/mobile session contracts and CI. Prove the mobile skeleton launches on selected iOS/Android targets. Define F1 shared interfaces. | F0: Figma wireframes for web/admin/mobile journeys, shared web styles/layouts, Kazakh/Russian/English resources and fixtures. Review event/venue/ticket contracts. | Reviewed wireframes/contracts, shared web foundation, demonstrated mobile build/device access and deterministic mocks; stack and ownership agreed. |
+| **Weeks 1–2** | Own all F0: web/mobile clients, shared contracts/adapters, CI, Figma wireframes, styles/layouts, kk/ru/en resources, fixtures and phone-launch evidence. Define F1 interfaces. | Prepare F2's event/discovery/editor requirements, venue/ticket inputs and module-specific API questions while F0 interfaces become available. | Reviewed wireframes/contracts, shared web foundation, demonstrated mobile build/device access and deterministic mocks; stack and ownership agreed. |
 | **Weeks 3–4** | F1: authentication, verification, profiles, web permissions/session recovery; integrate P1. Prepare F3 general-admission checkout/order/ticket states and native session adapter. | F2: event discovery/detail, organizer event editor, venue/uploads, preview/publish and registration windows; integrate P2. Prepare free/paid ticket-type forms. | Verified organizer can create/preview/publish an event; account and event flows are usable in Kazakh/Russian, with English locale available. |
-| **Weeks 5–6** | F3: integrate free orders/idempotency/recovery, account tickets and QR; verify email delivery. F4: attendee simulated paid checkout, authoritative totals and payment/status recovery. | F2: ticket types/inventory. F4: per-event activation/payout screens. F6: organizer attendee/order lists. Prepare F8 campaign forms and F9 contextual support contracts. | **First milestone:** free registration → QR → email → organizer attendee list. **Second milestone:** activated simulated paid general-admission checkout; payment failure/retry and inventory exhaustion are verified. No seating bonus gate. |
-| **Week 7** | F3: PDF download/print flow, canonical identifier and A4/grayscale review. Connect F8 automatic promo application/discount display to checkout. Prepare F7 mobile screen/session/camera contracts for Week 8. | F8: campaigns, generated code/Campaign QR, validation and attribution. Progress F6 basic cancellation/refunds; add F11 calendar only if required work is stable. | Campaign scan → pre-applied promo → simulated order attribution; downloadable printable canonical tickets. Paper-to-mobile scan acceptance completes when F7 lands. |
-| **Remaining** | F7 mobile verification, F10 platform admin and F11 cross-application integration, automated checks, deployment/docs and demo rehearsal, following the milestones below. | F9 support/notifications, F10 required analytics/history, remaining F6 lifecycle checks and F11 responsive/localization/accessibility review. F5 seating only through the bonus gate. | Required web/admin/mobile journeys are integrated, reviewed, tested and documented; bonuses are recorded separately from base acceptance. |
+| **Weeks 5–6** | F3 free orders/idempotency/recovery, tickets/QR and email verification. Own all F4: attendee paid checkout/status, organizer activation, payout accounts and financial views. | F2 ticket types/inventory; F6 organizer attendee/order lists. Prepare F8 campaign/promo components and F9 contextual support contracts. | **First milestone:** free registration → QR → email → organizer attendee list. **Second milestone:** activated simulated paid general-admission checkout; failure/retry and exhaustion verified. |
+| **Week 7** | F3 PDF/print and checkout consumption of F8's promo interface. Prepare F7 for Week 8; own optional F11 calendar only if required work is stable. | F8 campaigns, code/Campaign QR, automatic promo UI/validation and attribution. Progress F6 basic cancellation/refunds. | Campaign scan → pre-applied promo → attributed order; printable canonical tickets. Paper-to-mobile acceptance completes with F7. |
+| **Remaining** | Own F7 mobile/staff verification and all F11 cross-application checks, responsive/accessibility review, deployment/docs and demo coordination. | Own F9 support/notifications, all F10 analytics/history/admin, remaining F6 operations and conditional F5 seating. | Required journeys integrated, reviewed, tested/documented; each owner fixes their own modules and bonuses remain separate. |
 
 ### Remaining milestones from the source delivery plan
 
-- **Week 8:** Yernur Slyamshaikhov completes F7 React Native online verification on both selected platforms: assigned events, camera, manual search, check-in/undo, counts and synchronization. Dias completes F9 asynchronous support and notifications and remaining F6 basic refund/cancellation integration. Together verify invalidated and printed tickets using the mobile app.
-- **Week 9:** Yernur Slyamshaikhov completes F10 basic administration/moderation. Dias completes F10 required analytics and organizer history, including past-event duplication. Start F5 assigned seating or advanced GA4 only if the entire required flow is stable and capacity remains; calendar is also bonus scope. Choose one manageable bonus rather than committing to all of them.
-- **Week 10:** both students integrate web/admin/mobile/backend behavior, resolve cross-application defects, reconcile metrics and complete required interface/payment/QR tests. For a 10-week term, overlap Weeks 7–9 where capacity permits while retaining Week 10 for integration/stabilization. Any unfinished bonus is dropped before required acceptance.
-- **Weeks 11–12:** both students stabilize their modules, improve usability/localization polish, document and rehearse the demo, and retain contingency time. Stop new feature development after Week 9 unless a missing required feature blocks the core demonstration. [S5 pp.4–5 §§13.3–13.4]
+- **Week 8:** Yernur Slyamshaikhov completes all F7 mobile/staff functionality and tests invalidated/printed tickets on both platforms. Dias completes F9 support/notifications and F6 refund/cancellation integration, including those modules' own tests.
+- **Week 9:** Dias completes all F10 basic administration, analytics and history/duplication. Yernur Slyamshaikhov progresses F11 delivery preparation and F7 fixes. Conditional F5 seating/advanced F10 analytics belong to Dias; optional F11 calendar belongs to Yernur Slyamshaikhov. Start bonuses only when the required flow is stable and capacity remains.
+- **Week 10:** Yernur Slyamshaikhov owns F11 cross-application verification and reports defects by module; each module's sole owner implements its fixes. For a 10-week term, overlap Weeks 7–9 where capacity permits while retaining Week 10 for integration/stabilization. Drop unfinished bonuses before required acceptance.
+- **Weeks 11–12:** each owner stabilizes and documents their own modules. Yernur Slyamshaikhov owns F11 usability/accessibility verification, demo preparation and contingency coordination; issues in Dias's modules return to Dias. Stop new features after Week 9 unless required for the core demonstration. [S5 pp.4–5 §§13.3–13.4]
 
 ### Integration checkpoints
 
@@ -316,11 +316,11 @@ Yernur Slyamshaikhov and Dias review dependencies with backend contacts at each 
 
 **Scope control if behind:** S5 p.5 §13.4 orders cuts as assigned seating, calendar, advanced analytics, localization polish and refund simulation before cutting the core journey. Preserve baseline Kazakh/Russian support and required basic analytics; they are not the optional polish/advanced analytics. Basic refunds are listed as required in S5 §8, so reducing refund simulation is an explicit contingency requiring a documented team scope decision. Do not substitute a web scanner for the required mobile app or count unimplemented required work as complete.
 
-Work in small PRs such as `feat/frontend-free-checkout`. Each student implements and tests their named area; the other reviews it. For every feature, track **contract agreed → UI with mocks → API integrated → acceptance verified**. On shared modules, coordinate common types/query keys before changing the same files. A mock-only demonstration does not complete an integration milestone.
+Work in module-specific PRs such as `feat/frontend-free-checkout`. The sole module owner implements/tests/documents all of its work; peer review does not split implementation. Track **contract agreed → UI with mocks → API integrated → acceptance verified**. F0 shared code is maintained by its owner; other owners request interface changes and consume the published result. A mock-only demonstration does not complete an integration milestone.
 
 ## 6. API contracts to agree before dependent work
 
-The current backend document contains representative schemas, not a complete implemented API. Treat the following as contract requests, not endpoints already available. Agree F0/first-integration requirements first; settle later-feature requirements before their phase milestone. The ownership column below identifies backend API contacts, not frontend implementers; frontend ownership is defined above.
+The backend now has a static `backend/docs/openapi.yaml` contract with 101 operations, while only `GET /health` is implemented. F0 generates types from the YAML; API readiness and remaining auth decisions are recorded in the handoff document. Verify the requests below with backend owners rather than assuming endpoints already work. The contact column identifies backend API owners; frontend ownership is defined above.
 
 | Contract | Backend API contact(s) | Required decision / response |
 |---|---|---|
@@ -469,11 +469,11 @@ Load heavy organizer/admin/chart/scanner code only when its route needs it, size
 
 ## 11. First work session
 
-1. **Yernur Slyamshaikhov and Dias:** confirm required versus bonus scope, shared web/mobile stack, Kazakh/Russian plus additional English coverage, ownership and grouped milestones, including the source Weeks 8–12 under Remaining.
-2. **Yernur Slyamshaikhov:** agree web/native auth with Yernur (backend), shared order/payment/QR/PDF/check-in contracts with Dos (backend)/Dima (backend), and prove iOS/Android device/build access early.
-3. **Dias:** agree event/ticket contracts with Dos (backend), activation/refund/promo with Dima (backend), and support/analytics/history with Yernur (backend). Record bonus-layout/attachments and dashboard defaults as decisions rather than extra base work.
-4. **Dias:** prepare Figma web/admin wireframes, localization resources and fixture examples; **Yernur Slyamshaikhov:** prepare mobile/auth/checkout/QR states and shared API types. Review UC1–UC12 examples together.
-5. **Yernur Slyamshaikhov:** scaffold web/mobile clients and session adapters; **Dias:** add shared web styles/layouts/locales and MSW fixtures. Implement assigned modules in parallel and integrate contracts as services become available.
+1. **Yernur Slyamshaikhov (F0):** record stack/scope/language foundations, sole module ownership, interfaces and grouped milestones, including Remaining.
+2. **Yernur Slyamshaikhov (F0):** coordinate foundational API/auth/error/fixture contracts with backend contacts, prepare all Figma wireframes/styles/locales/MSW fixtures, scaffold clients/shared types and prove device/build access.
+3. **Yernur Slyamshaikhov:** implement F1/F3/F4/F7/F11 and arrange their backend integration/acceptance. Activation and payout screens are included in F4; calendar and final QA are included in F11.
+4. **Dias:** implement F2/F5/F6/F8/F9/F10 and arrange their module-specific API/acceptance work. F10 includes all admin screens as well as analytics/history; F5 remains conditional bonus scope.
+5. **Each module owner:** consume agreed shared interfaces, request changes from the owner of the dependency, and update that module's evidence. Do not divide a module's implementation between the two frontend students.
 
 ## References
 
