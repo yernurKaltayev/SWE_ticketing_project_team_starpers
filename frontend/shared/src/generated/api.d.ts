@@ -39,6 +39,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/resend-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a new verification email; responds the same for unknown or verified addresses (rate limited)
+         * @description Owner: P1. Access: public.
+         */
+        post: operations["post_auth_resend_verification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/login": {
         parameters: {
             query?: never;
@@ -50,7 +70,7 @@ export interface paths {
         put?: never;
         /**
          * Sign in (rate limited)
-         * @description Owner: P1. Access: public.
+         * @description Owner: P1. Access: public. 401 invalid_credentials; 403 account_suspended or email_not_verified, only after a correct password.
          */
         post: operations["post_auth_login"];
         delete?: never;
@@ -70,7 +90,7 @@ export interface paths {
         put?: never;
         /**
          * Exchange a refresh token; the old one is revoked
-         * @description Owner: P1. Access: public.
+         * @description Owner: P1. Access: public. Presenting an already rotated token is treated as theft: every session of that user is revoked. Clients must not refresh twice in parallel.
          */
         post: operations["post_auth_refresh"];
         delete?: never;
@@ -2622,23 +2642,20 @@ export interface components {
             /** Terms Accepted At */
             terms_accepted_at: string | null;
         };
-        /** OrganizerProfileUpdate */
+        /**
+         * OrganizerProfileUpdate
+         * @description Omitted fields are left unchanged.
+         */
         OrganizerProfileUpdate: {
-            /**
-             * Organization Name
-             * @default null
-             */
-            organization_name: string | null;
+            /** Organization Name */
+            organization_name?: string;
             /**
              * Contact Email
-             * @default null
+             * Format: email
              */
-            contact_email: string | null;
-            /**
-             * Contact Phone
-             * @default null
-             */
-            contact_phone: string | null;
+            contact_email?: string;
+            /** Contact Phone */
+            contact_phone?: string;
         };
         PageActivationOut: {
             items: components["schemas"]["ActivationOut"][];
@@ -2917,6 +2934,14 @@ export interface components {
              * @enum {string}
              */
             role: "attendee" | "organizer";
+        };
+        /** ResendVerificationIn */
+        ResendVerificationIn: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
         };
         /** ResetPasswordIn */
         ResetPasswordIn: {
@@ -3284,18 +3309,15 @@ export interface components {
             /** Email Verified At */
             email_verified_at: string | null;
         };
-        /** UserUpdate */
+        /**
+         * UserUpdate
+         * @description Omitted fields are left unchanged. Only phone can be cleared with null.
+         */
         UserUpdate: {
-            /**
-             * Full Name
-             * @default null
-             */
-            full_name: string | null;
-            /**
-             * Phone
-             * @default null
-             */
-            phone: string | null;
+            /** Full Name */
+            full_name?: string;
+            /** Phone */
+            phone?: string | null;
         };
         /** VenueOut */
         VenueOut: {
@@ -3385,7 +3407,9 @@ export interface operations {
                     "application/json": components["schemas"]["UserOut"];
                 };
             };
+            409: components["responses"]["Error"];
             422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
     post_auth_verify_email: {
@@ -3413,6 +3437,32 @@ export interface operations {
             422: components["responses"]["Error"];
         };
     };
+    post_auth_resend_verification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResendVerificationIn"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageOut"];
+                };
+            };
+            422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
+        };
+    };
     post_auth_login: {
         parameters: {
             query?: never;
@@ -3435,7 +3485,10 @@ export interface operations {
                     "application/json": components["schemas"]["TokenOut"];
                 };
             };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
             422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
     post_auth_refresh: {
@@ -3460,6 +3513,8 @@ export interface operations {
                     "application/json": components["schemas"]["TokenOut"];
                 };
             };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
     };
@@ -3511,6 +3566,7 @@ export interface operations {
                 };
             };
             422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
     post_auth_reset_password: {
@@ -3536,6 +3592,7 @@ export interface operations {
                 };
             };
             422: components["responses"]["Error"];
+            429: components["responses"]["Error"];
         };
     };
     get_me: {
@@ -3663,6 +3720,7 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
     };
