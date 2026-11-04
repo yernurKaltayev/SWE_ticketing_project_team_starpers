@@ -1,6 +1,6 @@
 # BiletFlow Frontend — Implementation Plan
 
-**Status:** seven-week implementation plan for two frontend students. No frontend is implemented yet.
+**Status:** frontend implementation plan for Yernur Slyamshaikhov and Dias. No frontend is implemented yet.
 
 **Basis:** the backend plan in [CLAUDE.md](CLAUDE.md), including P0–P16 and its example schemas. The referenced SRS PDF is absent, so this document does not claim independent SRS verification.
 
@@ -94,7 +94,7 @@ Public listing must exclude unlisted/private events according to the API contrac
 
 ## 4. Implementation modules and acceptance criteria
 
-These modules describe the seven-week scope. Priority **A** establishes the free-ticket journey; **B** completes payment, seating, admission, and ticket lifecycle; **C** completes the remaining documented platform scope. The weekly sequence and parallel assignments are in section 5. C features remain planned deliverables, not automatically optional. Calendar export and GA4 retain the optional status given in the backend plan.
+These modules describe the frontend scope. Priority **A** establishes the free-ticket journey; **B** completes payment, seating, admission, and ticket lifecycle; **C** completes the remaining documented platform scope. The weekly sequence and parallel assignments are in section 5. C features remain planned deliverables, not automatically optional. Calendar export and GA4 retain the optional status given in the backend plan.
 
 ### F0 — Contracts, setup, and development workflow [A]
 
