@@ -48,6 +48,20 @@ errors, unknown routes and crashes. Validation errors never echo submitted value
 - `check_event_access(db, user, event_id, ...)` does the same when the event ID is elsewhere,
   such as `POST /checkin/verify`.
 
+**Authentication.** Accounts are required for the MVP; guest checkout is not built.
+
+- Sign-in needs a confirmed email, so an access token always belongs to a verified user and other
+  parts need no check of their own. `POST /auth/resend-verification` covers expired links.
+- Access tokens are JWTs that live 30 minutes and cannot be revoked. Suspension still applies at
+  once, because `get_current_user` reads the user on every request.
+- Refresh tokens are random, stored hashed and rotated on each use. Reusing a rotated token revokes
+  all of the user's sessions, so clients must not run two refreshes in parallel.
+- Verification and reset emails call `send_email` directly, not `notify()`, because a notification
+  is stored and the raw token must not be. They go out in a FastAPI background task without
+  retries; a lost email is recovered by requesting another.
+- Rate limits are per process (`core/rate_limit.py`). They use the peer address, so behind a reverse
+  proxy start uvicorn with `--proxy-headers` and a matching `--forwarded-allow-ips`.
+
 **Money.** Integer tiyn in columns and in the API, with a `currency` beside it. Use
 `core.money.Money` for arithmetic. Floats are rejected.
 
@@ -67,7 +81,7 @@ their own.
 | `audit(db, *, action_type, entity_type, entity_id, description, ...)` | `services/audit_service.py` | Working |
 | `require_event_access()` / `check_event_access()` | `core/deps.py` | Working |
 | `notify(db, event_type, user, context)` | `services/notification_service.py` | Stub: logs only |
-| `issue_tickets(db, order)` | `services/ticket_service.py` | Raises `NotImplementedError` |
+| `issue_tickets(db, order)` | `services/ticket_service.py` | Working (P8): idempotent, does not commit |
 | `apply_promo(db, order, code)` | `services/promo_service.py` | Raises `NotImplementedError` |
 | `release_inventory(db, order)` | `services/inventory_service.py` | Raises `NotImplementedError` |
 | `PaymentProvider` | `services/payments/base.py` | Abstract class |

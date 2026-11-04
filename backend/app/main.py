@@ -13,6 +13,7 @@ from app.core.config import get_settings
 from app.core.deps import DbSession
 from app.core.errors import ServiceUnavailableError, register_exception_handlers
 from app.core.logging import REQUEST_ID_HEADER, RequestContextMiddleware, configure_logging
+from app.core.rate_limit import RateLimiter
 from app.db.session import engine
 from app.routers import api_router, public_router
 
@@ -41,6 +42,7 @@ def create_app() -> FastAPI:
         redoc_url=None,
         lifespan=lifespan,
     )
+    app.state.rate_limiter = RateLimiter()
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,

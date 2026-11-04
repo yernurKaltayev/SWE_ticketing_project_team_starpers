@@ -1,10 +1,10 @@
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import AfterValidator, BaseModel, EmailStr
 
-from app.schemas.common import OrmModel
+from app.schemas.common import Name, OrmModel, Phone
 
 
 class UserOut(OrmModel):
@@ -16,15 +16,26 @@ class UserOut(OrmModel):
     email_verified_at: datetime | None
 
 
+def _reject_null[T](value: T | None) -> T:
+    if value is None:
+        raise ValueError("must not be null")
+    return value
+
+
+# For PATCH bodies, where an omitted field is left unchanged. Defaults skip validators, so `None`
+# here means "omitted" and an explicit null is refused: the column behind the field is required.
+NotNull = AfterValidator(_reject_null)
+
+
 class UserUpdate(BaseModel):
-    full_name: str | None = None
-    phone: str | None = None
+    full_name: Annotated[Name | None, NotNull] = None
+    phone: Phone | None = None
 
 
 class OrganizerProfileUpdate(BaseModel):
-    organization_name: str | None = None
-    contact_email: EmailStr | None = None
-    contact_phone: str | None = None
+    organization_name: Annotated[Name | None, NotNull] = None
+    contact_email: Annotated[EmailStr | None, NotNull] = None
+    contact_phone: Annotated[Phone | None, NotNull] = None
 
 
 class OrganizerProfileOut(OrmModel):
