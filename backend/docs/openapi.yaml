@@ -57,7 +57,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserOut'
+        '409':
+          $ref: '#/components/responses/Error'
         '422':
+          $ref: '#/components/responses/Error'
+        '429':
           $ref: '#/components/responses/Error'
   /auth/verify-email:
     post:
@@ -82,12 +86,39 @@ paths:
                 $ref: '#/components/schemas/MessageOut'
         '422':
           $ref: '#/components/responses/Error'
+  /auth/resend-verification:
+    post:
+      tags:
+      - auth
+      summary: Send a new verification email; responds the same for unknown or verified addresses (rate
+        limited)
+      description: 'Owner: P1. Access: public.'
+      operationId: post_auth_resend_verification
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendVerificationIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageOut'
+        '422':
+          $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/Error'
   /auth/login:
     post:
       tags:
       - auth
       summary: Sign in (rate limited)
-      description: 'Owner: P1. Access: public.'
+      description: 'Owner: P1. Access: public. 401 invalid_credentials; 403 account_suspended or
+        email_not_verified, only after a correct password.'
       operationId: post_auth_login
       security: []
       requestBody:
@@ -103,14 +134,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
         '422':
+          $ref: '#/components/responses/Error'
+        '429':
           $ref: '#/components/responses/Error'
   /auth/refresh:
     post:
       tags:
       - auth
       summary: Exchange a refresh token; the old one is revoked
-      description: 'Owner: P1. Access: public.'
+      description: 'Owner: P1. Access: public. Presenting an already rotated token is treated as theft:
+        every session of that user is revoked. Clients must not refresh twice in parallel.'
       operationId: post_auth_refresh
       security: []
       requestBody:
@@ -126,6 +164,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TokenOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
   /auth/logout:
@@ -175,6 +217,8 @@ paths:
                 $ref: '#/components/schemas/MessageOut'
         '422':
           $ref: '#/components/responses/Error'
+        '429':
+          $ref: '#/components/responses/Error'
   /auth/reset-password:
     post:
       tags:
@@ -197,6 +241,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/MessageOut'
         '422':
+          $ref: '#/components/responses/Error'
+        '429':
           $ref: '#/components/responses/Error'
   /me:
     get:
@@ -326,6 +372,8 @@ paths:
         '403':
           $ref: '#/components/responses/Error'
         '404':
+          $ref: '#/components/responses/Error'
+        '409':
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
@@ -4332,26 +4380,21 @@ components:
       title: OrganizerProfileOut
       type: object
     OrganizerProfileUpdate:
+      description: Omitted fields are left unchanged.
       properties:
         organization_name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
+          maxLength: 200
+          minLength: 1
           title: Organization Name
+          type: string
         contact_email:
-          anyOf:
-          - format: email
-            type: string
-          - type: 'null'
-          default: null
+          format: email
           title: Contact Email
+          type: string
         contact_phone:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
+          maxLength: 32
           title: Contact Phone
+          type: string
       title: OrganizerProfileUpdate
       type: object
     PageActivationOut:
@@ -4946,10 +4989,13 @@ components:
           title: Email
           type: string
         password:
+          maxLength: 128
           minLength: 8
           title: Password
           type: string
         full_name:
+          maxLength: 200
+          minLength: 1
           title: Full Name
           type: string
         role:
@@ -4965,12 +5011,23 @@ components:
       - role
       title: RegisterIn
       type: object
+    ResendVerificationIn:
+      properties:
+        email:
+          format: email
+          title: Email
+          type: string
+      required:
+      - email
+      title: ResendVerificationIn
+      type: object
     ResetPasswordIn:
       properties:
         token:
           title: Token
           type: string
         new_password:
+          maxLength: 128
           minLength: 8
           title: New Password
           type: string
@@ -5481,18 +5538,18 @@ components:
       title: UserOut
       type: object
     UserUpdate:
+      description: Omitted fields are left unchanged. Only phone can be cleared with null.
       properties:
         full_name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          default: null
+          maxLength: 200
+          minLength: 1
           title: Full Name
+          type: string
         phone:
           anyOf:
-          - type: string
+          - maxLength: 32
+            type: string
           - type: 'null'
-          default: null
           title: Phone
       title: UserUpdate
       type: object

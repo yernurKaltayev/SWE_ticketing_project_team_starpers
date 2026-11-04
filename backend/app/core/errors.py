@@ -74,6 +74,12 @@ class UnprocessableError(AppError):
     message = "The request violates a business rule."
 
 
+class TooManyRequestsError(AppError):
+    status_code = 429
+    code = "too_many_requests"
+    message = "Too many attempts. Try again later."
+
+
 class ServiceUnavailableError(AppError):
     status_code = 503
     code = "service_unavailable"

@@ -64,6 +64,29 @@ uv run ruff check . && uv run ruff format --check . && uv run mypy
 5. Add background jobs to `JOBS` in `app/tasks/worker.py`.
 6. Ship unit and API tests with the part. `tests/factories.py` has helpers for valid rows.
 
+## Send real email
+
+By default email goes to MailHog, which keeps it at http://localhost:8025 and sends nothing out. To
+deliver it, set these in `.env`, then run `docker compose up -d`:
+
+| Variable | Gmail | Transactional provider |
+|---|---|---|
+| `SMTP_HOST` | `smtp.gmail.com` | from the provider |
+| `SMTP_PORT` | `587` | `587` |
+| `SMTP_STARTTLS` | `true` | `true` |
+| `SMTP_USERNAME` | your Gmail address | SMTP login from the provider |
+| `SMTP_PASSWORD` | an App Password | SMTP key from the provider |
+| `EMAIL_FROM` | your Gmail address | a sender verified with the provider |
+
+For Gmail, turn on 2-Step Verification, then create an App Password at
+https://myaccount.google.com/apppasswords. Enter its 16 characters without spaces. Your normal
+Google password will not work.
+
+Links in emails start with `WEB_BASE_URL`, so set it to the deployed frontend when there is one.
+Only STARTTLS is supported, so use port 587, not 465. Keep credentials in `.env`, which is not
+committed. A failed delivery does not fail the request: look for `email delivery failed` in the
+API logs.
+
 ## Backups
 
 `docker compose --profile ops up -d backup` takes a `pg_dump` at start and then daily, into
