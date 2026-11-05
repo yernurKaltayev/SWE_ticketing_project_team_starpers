@@ -1,0 +1,29 @@
+{
+  "base_branch": "master",
+  "phases": [
+    { "name": "Weeks 1-2", "parts": ["P0"] },
+    { "name": "Weeks 3-4", "parts": ["P1", "P2"] },
+    { "name": "Weeks 5-6", "parts": ["P3", "P4", "P5", "P6", "P8"] },
+    { "name": "Week 7", "parts": ["P16", "P14", "P7", "P15"] },
+    { "name": "Remaining", "parts": ["P9", "P10", "P11", "P12", "P13"] }
+  ],
+  "parts": {
+    "P0": { "title": "Foundation and deployment", "owner": "Yernur" },
+    "P1": { "title": "Auth, accounts and roles", "owner": "Yernur" },
+    "P2": { "title": "Events and venues", "owner": "Dos" },
+    "P3": { "title": "Ticket types and inventory", "owner": "Dos" },
+    "P4": { "title": "Seating and seat holds", "owner": "Dos" },
+    "P5": { "title": "Orders and free registration", "owner": "Dos" },
+    "P6": { "title": "Payments, activation and payouts", "owner": "Dima" },
+    "P7": { "title": "Cancellations and refunds", "owner": "Dima" },
+    "P8": { "title": "Digital tickets, QR and PDF", "owner": "Dima" },
+    "P9": { "title": "Notifications", "owner": "Yernur" },
+    "P10": { "title": "Support cases", "owner": "Yernur" },
+    "P11": { "title": "Platform administration", "owner": "Yernur" },
+    "P12": { "title": "Audit log and event history", "owner": "Yernur" },
+    "P13": { "title": "Organizer analytics", "owner": "Yernur" },
+    "P14": { "title": "Calendar export", "owner": "Dos" },
+    "P15": { "title": "Ticket verification and check-in", "owner": "Dima" },
+    "P16": { "title": "Promo codes and campaign QR", "owner": "Dima" }
+  }
+}
