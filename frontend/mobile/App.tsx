@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Button,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,30 +19,14 @@ import {
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
-import {
-  ApiError,
-  createApiClient,
-  localeLabels,
-  locales,
-  messages,
-} from "@biletflow/shared";
+import { ApiError, localeLabels, locales, messages } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import type { components } from "@biletflow/shared/api";
-import { probeSecureStorage, tokenStore } from "./src/session";
+import { api, apiOrigin as origin, probeSecureStorage } from "./src/session";
+import SessionPanel from "./src/SessionPanel";
 
 type Screens = { Home: undefined; Connection: undefined };
 const Stack = createNativeStackNavigator<Screens>();
-const origin = process.env.EXPO_PUBLIC_API_ORIGIN;
-let api: ReturnType<typeof createApiClient> | null = null;
-try {
-  if (origin)
-    api = createApiClient({
-      baseUrl: origin,
-      getAccessToken: tokenStore.getAccessToken,
-    });
-} catch {
-  /* Invalid config remains visibly disconnected. */
-}
 
 export default function App() {
   const [locale, setLocale] = useState<Locale>("kk");
@@ -63,39 +49,45 @@ export default function App() {
                   { backgroundColor: theme.colors.background },
                 ]}
               >
-                <ScrollView contentContainerStyle={styles.content}>
-                  <Text
-                    accessibilityRole="header"
-                    style={[styles.title, { color: theme.colors.text }]}
+                <KeyboardAvoidingView
+                  style={styles.fill}
+                  behavior={Platform.OS === "ios" ? "padding" : undefined}
+                >
+                  <ScrollView
+                    contentContainerStyle={styles.content}
+                    keyboardShouldPersistTaps="handled"
                   >
-                    {t.foundationTitle}
-                  </Text>
-                  <Text style={[styles.body, { color: theme.colors.text }]}>
-                    {t.foundationDescription}
-                  </Text>
-                  <Text style={[styles.body, { color: theme.colors.text }]}>
-                    {t.sessionStatus}: {t.signedOut}
-                  </Text>
-                  <Text style={[styles.body, { color: theme.colors.text }]}>
-                    {t.language}
-                  </Text>
-                  {locales.map((code) => (
-                    <View key={code} style={styles.button}>
+                    <SessionPanel locale={locale} />
+                    <Text
+                      accessibilityRole="header"
+                      style={[styles.title, { color: theme.colors.text }]}
+                    >
+                      {t.foundationTitle}
+                    </Text>
+                    <Text style={[styles.body, { color: theme.colors.text }]}>
+                      {t.foundationDescription}
+                    </Text>
+                    <Text style={[styles.body, { color: theme.colors.text }]}>
+                      {t.language}
+                    </Text>
+                    {locales.map((code) => (
+                      <View key={code} style={styles.button}>
+                        <Button
+                          title={localeLabels[code]}
+                          accessibilityLabel={localeLabels[code]}
+                          onPress={() => setLocale(code)}
+                          disabled={locale === code}
+                        />
+                      </View>
+                    ))}
+                    <View style={styles.button}>
                       <Button
-                        title={localeLabels[code]}
-                        accessibilityLabel={localeLabels[code]}
-                        onPress={() => setLocale(code)}
-                        disabled={locale === code}
+                        title={t.checkApi}
+                        onPress={() => props.navigation.navigate("Connection")}
                       />
                     </View>
-                  ))}
-                  <View style={styles.button}>
-                    <Button
-                      title={t.checkApi}
-                      onPress={() => props.navigation.navigate("Connection")}
-                    />
-                  </View>
-                </ScrollView>
+                  </ScrollView>
+                </KeyboardAvoidingView>
               </SafeAreaView>
             )}
           </Stack.Screen>

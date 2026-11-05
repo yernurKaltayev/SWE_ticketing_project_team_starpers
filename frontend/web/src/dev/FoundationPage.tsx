@@ -7,30 +7,34 @@ import { api } from "../api";
 import { config } from "../config";
 import { scenarios, setScenario } from "../mocks/handlers";
 import type { Scenario } from "../mocks/handlers";
+import { authCopy } from "../auth/copy";
+import { useSession } from "../auth/session";
 
 const copy = {
   kk: {
     scenario: "Сынақ жағдайы",
     read: "Тізімді оқу",
     write: "Сынақ өзгерісін жіберу",
-    note: "Бұл бет әзірлеу кезінде ғана қолжетімді. Тіркелгіге кіру әлі іске асырылмаған.",
+    note: "Бұл бет әзірлеу кезінде ғана қолжетімді. Сынақ деректері нақты сервердің тексерілгенін растамайды.",
   },
   ru: {
     scenario: "Сценарий проверки",
     read: "Прочитать список",
     write: "Отправить тестовое изменение",
-    note: "Страница доступна только при разработке. Вход в аккаунт ещё не реализован.",
+    note: "Страница доступна только при разработке. Тестовые данные не подтверждают проверку реального сервера.",
   },
   en: {
     scenario: "Test scenario",
     read: "Read list",
     write: "Send mock mutation",
-    note: "This page is available only during development. Account sign-in is not implemented yet.",
+    note: "This page is available only during development. Mock data does not verify the real backend.",
   },
 };
 export default function FoundationPage({ locale }: { locale: Locale }) {
   const t = messages[locale];
   const c = copy[locale];
+  const session = useSession();
+  const sessionCopy = authCopy[locale];
   const [scenario, selectScenario] = useState<Scenario>("success");
   const request = useMutation({
     mutationFn: async (operation: "health" | "read" | "write") => {
@@ -39,6 +43,7 @@ export default function FoundationPage({ locale }: { locale: Locale }) {
           throw new Error("Mock mutations require VITE_ENABLE_MOCKS=true.");
         return api.request<components["schemas"]["UserOut"]>("/api/v1/me", {
           method: "PATCH",
+          headers: { "X-BiletFlow-Foundation": "true" },
           body: {
             full_name: "F0 demo organizer",
             phone: null,
@@ -55,7 +60,12 @@ export default function FoundationPage({ locale }: { locale: Locale }) {
       <p>{c.note}</p>
       <p className="notice">
         <strong>{config.useMocks ? t.mockMode : t.liveMode}</strong> ·{" "}
-        {t.sessionStatus}: {t.signedOut}
+        {t.sessionStatus}:{" "}
+        {session.status === "loading"
+          ? sessionCopy.loading
+          : session.user
+            ? `${sessionCopy.signedIn} ${session.user.email}`
+            : t.signedOut}
       </p>
       <p>{formatMoney(125050, locale)} · KZT · Asia/Almaty</p>
       <div className="controls">

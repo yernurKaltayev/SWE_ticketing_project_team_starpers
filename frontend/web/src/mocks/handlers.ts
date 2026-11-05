@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw";
 import type { components } from "@biletflow/shared/api";
+import { authHandlers } from "./auth";
 
 export const scenarios = [
   "success",
@@ -104,14 +105,17 @@ export const handlers = [
         { headers },
       ),
   ),
-  http.get(
-    "*/api/v1/me",
-    () => failure() ?? HttpResponse.json(user, { headers }),
+  http.get("*/api/v1/me", ({ request }) =>
+    request.headers.get("X-BiletFlow-Foundation") === "true"
+      ? (failure() ?? HttpResponse.json(user, { headers }))
+      : undefined,
   ),
   http.patch("*/api/v1/me", async ({ request }) => {
+    if (request.headers.get("X-BiletFlow-Foundation") !== "true") return;
     const failed = failure();
     if (failed) return failed;
     const body = (await request.json()) as components["schemas"]["UserUpdate"];
     return HttpResponse.json({ ...user, ...body }, { headers });
   }),
+  ...authHandlers,
 ];
