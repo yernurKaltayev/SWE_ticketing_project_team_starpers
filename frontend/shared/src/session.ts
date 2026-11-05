@@ -131,6 +131,14 @@ export function createSession(options: SessionOptions): Session {
     if (!prior?.refreshToken) return Promise.reject(sessionChanged());
     const promise = (async () => {
       try {
+        // Remove the durable copy before spending this single-use credential.
+        // If the process dies during rotation or before saving its replacement,
+        // the next process must sign in rather than replay an uncertain token.
+        await store(async () => {
+          assertCurrent(expected);
+          await options.tokenStore.clear();
+        });
+        assertCurrent(expected);
         const tokens = tokenPair(
           await publicApi.request<Tokens>("/api/v1/auth/refresh", {
             method: "POST",

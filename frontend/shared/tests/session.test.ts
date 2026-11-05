@@ -278,14 +278,19 @@ describe("session lifecycle", () => {
 
   it("revokes a late rotated credential and keeps logout authoritative", async () => {
     const pending = deferred<Response>();
+    const refreshStarted = deferred<void>();
     const { session, store, transport } = setup((path) => {
       if (path.endsWith("/login")) return Response.json(tokens);
       if (path.endsWith("/me")) return Response.json(user);
-      if (path.endsWith("/refresh")) return pending.promise;
+      if (path.endsWith("/refresh")) {
+        refreshStarted.resolve();
+        return pending.promise;
+      }
       return new Response(null, { status: 204 });
     });
     await session.login(login);
     const refreshing = session.refresh().catch((error: unknown) => error);
+    await refreshStarted.promise;
     await session.logout();
     pending.resolve(Response.json(rotated));
     expect(await refreshing).toMatchObject({ code: "session_changed" });
@@ -403,8 +408,80 @@ describe("session lifecycle", () => {
       user: null,
       reason: "expired",
     });
-    expect(clear).toHaveBeenCalledTimes(1);
+    expect(clear).toHaveBeenCalled();
+    expect(await store.get()).toBeNull();
     expect(transport).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not send a refresh if removing the stored credential fails", async () => {
+    const store = createMemoryTokenStore();
+    let storageLocked = false;
+    const transport = vi.fn<typeof fetch>(async (input) => {
+      if (String(input).endsWith("/login")) return Response.json(tokens);
+      if (String(input).endsWith("/me")) return Response.json(user);
+      return Response.json(rotated);
+    });
+    const session = createSession({
+      baseUrl: "https://api.example.test",
+      tokenStore: {
+        ...store,
+        async clear() {
+          await store.clear();
+          if (storageLocked) throw new Error("secure deletion failed");
+        },
+      },
+      fetch: transport,
+    });
+    await session.login(login);
+    storageLocked = true;
+    await expect(session.refresh()).rejects.toThrow("secure deletion failed");
+    expect(
+      transport.mock.calls.filter(([url]) => String(url).endsWith("/refresh")),
+    ).toHaveLength(0);
+    expect(session.getSnapshot()).toMatchObject({
+      status: "signedOut",
+      reason: "expired",
+    });
+  });
+
+  it("does not start rotation if logout occurs while secure deletion is pending", async () => {
+    const store = createMemoryTokenStore();
+    const deletionStarted = deferred<void>();
+    const releaseDeletion = deferred<void>();
+    let holdDeletion = false;
+    const transport = vi.fn<typeof fetch>(async (input) => {
+      if (String(input).endsWith("/login")) return Response.json(tokens);
+      if (String(input).endsWith("/me")) return Response.json(user);
+      if (String(input).endsWith("/refresh")) return Response.json(rotated);
+      return new Response(null, { status: 204 });
+    });
+    const session = createSession({
+      baseUrl: "https://api.example.test",
+      tokenStore: {
+        ...store,
+        async clear() {
+          if (holdDeletion) {
+            deletionStarted.resolve();
+            await releaseDeletion.promise;
+          }
+          await store.clear();
+        },
+      },
+      fetch: transport,
+    });
+    await session.login(login);
+    holdDeletion = true;
+    const refreshing = session.refresh().catch((error: unknown) => error);
+    await deletionStarted.promise;
+    const signingOut = session.logout();
+    releaseDeletion.resolve();
+    await signingOut;
+    expect(await refreshing).toMatchObject({ code: "session_changed" });
+    expect(
+      transport.mock.calls.filter(([url]) => String(url).endsWith("/refresh")),
+    ).toHaveLength(0);
+    expect(session.getSnapshot().status).toBe("signedOut");
+    expect(await store.get()).toBeNull();
   });
 
   it("leaves login retryable if secure-storage cleanup fails", async () => {

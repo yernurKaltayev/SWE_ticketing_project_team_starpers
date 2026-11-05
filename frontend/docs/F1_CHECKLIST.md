@@ -19,6 +19,7 @@ Follow the dependency-based incremental workflow and module ownership in [FRONTE
 - One portable session controller per platform. Web credentials remain in memory; **browser reload signs out**. There is no local/session-storage persistence and no new cookie contract.
 - Native persists only the refresh credential through the existing SecureStore adapter. Startup exchanges it before authenticated reads; access tokens stay in memory.
 - Concurrent 401s share one rotating refresh operation. A late 401 does not spend the already-rotated credential again. An uncertain refresh response clears the local session instead of retrying the spent credential.
+- Before sending a refresh, the controller removes the stored credential and waits for confirmed removal. Only its in-memory copy is used for that attempt. If the native process ends before a replacement is saved, the next launch requires sign-in instead of replaying the spent token and triggering P1's account-wide refresh-session revocation. A storage-removal failure prevents the refresh request entirely.
 - Only GET/HEAD requests can be replayed after refresh. An expired PATCH refreshes the session but leaves the action for explicit resubmission, retaining the form draft while the session remains valid. Other failures do not silently retry writes.
 - Logout/expiry/account switches clear identity and user query caches. Generation checks and serialized storage operations prevent old async responses from restoring a discarded session. Failed remote logout is reported without claiming server revocation succeeded.
 - Authenticated visits to login/register redirect to the safe destination; changing accounts requires sign-out. Delayed auth-form continuations do not redirect an abandoned form or log out a newly established account after a password reset.
@@ -56,9 +57,10 @@ For native development, use the existing README LAN-origin/Expo launch instructi
 
 | Check | Evidence | Result |
 |---|---|---|
-| API type drift, lint, TypeScript, tests, production web build | `npm.cmd run check`; 60 tests across seven files | Passed locally |
+| API type drift, lint, TypeScript, tests, production web build | `npm.cmd run check`; 65 tests across seven files, including the refresh interruption follow-up | Passed locally |
 | Native bundling | `npm.cmd run export:mobile`; iOS and Android Hermes exports | Passed locally; not device proof |
 | Session/storage tests | Single-flight/late-401 rotation, no write replay, uncertain refresh discard, suspension, startup exchange, stale login/logout/storage races and failures | Passed with mocked transport/storage |
+| Native refresh interruption regression | Two deterministic crash/restart cases failed before the fix by replaying `old-refresh`: pending server response and pending replacement SecureStore write. Both now require sign-in without replay or revoking an unrelated simulated session. Completed rotation recovers using its replacement. Storage-removal failure and logout during removal prevent refresh dispatch | Passed with mocked P1 transport/storage; not physical-device proof |
 | Auth contract fixtures and helper tests | Seven MSW auth/profile tests and eight safe-return/permission/validation tests | Passed with mocks |
 | Chromium auth/profile journeys | Validation and focus; organizer login/user+organizer PATCH; attendee role denial; safe protected return; suspended/unverified/429/network states; resend; expired-link recovery; verification; password reset/new login; registration; expired PATCH retained draft and explicit retry; reload signed out | Passed with development mocks |
 | Responsive/locales | Register at 390px/1280px in kk/ru/en with long Cyrillic/Kazakh name; organizer at 320px/390px/1280px; login error at 390px. No horizontal page overflow. Captures under ignored `web/output/f1/` | Browser checks passed; owner translation review pending |
@@ -66,7 +68,7 @@ For native development, use the existing README LAN-origin/Expo launch instructi
 | Independent visual review | Five final web captures reviewed; disposition `ship`; incumbent system font/paper/green style preserved | Passed at reviewed scope; no Figma implementation |
 | Production boundary | Chromium production preview displays auth UI, `/dev/foundation` shows Page not found, no mock disclosure or service-worker registration; built bundles contain no fixture-token markers | Passed locally |
 | Real health | Direct `http://localhost:8000/health` attempt timed out after four seconds on 5 November | Unreachable; no real auth/profile integration evidence |
-| Remote CI | No push/PR was performed for F1 | Not run for this work |
+| Remote CI | [PR #7](https://github.com/yernurKaltayev/SWE_ticketing_project_team_starpers/pull/7): Frontend foundation and Plan Gate passed for `c27e64a`. The native refresh interruption fix is still local and requires its own commit/push and fresh PR checks | Original F1 passed CI; current follow-up not yet checked remotely |
 | Android/iPhone launch, SecureStore and lifecycle | No physical phone interaction observed | Not verified |
 
 ## Remaining integrated acceptance
