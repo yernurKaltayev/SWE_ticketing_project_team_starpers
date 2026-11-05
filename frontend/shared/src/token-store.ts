@@ -6,6 +6,7 @@ export interface TokenPair {
 export interface TokenStore {
   get(): Promise<TokenPair | null>;
   set(tokens: TokenPair): Promise<void>;
+  /** Resolve only after stored credentials are removed; reject if removal fails. */
   clear(): Promise<void>;
   getAccessToken(): Promise<string | null>;
 }

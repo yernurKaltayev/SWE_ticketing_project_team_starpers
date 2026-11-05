@@ -6,6 +6,29 @@ function mockFetch(response: Response) {
 }
 
 describe("API transport", () => {
+  it("retains Retry-After on rate-limited responses without retrying", async () => {
+    const transport = mockFetch(
+      Response.json(
+        { code: "rate_limited" },
+        {
+          status: 429,
+          headers: { "Retry-After": "30", "X-Request-ID": "limited-1" },
+        },
+      ),
+    );
+    const client = createApiClient({
+      baseUrl: "https://api.example.test",
+      fetch: transport,
+    });
+    await expect(
+      client.request("/api/v1/auth/login", { method: "POST" }),
+    ).rejects.toMatchObject({
+      status: 429,
+      retryAfter: "30",
+      requestId: "limited-1",
+    });
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
   it("calls the root health endpoint once with bearer authentication and no cookie assumption", async () => {
     const transport = mockFetch(Response.json({ status: "ok" }));
     const client = createApiClient({

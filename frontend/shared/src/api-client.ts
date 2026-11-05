@@ -4,6 +4,7 @@ export class ApiError extends Error {
   readonly code: string;
   readonly details: unknown;
   readonly requestId: string | null;
+  readonly retryAfter: string | null;
 
   constructor(
     status: number,
@@ -11,12 +12,14 @@ export class ApiError extends Error {
     message: string,
     details: unknown = null,
     requestId: string | null = null,
+    retryAfter: string | null = null,
   ) {
     super(message);
     this.status = status;
     this.code = code;
     this.details = details;
     this.requestId = requestId;
+    this.retryAfter = retryAfter;
   }
 }
 
@@ -158,6 +161,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
             : `The request failed (${response.status}).`,
           error.details ?? null,
           requestId,
+          response.headers.get("Retry-After"),
         );
       }
       return data as T;

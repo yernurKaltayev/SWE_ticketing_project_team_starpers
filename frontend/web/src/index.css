@@ -142,3 +142,121 @@ pre {
   max-width: 100%;
   font-variant-numeric: tabular-nums;
 }
+.site-nav,
+.auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+.site-nav {
+  margin-left: auto;
+}
+.auth-page {
+  max-width: 36rem;
+}
+.auth-page form {
+  margin-block: 1.5rem 2rem;
+}
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.field {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1.25rem;
+}
+.field label {
+  font-weight: 600;
+}
+.field input,
+.field select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #70837b;
+  border-radius: 5px;
+  background: #fff;
+  color: var(--color-ink);
+  padding: 0.6rem 0.8rem;
+  caret-color: var(--color-accent);
+}
+.field input[aria-invalid="true"] {
+  border-color: #a32920;
+}
+.field-hint {
+  font-size: 0.9rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.field-error {
+  color: #8e211a;
+  margin: 0;
+}
+.form-error {
+  border: 1px solid #a32920;
+  padding: 1rem;
+  margin-block: 1.5rem;
+  overflow-wrap: anywhere;
+}
+.form-error p:last-child {
+  margin-bottom: 0;
+}
+.form-error ul {
+  margin-block: 0.5rem;
+  padding-left: 1.25rem;
+}
+.status-badge {
+  display: inline-block;
+  background: #e5eee8;
+  border: 1px solid #bdc9c1;
+  padding: 0.2rem 0.65rem;
+  border-radius: 4px;
+}
+.identity,
+.environment-notice {
+  overflow-wrap: anywhere;
+}
+.environment-notice {
+  margin-bottom: 2rem;
+  padding-block: 0.75rem;
+  border-bottom: 1px solid #d7dfd8;
+  font-size: 0.9rem;
+}
+button.secondary {
+  background: transparent;
+  color: #135d4b;
+  border-color: #70837b;
+}
+button.secondary:hover {
+  background: #e5eee8;
+}
+button:disabled,
+fieldset:disabled input,
+fieldset:disabled select {
+  cursor: wait;
+}
+main:focus {
+  outline: none;
+}
+@media (max-width: 680px) {
+  .site-nav {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+  }
+  .language-control {
+    margin-left: auto;
+  }
+  .auth-page button {
+    width: 100%;
+    white-space: normal;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  button {
+    transition: background-color 120ms ease-out;
+  }
+}
