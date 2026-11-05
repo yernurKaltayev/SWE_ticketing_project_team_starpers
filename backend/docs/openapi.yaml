@@ -420,6 +420,33 @@ paths:
       parameters:
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Offset'
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: category
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: city
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: date_from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: date_to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
       security: []
       responses:
         '200':
