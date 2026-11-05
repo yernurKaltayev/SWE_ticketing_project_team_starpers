@@ -59,8 +59,13 @@ async def list_public_events(
     date_to: datetime | None = None,
 ) -> Page[EventOut]:
     return await event_service.public_events(
-        db, page, q=q, category=category, city=city,
-        date_from=date_from, date_to=date_to,
+        db,
+        page,
+        q=q,
+        category=category,
+        city=city,
+        date_from=date_from,
+        date_to=date_to,
     )
 
 
@@ -86,7 +91,10 @@ async def get_event(event_id: uuid.UUID, db: DbSession, user: OptionalUser) -> E
 
 @router.patch("/events/{event_id}", response_model=EventOut)
 async def patch_event(
-    data: EventUpdate, event: ManagedEvent, user: CurrentUser, db: DbSession,
+    data: EventUpdate,
+    event: ManagedEvent,
+    user: CurrentUser,
+    db: DbSession,
 ) -> EventOut:
     return await event_service.update_event(db, event.id, user, data)
 
@@ -101,8 +109,9 @@ async def unpublish_event(event: ManagedEvent, user: CurrentUser, db: DbSession)
     return await event_service.unpublish_event(db, event.id, user)
 
 
-@router.post("/events/{event_id}/duplicate", response_model=EventOut,
-             status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/events/{event_id}/duplicate", response_model=EventOut, status_code=status.HTTP_201_CREATED
+)
 async def duplicate_event(event: ManagedEvent, user: CurrentUser, db: DbSession) -> EventOut:
     return await event_service.duplicate_event(db, event.id, user)
 

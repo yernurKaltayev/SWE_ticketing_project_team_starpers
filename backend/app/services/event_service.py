@@ -24,22 +24,34 @@ from app.schemas.event import EventCreate, EventOut, EventUpdate
 from app.services.audit_service import audit
 
 _EDITABLE_FIELDS = (
-    "title", "description", "category", "venue_id", "layout_id", "starts_at", "ends_at",
-    "timezone", "visibility", "seating_mode", "capacity", "registration_opens_at",
+    "title",
+    "description",
+    "category",
+    "venue_id",
+    "layout_id",
+    "starts_at",
+    "ends_at",
+    "timezone",
+    "visibility",
+    "seating_mode",
+    "capacity",
+    "registration_opens_at",
     "registration_closes_at",
 )
 
 
 def _out(event: Event, *, reveal_token: bool = False) -> EventOut:
     """Do not disclose unguessable share tokens in public lists/details."""
-    value = EventOut.model_validate({
-        **{field: getattr(event, field) for field in _EDITABLE_FIELDS},
-        "id": event.id,
-        "status": event.status,
-        "paid_sales_status": event.paid_sales_status,
-        "share_token": event.share_token,
-        "images": event.image_urls,
-    })
+    value = EventOut.model_validate(
+        {
+            **{field: getattr(event, field) for field in _EDITABLE_FIELDS},
+            "id": event.id,
+            "status": event.status,
+            "paid_sales_status": event.paid_sales_status,
+            "share_token": event.share_token,
+            "images": event.image_urls,
+        }
+    )
     return value if reveal_token else value.model_copy(update={"share_token": ""})
 
 
@@ -58,9 +70,7 @@ async def _validate_venue(
 
 
 async def _organizer_profile(db: AsyncSession, user: User) -> OrganizerProfile:
-    profile = await db.scalar(
-        select(OrganizerProfile).where(OrganizerProfile.user_id == user.id)
-    )
+    profile = await db.scalar(select(OrganizerProfile).where(OrganizerProfile.user_id == user.id))
     if profile is None:
         raise ForbiddenError(
             "Create an organizer profile first.", code="organizer_profile_required"
@@ -82,8 +92,13 @@ async def create_event(db: AsyncSession, user: User, data: EventCreate) -> Event
     db.add(event)
     await db.flush()
     audit(
-        db, action_type="event_created", entity_type="event", entity_id=event.id,
-        event_id=event.id, actor=user, description="Created a draft event",
+        db,
+        action_type="event_created",
+        entity_type="event",
+        entity_id=event.id,
+        event_id=event.id,
+        actor=user,
+        description="Created a draft event",
     )
     await db.commit()
     return _out(event, reveal_token=True)
@@ -122,8 +137,12 @@ async def public_events(
     if date_to:
         stmt = stmt.where(Event.starts_at <= date_to)
     page = await paginate(db, stmt.order_by(Event.starts_at, Event.id), params)
-    return Page(items=[_out(event) for event in page.items], total=page.total,
-                limit=page.limit, offset=page.offset)
+    return Page(
+        items=[_out(event) for event in page.items],
+        total=page.total,
+        limit=page.limit,
+        offset=page.offset,
+    )
 
 
 async def own_events(db: AsyncSession, user: User, params: PageParams) -> Page[EventOut]:
@@ -135,8 +154,12 @@ async def own_events(db: AsyncSession, user: User, params: PageParams) -> Page[E
         .order_by(Event.created_at.desc(), Event.id),
         params,
     )
-    return Page(items=[_out(event, reveal_token=True) for event in page.items],
-                total=page.total, limit=page.limit, offset=page.offset)
+    return Page(
+        items=[_out(event, reveal_token=True) for event in page.items],
+        total=page.total,
+        limit=page.limit,
+        offset=page.offset,
+    )
 
 
 async def event_details(db: AsyncSession, event_id: uuid.UUID, user: User | None) -> EventOut:
@@ -174,8 +197,9 @@ async def _locked_event(db: AsyncSession, event_id: uuid.UUID) -> Event:
 
 async def _ticket_quantity(db: AsyncSession, event_id: uuid.UUID) -> int:
     count = await db.scalar(
-        select(func.coalesce(func.sum(TicketType.quantity_total), 0))
-        .where(TicketType.event_id == event_id)
+        select(func.coalesce(func.sum(TicketType.quantity_total), 0)).where(
+            TicketType.event_id == event_id
+        )
     )
     return int(count or 0)
 
@@ -197,7 +221,9 @@ async def update_event(
     # A nullable PATCH schema is part of the agreed contract; preserve SQL NOT NULL rules.
     for key in changes:
         if changes[key] is None and key not in {
-            "layout_id", "registration_opens_at", "registration_closes_at"
+            "layout_id",
+            "registration_opens_at",
+            "registration_closes_at",
         }:
             raise UnprocessableError(f"{key} cannot be null.", code="null_event_field")
     current = {key: getattr(event, key) for key in _EDITABLE_FIELDS}
@@ -207,8 +233,14 @@ async def update_event(
         raise UnprocessableError(
             "The updated event configuration is invalid.",
             code="invalid_event_update",
-            details=[{"field": ".".join(map(str, err["loc"])),
-                      "message": err["msg"], "type": err["type"]} for err in exc.errors()],
+            details=[
+                {
+                    "field": ".".join(map(str, err["loc"])),
+                    "message": err["msg"],
+                    "type": err["type"],
+                }
+                for err in exc.errors()
+            ],
         ) from exc
     await _validate_venue(db, merged.venue_id, merged.layout_id)
     if "capacity" in changes and merged.capacity < await _ticket_quantity(db, event_id):
@@ -229,11 +261,18 @@ async def update_event(
     for key, value in changes.items():
         setattr(event, key, value)
     audit(
-        db, action_type="event_updated", entity_type="event", entity_id=event.id,
-        event_id=event.id, actor=user,
+        db,
+        action_type="event_updated",
+        entity_type="event",
+        entity_id=event.id,
+        event_id=event.id,
+        actor=user,
         description="Updated event configuration",
-        metadata={"fields": sorted(changes), "capacity_from": original_capacity,
-                  "capacity_to": event.capacity},
+        metadata={
+            "fields": sorted(changes),
+            "capacity_from": original_capacity,
+            "capacity_to": event.capacity,
+        },
     )
     await db.commit()
     return _out(event, reveal_token=True)
@@ -255,8 +294,13 @@ async def publish_event(db: AsyncSession, event_id: uuid.UUID, user: User) -> Ev
         )
     event.status = EventStatus.published
     audit(
-        db, action_type="event_published", entity_type="event", entity_id=event.id,
-        event_id=event.id, actor=user, description="Published event",
+        db,
+        action_type="event_published",
+        entity_type="event",
+        entity_id=event.id,
+        event_id=event.id,
+        actor=user,
+        description="Published event",
     )
     await db.commit()
     return _out(event, reveal_token=True)
@@ -275,8 +319,13 @@ async def unpublish_event(db: AsyncSession, event_id: uuid.UUID, user: User) -> 
         )
     event.status = EventStatus.draft
     audit(
-        db, action_type="event_unpublished", entity_type="event", entity_id=event.id,
-        event_id=event.id, actor=user, description="Returned event to draft",
+        db,
+        action_type="event_unpublished",
+        entity_type="event",
+        entity_id=event.id,
+        event_id=event.id,
+        actor=user,
+        description="Returned event to draft",
     )
     await db.commit()
     return _out(event, reveal_token=True)
@@ -296,31 +345,37 @@ async def duplicate_event(db: AsyncSession, event_id: uuid.UUID, user: User) -> 
     )
     db.add(clone)
     await db.flush()
-    original_types = (await db.scalars(
-        select(TicketType).where(TicketType.event_id == source.id)
-    )).all()
+    original_types = (
+        await db.scalars(select(TicketType).where(TicketType.event_id == source.id))
+    ).all()
     for item in original_types:
-        db.add(TicketType(
-            event_id=clone.id,
-            name=item.name,
-            description=item.description,
-            price_amount=item.price_amount,
-            currency=item.currency,
-            quantity_total=item.quantity_total,
-            is_free=item.is_free,
-            sales_start=item.sales_start,
-            sales_end=item.sales_end,
-            max_per_order=item.max_per_order,
-            is_hidden=item.is_hidden,
-            price_category=item.price_category,
-            qty_reserved=0,
-            qty_sold=0,
-            qty_refunded=0,
-            qty_checked_in=0,
-        ))
+        db.add(
+            TicketType(
+                event_id=clone.id,
+                name=item.name,
+                description=item.description,
+                price_amount=item.price_amount,
+                currency=item.currency,
+                quantity_total=item.quantity_total,
+                is_free=item.is_free,
+                sales_start=item.sales_start,
+                sales_end=item.sales_end,
+                max_per_order=item.max_per_order,
+                is_hidden=item.is_hidden,
+                price_category=item.price_category,
+                qty_reserved=0,
+                qty_sold=0,
+                qty_refunded=0,
+                qty_checked_in=0,
+            )
+        )
     audit(
-        db, action_type="event_duplicated", entity_type="event", entity_id=clone.id,
-        event_id=clone.id, actor=user,
+        db,
+        action_type="event_duplicated",
+        entity_type="event",
+        entity_id=clone.id,
+        event_id=clone.id,
+        actor=user,
         description="Duplicated event configuration",
         metadata={"original_event_id": str(source.id)},
     )
@@ -343,8 +398,12 @@ async def cancel_event(db: AsyncSession, event_id: uuid.UUID, user: User) -> Eve
     event.cancelled_at = datetime.now(UTC)
     event.paid_sales_status = PaidSalesStatus.disabled
     audit(
-        db, action_type="event_cancelled", entity_type="event", entity_id=event.id,
-        event_id=event.id, actor=user,
+        db,
+        action_type="event_cancelled",
+        entity_type="event",
+        entity_id=event.id,
+        event_id=event.id,
+        actor=user,
         description="Cancelled an event with no orders",
     )
     await db.commit()

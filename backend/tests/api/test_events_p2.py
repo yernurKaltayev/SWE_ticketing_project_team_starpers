@@ -58,7 +58,8 @@ async def test_organizer_creates_draft_event(client, db):
 async def test_attendee_cannot_create_event(client, db):
     attendee = await make_user(db)
     response = await client.post(
-        f"{PREFIX}/events", json=event_payload("00000000-0000-0000-0000-000000000000"),
+        f"{PREFIX}/events",
+        json=event_payload("00000000-0000-0000-0000-000000000000"),
         headers=auth_header(attendee),
     )
     assert response.status_code == 403
@@ -117,9 +118,7 @@ async def test_publish_requires_ticket_types_and_enough_capacity(client, db):
     )
     assert no_tickets.status_code == 422
     await make_ticket_type(db, event, quantity_total=10)
-    too_small = await client.post(
-        f"{PREFIX}/events/{event.id}/publish", headers=auth_header(owner)
-    )
+    too_small = await client.post(f"{PREFIX}/events/{event.id}/publish", headers=auth_header(owner))
     assert too_small.status_code == 422
     event.capacity = 15
     await db.flush()
@@ -157,7 +156,8 @@ async def test_patch_invalid_dates_returns_422_instead_of_500(client, db):
     owner, profile = await make_organizer(db)
     event = await make_event(db, profile)
     bad = await client.patch(
-        f"{PREFIX}/events/{event.id}", json={"ends_at": "2020-01-01T01:00:00Z"},
+        f"{PREFIX}/events/{event.id}",
+        json={"ends_at": "2020-01-01T01:00:00Z"},
         headers=auth_header(owner),
     )
     assert bad.status_code == 422, bad.text
@@ -168,7 +168,9 @@ async def test_patch_blank_title_returns_422(client, db):
     owner, profile = await make_organizer(db)
     event = await make_event(db, profile)
     result = await client.patch(
-        f"{PREFIX}/events/{event.id}", json={"title": "  "}, headers=auth_header(owner),
+        f"{PREFIX}/events/{event.id}",
+        json={"title": "  "},
+        headers=auth_header(owner),
     )
     assert result.status_code == 422, result.text
 
@@ -210,17 +212,13 @@ async def test_duplicated_event_is_new_draft_without_orders(client, db):
 async def test_cancel_without_orders_and_block_cancel_with_orders(client, db):
     owner, profile = await make_organizer(db)
     empty = await make_event(db, profile, status=EventStatus.published)
-    response = await client.post(
-        f"{PREFIX}/events/{empty.id}/cancel", headers=auth_header(owner)
-    )
+    response = await client.post(f"{PREFIX}/events/{empty.id}/cancel", headers=auth_header(owner))
     assert response.status_code == 200, response.text
     assert response.json()["status"] == "cancelled"
     assert (await db.get(Event, empty.id)).cancelled_at is not None
     occupied = await make_event(db, profile, status=EventStatus.published)
     await make_order(db, occupied)
-    denied = await client.post(
-        f"{PREFIX}/events/{occupied.id}/cancel", headers=auth_header(owner)
-    )
+    denied = await client.post(f"{PREFIX}/events/{occupied.id}/cancel", headers=auth_header(owner))
     assert denied.status_code == 409, denied.text
     assert (await db.get(Event, occupied.id)).status == EventStatus.published
 
@@ -229,7 +227,5 @@ async def test_unpublish_with_orders_returns_409(client, db):
     owner, profile = await make_organizer(db)
     event = await make_event(db, profile, status=EventStatus.published)
     await make_order(db, event)
-    result = await client.post(
-        f"{PREFIX}/events/{event.id}/unpublish", headers=auth_header(owner)
-    )
+    result = await client.post(f"{PREFIX}/events/{event.id}/unpublish", headers=auth_header(owner))
     assert result.status_code == 409, result.text

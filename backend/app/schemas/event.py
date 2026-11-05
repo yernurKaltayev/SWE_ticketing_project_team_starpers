@@ -39,12 +39,13 @@ class EventCreate(BaseModel):
                 raise ValueError(f"{name} must include a UTC offset")
         if self.ends_at <= self.starts_at:
             raise ValueError("ends_at must be after starts_at")
-        if (self.registration_opens_at is not None
-                and self.registration_closes_at is not None
-                and self.registration_opens_at > self.registration_closes_at):
+        if (
+            self.registration_opens_at is not None
+            and self.registration_closes_at is not None
+            and self.registration_opens_at > self.registration_closes_at
+        ):
             raise ValueError("registration_opens_at must not be after registration_closes_at")
-        if (self.registration_closes_at is not None
-                and self.registration_closes_at > self.ends_at):
+        if self.registration_closes_at is not None and self.registration_closes_at > self.ends_at:
             raise ValueError("registration must close by the end of the event")
         if self.seating_mode == "assigned" and self.layout_id is None:
             raise ValueError("assigned seating requires layout_id")
