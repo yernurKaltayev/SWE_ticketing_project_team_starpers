@@ -173,7 +173,8 @@ Shared "service interfaces" (agreed in P0 so work isn't blocked):
 `notify()` (P9), `audit()` (P12), `issue_tickets(order)` (P8), `PaymentProvider` (P6), `apply_promo()` (P16), `release_inventory(order)` (P3/P4), `require_event_access()` (P0/P1). Each owner stubs the others at first.
 
 ## Working Agreements
-- Branch per part (`feat/p4-seat-holds`), PRs reviewed by one other backender; migrations conflicts resolved by rebasing Alembic heads weekly.
+- **Never commit directly to `main`/`master`.** Before making any changes, create a separate branch named after the step and its owner: `feat/<step>-<short-name>-<owner>` (e.g. `feat/p4-seat-holds-dos`, `feat/p9-notifications-yernur`). All changes reach `master` only through a PR.
+- One branch per part; PRs reviewed by one other backender; migrations conflicts resolved by rebasing Alembic heads weekly.
 - API changes go through the OpenAPI contract file first.
 - Each part ships with unit + API tests; payment and QR-validation tests mandatory (SRS testing requirement).
 
