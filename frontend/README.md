@@ -129,3 +129,7 @@ Use [F0_CHECKLIST.md](docs/F0_CHECKLIST.md) to track implementation, automated e
 F0's remaining owner work is wireframes/styles/fixtures/language review, phone verification, real API evidence, contract agreements and remote CI/handoff. Real authenticated operations depend on backend feature readiness; all frontend F0 work belongs to Yernur Slyamshaikhov. Do not mark those items complete because a mock screen or successful build exists.
 
 Keep work on `feat/frontend-f0`, review the diff, and commit/push when ready. This scaffold does not require deploying to app stores or publishing any website.
+
+## F2 — Dias's event discovery and organizer tools
+
+The F2 client adds public discovery at `/events`, event details at `/events/:eventId`, and organizer tools at `/organizer/events`. See [F2_CHECKLIST.md](docs/F2_CHECKLIST.md) for implemented scope, fixture login/run instructions, verification evidence and backend integration gaps. Upload attachment and saved refund-policy readback need backend contracts before full acceptance. Existing F0/P0 readiness statements above are historical; check actual backend endpoint readiness with mocks disabled.
