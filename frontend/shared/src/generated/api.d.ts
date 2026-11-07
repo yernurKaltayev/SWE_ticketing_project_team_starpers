@@ -3754,6 +3754,11 @@ export interface operations {
             query?: {
                 limit?: components["parameters"]["Limit"];
                 offset?: components["parameters"]["Offset"];
+                q?: string;
+                category?: string;
+                city?: string;
+                date_from?: string;
+                date_to?: string;
             };
             header?: never;
             path?: never;
