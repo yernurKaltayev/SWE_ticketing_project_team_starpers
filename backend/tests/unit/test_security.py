@@ -63,7 +63,9 @@ def test_alg_none_is_rejected():
         "exp": datetime.now(UTC) + timedelta(hours=1),
     }
     with pytest.raises(InvalidTokenError):
-        decode_access_token(jwt.encode(claims, None, algorithm="none"))
+        decode_access_token(
+            jwt.encode(claims, None, algorithm="none")  # type: ignore[arg-type]
+        )
 
 
 def test_signature_round_trip_and_tampering():
