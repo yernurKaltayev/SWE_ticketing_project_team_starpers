@@ -328,3 +328,9 @@ export const authHandlers = [
     return HttpResponse.json(entry.organizer, { headers });
   }),
 ];
+
+/** Shared identity boundary for feature development fixtures. */
+export function mockCurrentUser(request: Request): User | Response {
+  const result = current(request);
+  return result instanceof Response ? result : result.user;
+}

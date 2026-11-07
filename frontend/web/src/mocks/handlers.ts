@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw";
 import type { components } from "@biletflow/shared/api";
+import { eventHandlers } from "./events";
 import { authHandlers } from "./auth";
 
 export const scenarios = [
@@ -78,6 +79,7 @@ function failure() {
   return null;
 }
 export const handlers = [
+  ...eventHandlers,
   http.get(
     "*/health",
     () =>

@@ -2,6 +2,8 @@
 
 **Status:** frontend implementation plan for Yernur Slyamshaikhov and Dias. The F0 web/mobile foundation is implemented on `feat/frontend-f0`; real backend/session integration, phone launches and Yernur Slyamshaikhov's F0 wireframe/translation review remain pending. Track evidence in [frontend/docs/F0_CHECKLIST.md](frontend/docs/F0_CHECKLIST.md).
 
+**F2 client progress (6 November 2026):** Dias’s discovery/editor/ticket-type/publication implementation and controlled tests are recorded in [frontend/docs/F2_CHECKLIST.md](frontend/docs/F2_CHECKLIST.md). Live integration, image attachment, policy readback and real-browser acceptance remain pending; F2 is not marked fully accepted.
+
 **Basis:** all five supplied BiletFlow SRS v0.3 PDF extracts, reviewed in full, plus the implementation interfaces in [CLAUDE.md](CLAUDE.md). PDF references below use printed page numbers and original SRS section/use-case identifiers. These are initial-draft requirements; proposed implementation details and unresolved decisions are identified separately.
 
 | Source | Supplied document | Relevant scope |
