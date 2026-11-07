@@ -10,6 +10,7 @@ schedule it. Run after deploying the DB migration:
 The caller may also inject the team's existing async_sessionmaker into
 `run_expiration_pass` from its preferred scheduler.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -25,8 +26,7 @@ from app.services.seat_service import expire_due_holds
 logger = logging.getLogger(__name__)
 
 
-async def run_expiration_pass(session_factory: Callable[[], AsyncSession],
-                              limit: int = 100) -> int:
+async def run_expiration_pass(session_factory: Callable[[], AsyncSession], limit: int = 100) -> int:
     async with session_factory() as db:
         try:
             return await expire_due_holds(db, limit=limit)
@@ -38,10 +38,12 @@ async def run_expiration_pass(session_factory: Callable[[], AsyncSession],
 async def main() -> None:
     parser = argparse.ArgumentParser(description="Expire old assigned-seat holds")
     parser.add_argument("--once", action="store_true", help="Run one pass then exit")
-    parser.add_argument("--interval", type=int, default=60,
-                        help="Delay between passes in seconds (default: 60)")
-    parser.add_argument("--limit", type=int, default=100,
-                        help="Maximum number of due groups scanned per pass")
+    parser.add_argument(
+        "--interval", type=int, default=60, help="Delay between passes in seconds (default: 60)"
+    )
+    parser.add_argument(
+        "--limit", type=int, default=100, help="Maximum number of due groups scanned per pass"
+    )
     args = parser.parse_args()
     if args.interval < 1 or args.limit < 1:
         parser.error("--interval and --limit must be positive")

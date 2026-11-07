@@ -8,6 +8,7 @@ Run only on a disposable database whose name contains `_test` or `test_`:
 Each test receives a private schema and tests an isolated DDL mirror of the
 canonical per-seat constraint. These are NOT Alembic migration / HTTP tests.
 """
+
 import asyncio
 import os
 from uuid import uuid4
@@ -42,6 +43,7 @@ CREATE UNIQUE INDEX uq_seat_holds_event_seat_active ON seat_holds (event_id, sea
  WHERE status IN ('held', 'converted');
 """
 
+
 async def _connect(dsn: str, schema: str):
     import asyncpg
 
@@ -75,17 +77,32 @@ async def pg_schema():
 
 async def _insert_hold(conn, event_id, seat_ids, status="held"):
     hold_id = uuid4()
-    await conn.execute("""
+    await conn.execute(
+        """
         INSERT INTO seat_hold_groups (id, event_id, user_id, status, expires_at)
         VALUES ($1, $2, $3, $4, now() + interval '10 minutes')
-    """, hold_id, event_id, uuid4(), "sold" if status == "converted" else status)
+    """,
+        hold_id,
+        event_id,
+        uuid4(),
+        "sold" if status == "converted" else status,
+    )
     for seat_id in seat_ids:
-        await conn.execute("""
+        await conn.execute(
+            """
             INSERT INTO seat_holds
                 (id, hold_group_id, event_id, seat_id, ticket_type_id,
                  user_id, status, expires_at)
             VALUES ($1, $2, $3, $4, $5, $6, $7, now() + interval '10 minutes')
-        """, uuid4(), hold_id, event_id, seat_id, uuid4(), uuid4(), status)
+        """,
+            uuid4(),
+            hold_id,
+            event_id,
+            seat_id,
+            uuid4(),
+            uuid4(),
+            status,
+        )
     return hold_id
 
 
@@ -124,10 +141,17 @@ async def test_multi_seat_hold_is_atomic_on_conflict(pg_schema):
         with pytest.raises(asyncpg.UniqueViolationError):
             async with conn.transaction():
                 await _insert_hold(conn, event_id, [free_seat, busy_seat])
-        assert await conn.fetchval("""
+        assert (
+            await conn.fetchval(
+                """
             SELECT count(*) FROM seat_holds
             WHERE event_id=$1 AND seat_id=$2
-        """, event_id, free_seat) == 0
+        """,
+                event_id,
+                free_seat,
+            )
+            == 0
+        )
     finally:
         await conn.close()
 
@@ -140,15 +164,24 @@ async def test_terminal_hold_frees_seat(pg_schema, terminal_status):
         event_id, seat_id = uuid4(), uuid4()
         hold_id = await _insert_hold(conn, event_id, [seat_id])
         async with conn.transaction():
-            await conn.execute("UPDATE seat_holds SET status=$1 WHERE hold_group_id=$2",
-                               terminal_status, hold_id)
-            await conn.execute("UPDATE seat_hold_groups SET status=$1 WHERE id=$2",
-                               terminal_status, hold_id)
+            await conn.execute(
+                "UPDATE seat_holds SET status=$1 WHERE hold_group_id=$2", terminal_status, hold_id
+            )
+            await conn.execute(
+                "UPDATE seat_hold_groups SET status=$1 WHERE id=$2", terminal_status, hold_id
+            )
         await _insert_hold(conn, event_id, [seat_id])
-        assert await conn.fetchval("""
+        assert (
+            await conn.fetchval(
+                """
             SELECT count(*) FROM seat_holds
             WHERE event_id=$1 AND seat_id=$2 AND status='held'
-        """, event_id, seat_id) == 1
+        """,
+                event_id,
+                seat_id,
+            )
+            == 1
+        )
     finally:
         await conn.close()
 

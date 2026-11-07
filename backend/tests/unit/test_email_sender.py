@@ -1,10 +1,11 @@
 import logging
 import smtplib
 import ssl
+from typing import Any
 
 import pytest
 from pydantic import SecretStr
-from typing import Any
+
 from app.core.config import Settings, get_settings
 from app.services import email_sender
 from app.services.email_sender import send_email

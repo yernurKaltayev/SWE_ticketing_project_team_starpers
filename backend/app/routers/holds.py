@@ -2,6 +2,7 @@
 
 DO NOT include this router alongside a second router defining the same paths.
 """
+
 from uuid import UUID
 
 from fastapi import APIRouter, status
@@ -20,15 +21,17 @@ async def seat_map(event_id: UUID, db: DbSession):
     return await seat_service.seat_map(db, event_id)
 
 
-@router.post("/events/{event_id}/holds", response_model=HoldResponseP4,
-             status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/events/{event_id}/holds", response_model=HoldResponseP4, status_code=status.HTTP_201_CREATED
+)
 async def create_hold(event_id: UUID, data: HoldCreateP4, user: CurrentUser, db: DbSession):
     try:
         return await seat_service.create_hold(db, event_id, user.id, data)
     except IntegrityError as exc:
         await db.rollback()
-        raise ConflictError("One or more seats were just reserved.",
-                            code="seats_unavailable") from exc
+        raise ConflictError(
+            "One or more seats were just reserved.", code="seats_unavailable"
+        ) from exc
     except Exception:
         await db.rollback()
         raise

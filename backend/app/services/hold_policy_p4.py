@@ -1,4 +1,5 @@
 """Pure P4 hold state/validation rules, independent of the database."""
+
 from datetime import UTC, datetime, timedelta
 
 HOLD_DURATION = timedelta(minutes=10)

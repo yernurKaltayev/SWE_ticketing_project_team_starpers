@@ -11,7 +11,7 @@ NOW = datetime(2026, 11, 7, 12, 0, tzinfo=UTC)
 
 
 def test_hold_duration_is_ten_minutes():
-    assert HOLD_DURATION == timedelta(minutes=10)
+    assert timedelta(minutes=10) == HOLD_DURATION
 
 
 def test_active_hold_expires_at_boundary():

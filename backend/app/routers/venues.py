@@ -1,4 +1,5 @@
 """P4 venue discovery and seating layouts. Shared /api/v1 prefix added by main.py."""
+
 from uuid import UUID
 
 from fastapi import APIRouter
