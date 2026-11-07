@@ -1239,6 +1239,23 @@ paths:
           format: uuid
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Offset'
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 100
+      - name: ticket_type_id
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
       security:
       - bearerAuth: []
       responses:
@@ -1270,6 +1287,23 @@ paths:
         schema:
           type: string
           format: uuid
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 100
+      - name: ticket_type_id
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
       security:
       - bearerAuth: []
       responses:
@@ -4253,6 +4287,13 @@ components:
             $ref: '#/components/schemas/AttendeeIn'
           title: Attendees
           type: array
+        hold_ids:
+          title: Hold Ids
+          type: array
+          default: []
+          items:
+            type: string
+            format: uuid
         promo_code:
           anyOf:
           - type: string
