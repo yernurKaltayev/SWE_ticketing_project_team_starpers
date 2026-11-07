@@ -44,10 +44,12 @@ class FakeDB:
         sql = str(stmt).strip().lower()
         self.ops.append(sql)
         g = self.group
-        if sql.startswith("select id from p4_hold_groups"):
+        if sql.startswith("update seat_holds set status = 'expired'") and "hold_group_id is null" in sql:
+            return Result([])
+        if sql.startswith("select id from seat_hold_groups"):
             rows = [g.id] if g.status == "held" and g.expires_at <= params["now"] else []
             return Result(rows[:params.get("limit", 1_000_000)])
-        if sql.startswith("select user_id, status, expires_at from p4_hold_groups"):
+        if sql.startswith("select user_id, status, expires_at from seat_hold_groups"):
             if params["hold_id"] != g.id or params["event_id"] != g.event_id:
                 return Result([])
             return Result([SimpleNamespace(user_id=g.user_id, status=g.status,
@@ -55,13 +57,13 @@ class FakeDB:
         if sql.startswith("select ticket_type_id, count(*)"):
             counts = Counter(s.ticket_type_id for s in g.seats if s.status == "held")
             return Result(list(counts.items()))
-        if sql.startswith("update p4_hold_seats set status ="):
+        if sql.startswith("update seat_holds set status ="):
             terminal = "expired" if "'expired'" in sql else "released"
             for seat in g.seats:
                 if seat.status == "held":
                     seat.status = terminal
             return Result([])
-        if sql.startswith("update p4_hold_groups set status ="):
+        if sql.startswith("update seat_hold_groups set status ="):
             terminal = "expired" if "'expired'" in sql else "released"
             if g.status == "held":
                 g.status = terminal

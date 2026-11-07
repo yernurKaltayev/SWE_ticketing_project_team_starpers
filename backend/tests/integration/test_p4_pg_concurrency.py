@@ -1,16 +1,15 @@
-"""PostgreSQL invariants for P4's ACTUAL p4_hold_groups/p4_hold_seats DDL.
+"""PostgreSQL index invariants for P4 canonical seat_holds design.
 
 Run only on a disposable database whose name contains `_test` or `test_`:
 
     P4_TEST_DATABASE_URL=postgresql://.../ticketing_test \
         pytest backend/tests/integration/test_p4_pg_concurrency.py -q
 
-Each test receives a private schema, and all connections use that schema. These
-verify index/transaction invariants (not the HTTP handlers or P3 accounting).
+Each test receives a private schema and tests an isolated DDL mirror of the
+canonical per-seat constraint. These are NOT Alembic migration / HTTP tests.
 """
 import asyncio
 import os
-from pathlib import Path
 from uuid import uuid4
 
 import pytest
@@ -18,9 +17,30 @@ import pytest_asyncio
 
 pytestmark = pytest.mark.asyncio
 
-DDL = (Path(__file__).resolve().parents[2] / "migrations" / "manual" /
-       "p4_seat_holds.sql").read_text()
-
+# Isolated schema mirror for the canonical SeatHold index. The production schema
+# is built by Alembic; run an additional migration test against that schema.
+DDL = """
+CREATE TABLE seat_hold_groups (
+ id uuid PRIMARY KEY,
+ event_id uuid NOT NULL,
+ user_id uuid NOT NULL,
+ status text NOT NULL,
+ expires_at timestamptz NOT NULL
+);
+CREATE TABLE seat_holds (
+ id uuid PRIMARY KEY,
+ hold_group_id uuid NOT NULL REFERENCES seat_hold_groups(id),
+ event_id uuid NOT NULL,
+ seat_id uuid NOT NULL,
+ ticket_type_id uuid NOT NULL,
+ user_id uuid NOT NULL,
+ status text NOT NULL,
+ expires_at timestamptz NOT NULL,
+ UNIQUE (hold_group_id, seat_id)
+);
+CREATE UNIQUE INDEX uq_seat_holds_event_seat_active ON seat_holds (event_id, seat_id)
+ WHERE status IN ('held', 'converted');
+"""
 
 async def _connect(dsn: str, schema: str):
     import asyncpg
@@ -56,15 +76,16 @@ async def pg_schema():
 async def _insert_hold(conn, event_id, seat_ids, status="held"):
     hold_id = uuid4()
     await conn.execute("""
-        INSERT INTO p4_hold_groups (id, event_id, user_id, status, expires_at)
+        INSERT INTO seat_hold_groups (id, event_id, user_id, status, expires_at)
         VALUES ($1, $2, $3, $4, now() + interval '10 minutes')
-    """, hold_id, event_id, uuid4(), status)
+    """, hold_id, event_id, uuid4(), "sold" if status == "converted" else status)
     for seat_id in seat_ids:
         await conn.execute("""
-            INSERT INTO p4_hold_seats (id, hold_id, event_id, seat_id,
-                                       ticket_type_id, status)
-            VALUES ($1, $2, $3, $4, $5, $6)
-        """, uuid4(), hold_id, event_id, seat_id, uuid4(), status)
+            INSERT INTO seat_holds
+                (id, hold_group_id, event_id, seat_id, ticket_type_id,
+                 user_id, status, expires_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, now() + interval '10 minutes')
+        """, uuid4(), hold_id, event_id, seat_id, uuid4(), uuid4(), status)
     return hold_id
 
 
@@ -104,7 +125,7 @@ async def test_multi_seat_hold_is_atomic_on_conflict(pg_schema):
             async with conn.transaction():
                 await _insert_hold(conn, event_id, [free_seat, busy_seat])
         assert await conn.fetchval("""
-            SELECT count(*) FROM p4_hold_seats
+            SELECT count(*) FROM seat_holds
             WHERE event_id=$1 AND seat_id=$2
         """, event_id, free_seat) == 0
     finally:
@@ -119,13 +140,13 @@ async def test_terminal_hold_frees_seat(pg_schema, terminal_status):
         event_id, seat_id = uuid4(), uuid4()
         hold_id = await _insert_hold(conn, event_id, [seat_id])
         async with conn.transaction():
-            await conn.execute("UPDATE p4_hold_seats SET status=$1 WHERE hold_id=$2",
+            await conn.execute("UPDATE seat_holds SET status=$1 WHERE hold_group_id=$2",
                                terminal_status, hold_id)
-            await conn.execute("UPDATE p4_hold_groups SET status=$1 WHERE id=$2",
+            await conn.execute("UPDATE seat_hold_groups SET status=$1 WHERE id=$2",
                                terminal_status, hold_id)
         await _insert_hold(conn, event_id, [seat_id])
         assert await conn.fetchval("""
-            SELECT count(*) FROM p4_hold_seats
+            SELECT count(*) FROM seat_holds
             WHERE event_id=$1 AND seat_id=$2 AND status='held'
         """, event_id, seat_id) == 1
     finally:
@@ -139,7 +160,7 @@ async def test_sold_seat_cannot_be_reserved_again(pg_schema):
     conn = await _connect(dsn, schema)
     try:
         event_id, seat_id = uuid4(), uuid4()
-        await _insert_hold(conn, event_id, [seat_id], status="sold")
+        await _insert_hold(conn, event_id, [seat_id], status="converted")
         with pytest.raises(asyncpg.UniqueViolationError):
             await _insert_hold(conn, event_id, [seat_id])
     finally:

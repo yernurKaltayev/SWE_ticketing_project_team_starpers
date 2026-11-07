@@ -2,8 +2,8 @@
 
 Integration boundaries:
 * Requires the existing P2 Event and P3 TicketType / inventory service.
-* The p4_hold_* tables in migrations/manual/p4_seat_holds.sql are additive
-  until the team's existing SeatHold model is reconciled.
+* P4 uses existing seat_holds (including legacy P0 rows) as its only seat
+  reservation ledger. seat_hold_groups represents multi-seat checkout groups.
 * Create/release commit in their service functions; confirm_hold deliberately
   DOES NOT commit, so P5 can atomically settle payment/order/tickets and mark seats sold.
 * All mutating paths acquire the Event row lock FIRST to avoid deadlocks and
@@ -131,12 +131,17 @@ async def _layout_seats(db: AsyncSession, layout_id: UUID):
 
 
 async def _seat_status(db: AsyncSession, event_id: UUID, now: datetime) -> dict[UUID, str]:
+    """Read the single P0/P4 seat ledger; converted seats are sold."""
     rows = (await db.execute(text("""
-        SELECT s.seat_id, s.status
-          FROM p4_hold_seats AS s JOIN p4_hold_groups AS g ON g.id = s.hold_id
+        SELECT s.seat_id,
+               CASE WHEN s.status = 'converted' THEN 'sold' ELSE 'held' END AS status
+          FROM seat_holds s
+          LEFT JOIN seat_hold_groups g ON g.id = s.hold_group_id
          WHERE s.event_id = :event_id
-           AND (s.status = 'sold'
-             OR (s.status = 'held' AND g.status = 'held' AND g.expires_at > :now))
+           AND (s.status = 'converted'
+                OR (s.status = 'held' AND s.expires_at > :now
+                    AND (s.hold_group_id IS NULL
+                         OR (g.status = 'held' AND g.expires_at > :now))))
     """), {"event_id": event_id, "now": now})).all()
     return {seat_id: status for seat_id, status in rows}
 
@@ -165,7 +170,7 @@ async def _expire_event(db: AsyncSession, event_id: UUID, now: datetime,
     overdue group before a new seat claim so stale unique-index rows never
     block a legitimate request.
     """
-    sql = """SELECT id FROM p4_hold_groups
+    sql = """SELECT id FROM seat_hold_groups
          WHERE event_id = :event_id AND status = 'held' AND expires_at <= :now
          ORDER BY id"""
     params = {"event_id": event_id, "now": now}
@@ -176,12 +181,19 @@ async def _expire_event(db: AsyncSession, event_id: UUID, now: datetime,
         params["limit"] = max_groups
     sql += " FOR UPDATE"
     groups = (await db.execute(text(sql), params)).scalars().all()
+    # P0 legacy rows were not grouped and have no ticket type to reconcile.
+    # Release their stale unique-index claims as well.
+    await db.execute(text("""
+        UPDATE seat_holds SET status = 'expired', updated_at = now()
+         WHERE event_id = :event_id AND hold_group_id IS NULL
+           AND status = 'held' AND expires_at <= :now
+    """), {"event_id": event_id, "now": now})
     if not groups:
         return 0
     for group_id in groups:
         counts = (await db.execute(text("""
-            SELECT ticket_type_id, COUNT(*) AS n FROM p4_hold_seats
-             WHERE hold_id = :hold_id AND status = 'held'
+            SELECT ticket_type_id, COUNT(*) AS n FROM seat_holds
+             WHERE hold_group_id = :hold_id AND status = 'held'
              GROUP BY ticket_type_id
         """), {"hold_id": group_id})).all()
         for ticket_id, quantity in counts:
@@ -189,11 +201,11 @@ async def _expire_event(db: AsyncSession, event_id: UUID, now: datetime,
                 raise ConflictError("Reserved ticket inventory is inconsistent.",
                                     code="inventory_inconsistent")
         await db.execute(text("""
-            UPDATE p4_hold_seats SET status = 'expired'
-             WHERE hold_id = :hold_id AND status = 'held'
+            UPDATE seat_holds SET status = 'expired', updated_at = now()
+             WHERE hold_group_id = :hold_id AND status = 'held'
         """), {"hold_id": group_id})
         await db.execute(text("""
-            UPDATE p4_hold_groups SET status = 'expired'
+            UPDATE seat_hold_groups SET status = 'expired'
              WHERE id = :hold_id AND status = 'held'
         """), {"hold_id": group_id})
     return len(groups)
@@ -242,16 +254,23 @@ async def create_hold(db: AsyncSession, event_id: UUID, user_id: UUID,
     hold_id = uuid4()
     expiry = now + HOLD_DURATION
     await db.execute(text("""
-        INSERT INTO p4_hold_groups (id, event_id, user_id, status, expires_at)
+        INSERT INTO seat_hold_groups (id, event_id, user_id, status, expires_at)
         VALUES (:id, :event_id, :user_id, 'held', :expires_at)
     """), {"id": hold_id, "event_id": event.id, "user_id": user_id,
            "expires_at": expiry})
     for seat_id in sorted(requested):
         await db.execute(text("""
-            INSERT INTO p4_hold_seats (id, hold_id, event_id, seat_id, ticket_type_id, status)
-            VALUES (:id, :hold_id, :event_id, :seat_id, :ticket_type_id, 'held')
+            INSERT INTO seat_holds
+                (id, hold_group_id, event_id, seat_id, ticket_type_id,
+                 user_id, session_id, order_id, status, expires_at,
+                 created_at, updated_at)
+            VALUES
+                (:id, :hold_id, :event_id, :seat_id, :ticket_type_id,
+                 :user_id, NULL, NULL, 'held', :expires_at,
+                 now(), now())
         """), {"id": uuid4(), "hold_id": hold_id, "event_id": event.id,
-               "seat_id": seat_id, "ticket_type_id": ticket.id})
+               "seat_id": seat_id, "ticket_type_id": ticket.id,
+               "user_id": user_id, "expires_at": expiry})
     await db.commit()
     return HoldResponseP4(id=hold_id, event_id=event.id,
                           seat_ids=sorted(requested), status="held", expires_at=expiry)
@@ -265,7 +284,7 @@ async def release_hold(db: AsyncSession, event_id: UUID, hold_id: UUID, user_id:
     if event is None:
         raise NotFoundError("Event not found.", code="event_not_found")
     row = (await db.execute(text("""
-        SELECT user_id, status, expires_at FROM p4_hold_groups
+        SELECT user_id, status, expires_at FROM seat_hold_groups
          WHERE id = :hold_id AND event_id = :event_id FOR UPDATE
     """), {"hold_id": hold_id, "event_id": event_id})).first()
     if row is None or row.user_id != user_id:
@@ -278,19 +297,19 @@ async def release_hold(db: AsyncSession, event_id: UUID, hold_id: UUID, user_id:
         raise ConflictError("Sold seats cannot be released as a hold.",
                             code="hold_already_sold")
     counts = (await db.execute(text("""
-        SELECT ticket_type_id, COUNT(*) FROM p4_hold_seats
-         WHERE hold_id = :hold_id AND status = 'held' GROUP BY ticket_type_id
+        SELECT ticket_type_id, COUNT(*) FROM seat_holds
+         WHERE hold_group_id = :hold_id AND status = 'held' GROUP BY ticket_type_id
     """), {"hold_id": hold_id})).all()
     for ticket_id, quantity in counts:
         if not await release_inventory(db, ticket_id, int(quantity)):
             raise ConflictError("Reserved ticket inventory is inconsistent.",
                                 code="inventory_inconsistent")
     await db.execute(text("""
-        UPDATE p4_hold_seats SET status = 'released'
-         WHERE hold_id = :hold_id AND status = 'held'
+        UPDATE seat_holds SET status = 'released', updated_at = now()
+         WHERE hold_group_id = :hold_id AND status = 'held'
     """), {"hold_id": hold_id})
     await db.execute(text("""
-        UPDATE p4_hold_groups SET status = 'released'
+        UPDATE seat_hold_groups SET status = 'released'
          WHERE id = :hold_id AND status = 'held'
     """), {"hold_id": hold_id})
     await db.commit()
@@ -306,7 +325,7 @@ async def confirm_hold(db: AsyncSession, event_id: UUID, hold_id: UUID,
     now = now or now_utc()
     await _published_event(db, event_id, lock=True)
     group = (await db.execute(text("""
-        SELECT user_id, status, expires_at FROM p4_hold_groups
+        SELECT user_id, status, expires_at FROM seat_hold_groups
          WHERE id = :hold_id AND event_id = :event_id FOR UPDATE
     """), {"hold_id": hold_id, "event_id": event_id})).first()
     if group is None or group.user_id != user_id:
@@ -314,8 +333,8 @@ async def confirm_hold(db: AsyncSession, event_id: UUID, hold_id: UUID,
     if group.status != "held" or group.expires_at <= now:
         raise ConflictError("Hold is not active.", code="hold_not_active")
     counts = (await db.execute(text("""
-        SELECT ticket_type_id, COUNT(*) FROM p4_hold_seats
-         WHERE hold_id = :hold_id AND status = 'held' GROUP BY ticket_type_id
+        SELECT ticket_type_id, COUNT(*) FROM seat_holds
+         WHERE hold_group_id = :hold_id AND status = 'held' GROUP BY ticket_type_id
     """), {"hold_id": hold_id})).all()
     if not counts:
         raise ConflictError("Hold is missing its seats.", code="hold_empty")
@@ -324,11 +343,11 @@ async def confirm_hold(db: AsyncSession, event_id: UUID, hold_id: UUID,
             raise ConflictError("Reserved ticket inventory is inconsistent.",
                                 code="inventory_inconsistent")
     await db.execute(text("""
-        UPDATE p4_hold_seats SET status = 'sold'
-         WHERE hold_id = :hold_id AND status = 'held'
+        UPDATE seat_holds SET status = 'converted', updated_at = now()
+         WHERE hold_group_id = :hold_id AND status = 'held'
     """), {"hold_id": hold_id})
     await db.execute(text("""
-        UPDATE p4_hold_groups SET status = 'sold'
+        UPDATE seat_hold_groups SET status = 'sold'
          WHERE id = :hold_id AND status = 'held'
     """), {"hold_id": hold_id})
 
@@ -344,7 +363,7 @@ async def expire_due_holds(db: AsyncSession, *, limit: int = 100,
     now = now or now_utc()
     groups = (await db.execute(text("""
         SELECT event_id, COUNT(*) AS n FROM (
-            SELECT event_id FROM p4_hold_groups
+            SELECT event_id FROM seat_hold_groups
             WHERE status = 'held' AND expires_at <= :now
             ORDER BY expires_at, id LIMIT :limit
         ) AS due GROUP BY event_id ORDER BY event_id
