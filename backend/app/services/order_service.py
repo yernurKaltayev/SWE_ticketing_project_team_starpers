@@ -293,6 +293,7 @@ async def create_order(
     )
     db.add(order)
     await db.flush()
+    created_order_id = order.id
 
     # Insert items and one-to-one attendee assignments in the same request order.
     next_attendee = iter(data.attendees)
@@ -302,8 +303,8 @@ async def create_order(
         for seat_id in seat_ids:
             quantity = 1 if seat_id is not None else selection.quantity
             location = seat_details.get(seat_id) if seat_id is not None else None
-            item = OrderItem(
-                order_id=order.id,
+            new_order_item = OrderItem(
+                order_id=created_order_id,
                 ticket_type_id=ticket.id,
                 seat_id=seat_id,
                 section_name=location[0] if location else None,
@@ -314,14 +315,14 @@ async def create_order(
                 line_total=ticket.price_amount * quantity,
                 currency="KZT",
             )
-            db.add(item)
+            db.add(new_order_item)
             await db.flush()
             for _ in range(quantity):
                 entry = next(next_attendee)
                 db.add(
                     Attendee(
-                        order_id=order.id,
-                        order_item_id=item.id,
+                        order_id=created_order_id,
+                        order_item_id=new_order_item.id,
                         full_name=entry.full_name,
                         email=str(entry.email),
                         phone=None,
@@ -451,7 +452,9 @@ async def _attendees_query(
     return stmt
 
 
-def _attendee_out(row: object) -> AttendeeOut:
+def _attendee_out(
+    row: tuple[Attendee, str, TicketStatus | None],
+) -> AttendeeOut:
     attendee, type_name, ticket_status = row
     return AttendeeOut(
         id=attendee.id,
@@ -484,7 +487,7 @@ async def list_attendees(
     total = await db.scalar(select(func.count()).select_from(stmt.order_by(None).subquery()))
     rows = (await db.execute(stmt.limit(params.limit).offset(params.offset))).all()
     return Page[AttendeeOut](
-        items=[_attendee_out(row) for row in rows],
+        items=[_attendee_out(row._t) for row in rows],
         total=total or 0,
         limit=params.limit,
         offset=params.offset,
@@ -522,7 +525,7 @@ async def export_attendees_csv(
     # Stream rows from PostgreSQL instead of loading the entire guest list into RAM.
     result = await db.stream(stmt)
     async for row in result:
-        person = _attendee_out(row)
+        person = _attendee_out(row._t)
         writer.writerow(
             (
                 str(person.id),
@@ -625,6 +628,9 @@ async def confirm_paid_order(
         raise NotFoundError("Order not found.", code="order_not_found")
     await _lock_event(db, visible.event_id)
     order = await db.scalar(select(Order).where(Order.id == order_id).with_for_update())
+    if order is None:
+        raise NotFoundError("Order not found.", code="order_not_found")
+
     if order.status == OrderStatus.paid:
         return order
     if order.status != OrderStatus.pending:
@@ -640,7 +646,13 @@ async def confirm_paid_order(
         if None in groups:
             raise ConflictError("Seat hold group missing.", code="seat_reservations_inconsistent")
         buyer_id = order.buyer_user_id
-        for group_id in sorted(groups):
+        if buyer_id is None:
+            raise ConflictError(
+                "Order has no buyer.",
+                code="order_buyer_missing",
+            )
+
+        for group_id in sorted(group_id for group_id in groups if group_id is not None):
             await confirm_hold(db, order.event_id, group_id, buyer_id, now)
     items = list(await db.scalars(select(OrderItem).where(OrderItem.order_id == order.id)))
     for item in items:

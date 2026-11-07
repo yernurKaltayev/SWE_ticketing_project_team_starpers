@@ -75,7 +75,14 @@ async def release_inventory(
                 "A pending order has a sold seat.", code="seat_reservations_inconsistent"
             )
         if seat.status == SeatHoldStatus.held:
-            if not await release_ticket_quantity(db, seat.ticket_type_id, 1):
+            ticket_type_id = seat.ticket_type_id
+            if ticket_type_id is None:
+                raise ConflictError(
+                    "Seat hold has no ticket type.",
+                    code="seat_reservations_inconsistent",
+                )
+
+            if not await release_ticket_quantity(db, ticket_type_id, 1):
                 raise ConflictError(
                     "Unable to release seat inventory.", code="inventory_release_failed"
                 )
