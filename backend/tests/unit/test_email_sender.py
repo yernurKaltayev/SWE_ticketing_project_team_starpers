@@ -1,6 +1,7 @@
 import logging
 import smtplib
 import ssl
+from typing import Any
 
 import pytest
 from pydantic import SecretStr
@@ -19,7 +20,7 @@ class FakeSMTP:
         self.calls: list[str] = []
         self.context: ssl.SSLContext | None = None
         self.login_error: Exception | None = None
-        self.sent = []
+        self.sent: list[Any] = []
 
     def __call__(self, host: str, port: int, timeout: int) -> "FakeSMTP":
         return self
