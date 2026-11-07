@@ -20,11 +20,23 @@ from app.db.base import (
 
 class TicketType(UUIDPrimaryKey, Timestamps, Currency, Base):
     __tablename__ = "ticket_types"
+
     __table_args__ = (
-        CheckConstraint("qty_reserved + qty_sold <= quantity_total", name="not_oversold"),
+        CheckConstraint(
+            "qty_reserved + qty_sold - qty_refunded <= quantity_total",
+            name="not_oversold",
+        ),
         CheckConstraint(
             "qty_reserved >= 0 AND qty_sold >= 0 AND qty_refunded >= 0 AND qty_checked_in >= 0",
             name="counters_not_negative",
+        ),
+        CheckConstraint(
+            "qty_refunded <= qty_sold",
+            name="refunds_not_above_sales",
+        ),
+        CheckConstraint(
+            "qty_checked_in + qty_refunded <= qty_sold",
+            name="checkins_and_refunds_valid",
         ),
     )
 
