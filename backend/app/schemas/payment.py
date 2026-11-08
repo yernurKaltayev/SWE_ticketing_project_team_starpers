@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 
 class PaymentOut(BaseModel):
@@ -34,9 +34,21 @@ class ActivationUpdate(BaseModel):
 
 
 class PayoutAccountIn(BaseModel):
-    bank_name: str
-    iban: str
-    holder_name: str
+    bank_name: str = Field(min_length=1, max_length=200)
+    iban: str = Field(min_length=15, max_length=42)
+    holder_name: str = Field(min_length=1, max_length=200)
+
+    @field_validator("iban")
+    @classmethod
+    def valid_iban(cls, value: str) -> str:
+        """ISO 13616 mod-97 checksum, e.g. KZ86125KZT5004100100. Spaces are allowed."""
+        iban = value.replace(" ", "").upper()
+        if not (15 <= len(iban) <= 34 and iban[:2].isalpha() and iban.isalnum()):
+            raise ValueError("not an IBAN")
+        digits = "".join(str(int(char, 36)) for char in iban[4:] + iban[:4])
+        if int(digits) % 97 != 1:
+            raise ValueError("IBAN checksum is wrong")
+        return iban
 
 
 class PayoutAccountOut(BaseModel):
@@ -68,3 +80,10 @@ class FinancialSummaryOut(BaseModel):
     estimated_payout: int
     currency: str
     is_simulated: bool
+
+
+class SimulatePaymentIn(BaseModel):
+    """SANDBOX control. Decides what the simulated provider reports; no card data."""
+
+    outcome: Literal["succeeded", "failed"]
+    failure_reason: str | None = Field(default=None, max_length=200)

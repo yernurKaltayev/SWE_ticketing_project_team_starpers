@@ -1,5 +1,6 @@
 """Application settings, read from environment variables (or a local `.env`)."""
 
+from decimal import Decimal
 from functools import lru_cache
 from typing import Annotated, Literal
 
@@ -48,6 +49,13 @@ class Settings(BaseSettings):
     auth_rate_limit_window_seconds: int = 300
     auth_rate_limit_per_account: int = 10
     auth_rate_limit_per_ip: int = 100
+
+    # P6 payments. Every amount is simulated; platform_settings rows (P11) override these.
+    activation_fee_amount: int = 1_000_000  # tiyn, i.e. 10 000 KZT per event
+    processing_fee_percent: Decimal = Decimal("3")  # deducted from the organizer, not the buyer
+    payout_delay_days: int = 3  # after the event ends
+    # Lets a buyer or organizer finish a sandbox payment via /payments/{id}/simulate.
+    payment_simulation_enabled: bool = True
 
     smtp_host: str = "localhost"
     smtp_port: int = 1025
