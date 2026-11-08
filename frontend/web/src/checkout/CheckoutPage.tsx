@@ -7,6 +7,7 @@ import { Field, Status } from "../auth/ui";
 import { checkoutCoordinator } from "./attempt";
 import { commerceCopy } from "./copy";
 import { CommerceError } from "./ui";
+import { paymentCopy } from "../payments/copy";
 import {
   eventPath,
   parseAvailability,
@@ -34,7 +35,7 @@ export default function CheckoutPage({ locale }: { locale: Locale }) {
   return (
     <section>
       <Link to="/events">{t.back}</Link>
-      <h1>{t.checkout}</h1>
+      <h1>{paymentCopy[locale].checkout}</h1>
       <CommerceError
         error={event.error ?? availability.error}
         t={t}
@@ -134,7 +135,18 @@ function CheckoutForm({
   }, []);
   const recovery = coordinator.recovery(event.id);
   const frozen = coordinator.draft(event.id);
-  const choices = availability.choices.filter((c) => c.free);
+  const choices = availability.choices;
+  const paidActive = event.paid_sales_status === "active";
+  const canChoose = (c: (typeof choices)[number]) =>
+    c.free || (paidActive && !!c.price);
+  const selectedPaid = choices.some(
+    (c) => !c.free && (quantities[c.id] ?? 0) > 0,
+  );
+  const estimated = choices.reduce(
+    (sum, c) => sum + (c.price ?? 0) * (quantities[c.id] ?? 0),
+    0,
+  );
+  const p = paymentCopy[locale];
   const count = choices.reduce((sum, c) => sum + (quantities[c.id] ?? 0), 0);
   const labels = choices.flatMap((c) =>
     Array.from({ length: Math.min(100, quantities[c.id] ?? 0) }, () => c.name),
@@ -192,6 +204,7 @@ function CheckoutForm({
             body.items.map((i) => [i.ticket_type_id, i.quantity]),
           ),
           body.attendees,
+          latestEvent.paid_sales_status === "active",
         );
       }
       const order = await coordinator.submit(body);
@@ -288,7 +301,15 @@ function CheckoutForm({
                   )?.name ?? t.ticket}
                 </strong>
                 <span>
-                  {t.quantity}: {item.quantity} · {t.free}
+                  {t.quantity}: {item.quantity} ·{" "}
+                  {(() => {
+                    const c = choices.find((c) => c.id === item.ticket_type_id);
+                    return c?.free
+                      ? t.free
+                      : c?.price
+                        ? formatMoney(c.price, locale)
+                        : p.authoritative;
+                  })()}
                 </span>
               </li>
             ))}
@@ -303,9 +324,10 @@ function CheckoutForm({
             ))}
           </ol>
           <p className="checkout-total">
-            {t.total}: {formatMoney(0, locale)}
+            {selectedPaid ? p.estimate : t.total}:{" "}
+            {formatMoney(estimated, locale)}
           </p>
-          <p>{t.freeHint}</p>
+          <p>{selectedPaid ? p.authoritative : t.freeHint}</p>
           <p>{t.reviewHint}</p>
           <div className="controls">
             <button
@@ -314,7 +336,13 @@ function CheckoutForm({
                 void confirm();
               }}
             >
-              {busy ? t.working : recovery ? t.repeat : t.register}
+              {busy
+                ? t.working
+                : recovery
+                  ? t.repeat
+                  : selectedPaid
+                    ? p.continue
+                    : t.register}
             </button>
             {!recovery && (
               <button
@@ -356,6 +384,7 @@ function CheckoutForm({
                   availability.choices,
                   quantities,
                   attendees,
+                  paidActive,
                 ),
               );
             } catch (caught) {
@@ -365,8 +394,8 @@ function CheckoutForm({
           noValidate
         >
           <h2>{t.select}</h2>
-          {!choices.some((c) => c.open && c.available > 0) && (
-            <Status>{t.noFree}</Status>
+          {!choices.some((c) => canChoose(c) && c.open && c.available > 0) && (
+            <Status>{p.noTickets}</Status>
           )}
           <div className="ticket-choices">
             {choices.map((c) => (
@@ -374,7 +403,12 @@ function CheckoutForm({
                 <div>
                   <strong>{c.name}</strong>
                   <p className="field-hint">
-                    {t.free} · {t.limit}: {Math.min(c.available, c.limit)}
+                    {c.free
+                      ? t.free
+                      : c.price
+                        ? formatMoney(c.price, locale)
+                        : p.authoritative}{" "}
+                    · {t.limit}: {Math.min(c.available, c.limit)}
                   </p>
                 </div>
                 <Field
@@ -384,7 +418,7 @@ function CheckoutForm({
                   min={0}
                   max={Math.min(c.available, c.limit, 100)}
                   step={1}
-                  disabled={!c.open || !c.available}
+                  disabled={!c.open || !c.available || !canChoose(c)}
                   value={quantities[c.id] ?? 0}
                   onChange={(e) =>
                     quantity(
@@ -399,8 +433,8 @@ function CheckoutForm({
               </div>
             ))}
           </div>
-          {availability.choices.some((c) => !c.free) && (
-            <p className="field-hint">{t.paid}</p>
+          {!paidActive && choices.some((c) => !c.free) && (
+            <p className="notice">{p.blocked}</p>
           )}
           {count > 0 && (
             <>

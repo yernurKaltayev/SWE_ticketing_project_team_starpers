@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import "./index.css";
 import { config } from "./config";
+import { PageErrorBoundary } from "./PageErrorBoundary";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -15,9 +16,11 @@ async function start() {
   }
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
+      <PageErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
+      </PageErrorBoundary>
     </StrictMode>,
   );
 }

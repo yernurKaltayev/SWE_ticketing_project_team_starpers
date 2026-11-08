@@ -216,6 +216,8 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F4 — Paid-sales activation, simulated checkout, and payouts [B]
 
+**Implementation evidence (8 November 2026):** F4 is implemented on `feat/frontend-f4`, with per-event activation, masked payout-account management, simulated paid checkout/recovery and financial/payout views. Real local P6 activation/paid-order/reload/response-loss flows passed; automated checks cover failure/retry, suspension and payout statuses. Owner accessibility/translation review and remaining cross-team acceptance are tracked separately in [F4_CHECKLIST.md](frontend/docs/F4_CHECKLIST.md).
+
 **Frontend lead:** Yernur Slyamshaikhov — sole owner of attendee payment/status recovery and organizer activation/payout screens.
 
 **Backend dependencies:** Dima (backend), with Yernur (backend) for suspension/settings; P6/P11.

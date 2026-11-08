@@ -8,6 +8,8 @@ import { searchQuery } from "./model";
 import type { Event, Page } from "./model";
 import { EventError, Image } from "./ui";
 import { commerceNavigation } from "../checkout/navigation";
+import { paymentCopy } from "../payments/copy";
+import { parseEvents } from "./contracts";
 
 export function EventList({
   locale,
@@ -23,6 +25,7 @@ export function EventList({
     : searchQuery(params);
   const { data, error, reload } = useResource<Page<Event>>(
     `/api/v1/${organizer ? "organizers/me/events" : "events"}?${query}`,
+    parseEvents,
   );
   const offset = Number(new URLSearchParams(query).get("offset"));
   function page(next: number) {
@@ -152,9 +155,23 @@ export function EventList({
                   {formatEventDateTime(event.starts_at, event.timezone, locale)}
                 </p>
                 {organizer && (
-                  <span className="status-badge">
-                    {t[event.status as "draft"] ?? event.status}
-                  </span>
+                  <>
+                    <span className="status-badge">
+                      {t[event.status as "draft"] ?? event.status}
+                    </span>
+                    <nav className="controls">
+                      <Link
+                        to={`/organizer/events/${encodeURIComponent(event.id)}/activation`}
+                      >
+                        {paymentCopy[locale].activation}
+                      </Link>
+                      <Link
+                        to={`/organizer/events/${encodeURIComponent(event.id)}/financials`}
+                      >
+                        {paymentCopy[locale].finances}
+                      </Link>
+                    </nav>
+                  </>
                 )}
                 {!organizer && (
                   <Link to={`/events/${event.id}/checkout`}>

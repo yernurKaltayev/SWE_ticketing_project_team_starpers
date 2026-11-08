@@ -16,12 +16,14 @@ import {
 } from "./model";
 import type { Event, Page, Ticket, Venue } from "./model";
 import { EventError, Image, SelectField, TextArea } from "./ui";
+import { parseEvent, parseVenues, parseTicketTypes } from "./contracts";
 
 export function EventEditor({ locale }: { locale: Locale }) {
   const { eventId } = useParams();
   const t = eventCopy[locale];
   const resource = useResource<Event>(
     eventId ? `/api/v1/events/${encodeURIComponent(eventId)}` : "",
+    parseEvent,
   );
   if (eventId && !resource.data)
     return (
@@ -57,6 +59,7 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
   const [venueOffset, setVenueOffset] = useState(0);
   const moreVenues = useResource<Page<Venue>>(
     `/api/v1/venues?limit=100&offset=${venueOffset}`,
+    parseVenues,
   );
   const [venueOptions, setVenueOptions] = useState<Venue[]>([]);
   // Accumulating paginated remote results synchronizes the venue selector with the API.
@@ -97,9 +100,8 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
     setError(undefined);
     setSaved(false);
     try {
-      const result = await request<Event>(
-        `/api/v1/events/${event.id}/${kind}`,
-        { method: "POST" },
+      const result = parseEvent(
+        await request(`/api/v1/events/${event.id}/${kind}`, { method: "POST" }),
       );
       if (kind === "duplicate") navigate(`/organizer/events/${result.id}/edit`);
       else {
@@ -158,10 +160,11 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
             return;
           }
           setPending(true);
-          void request<Event>(
+          void request(
             event ? `/api/v1/events/${event.id}` : "/api/v1/events",
             { method: event ? "PATCH" : "POST", body },
           )
+            .then(parseEvent)
             .then((result) => {
               setDirty(false);
               setEvent(result);
@@ -214,15 +217,21 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
               ))}
             </SelectField>
           </div>
-          {moreVenues.data && venueOffset + 100 < moreVenues.data.total && (
-            <button
-              type="button"
-              className="secondary"
-              onClick={() => setVenueOffset((n) => n + 100)}
-            >
-              {t.next} · {t.venue_id}
-            </button>
-          )}
+          {moreVenues.data &&
+            moreVenues.data.offset + moreVenues.data.limit <
+              moreVenues.data.total && (
+              <button
+                type="button"
+                className="secondary"
+                onClick={() =>
+                  setVenueOffset(
+                    moreVenues.data!.offset + moreVenues.data!.limit,
+                  )
+                }
+              >
+                {t.next} · {t.venue_id}
+              </button>
+            )}
           <Field
             name="timezone"
             label={t.timezone}
@@ -391,6 +400,7 @@ function TicketEditor({
   const [offset, setOffset] = useState(0);
   const tickets = useResource<Page<Ticket>>(
     `/api/v1/events/${event.id}/ticket-types?limit=20&offset=${offset}`,
+    parseTicketTypes,
   );
   const [selected, select] = useState<Ticket | null | undefined>();
   const [error, setError] = useState<unknown>();
@@ -472,8 +482,13 @@ function TicketEditor({
           </button>
           <button
             className="secondary"
-            disabled={offset + 20 >= tickets.data.total || pending}
-            onClick={() => setOffset((n) => n + 20)}
+            disabled={
+              tickets.data.offset + tickets.data.limit >= tickets.data.total ||
+              pending
+            }
+            onClick={() =>
+              setOffset(tickets.data!.offset + tickets.data!.limit)
+            }
           >
             {t.next}
           </button>

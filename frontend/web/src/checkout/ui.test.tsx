@@ -392,7 +392,7 @@ it("shows a pending server outcome without claiming free confirmation or ticket 
   await userEvent.click(
     screen.getByRole("button", { name: "Register for free" }),
   );
-  await screen.findByText(/This order is not confirmed/);
+  await screen.findByText(/Payment is pending/);
   expect(screen.getByText("Simulated", { exact: true })).toBeDefined();
   expect(
     screen.queryByRole("heading", { name: "Registration confirmed" }),

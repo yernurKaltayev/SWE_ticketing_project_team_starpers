@@ -14,6 +14,8 @@ import {
   usePagination,
 } from "./data";
 import type { Order } from "./model";
+import { PaymentPanel } from "../payments/PaymentPanel";
+import { paymentCopy } from "../payments/copy";
 import "./checkout.css";
 
 export function Pagination({
@@ -149,7 +151,22 @@ function OrderContent({
           <OrderTotals order={order} locale={locale} />
           {confirmed && <p className="notice">{t.emailNote}</p>}
           {preparing && <Status>{t.preparing}</Status>}
-          {order.status === "pending" && <Status>{t.pending}</Status>}
+          {order.status === "pending" && (
+            <Status>{paymentCopy[locale].pending}</Status>
+          )}
+          {order.status === "pending" && order.total > 0 && (
+            <PaymentPanel
+              locale={locale}
+              kind="ticket"
+              amount={order.total}
+              startPath={`${orderPath(orderId)}/payments`}
+            />
+          )}
+          {["failed", "expired", "cancelled"].includes(order.status) && (
+            <p>
+              <Link to="/events">{t.back}</Link>
+            </p>
+          )}
           {poll && polls >= 10 && <p role="status">{t.pollEnded}</p>}
           <div className="controls">
             <button

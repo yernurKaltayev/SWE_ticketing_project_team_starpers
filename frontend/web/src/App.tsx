@@ -25,6 +25,19 @@ import { EventDetail } from "./events/Detail";
 import { EventEditor } from "./events/Editor";
 import { eventCopy } from "./events/copy";
 import { commerceNavigation } from "./checkout/navigation";
+import { paymentCopy } from "./payments/copy";
+import { PageErrorBoundary } from "./PageErrorBoundary";
+
+const Activation = lazy(() => import("./payments/Organizer"));
+const Accounts = lazy(() =>
+  import("./payments/Organizer").then((m) => ({ default: m.AccountsPage })),
+);
+const Financials = lazy(() =>
+  import("./payments/Organizer").then((m) => ({ default: m.FinancialsPage })),
+);
+const Payouts = lazy(() =>
+  import("./payments/Organizer").then((m) => ({ default: m.PayoutsPage })),
+);
 
 const Checkout = lazy(() => import("./checkout/CheckoutPage"));
 const Orders = lazy(() => import("./checkout/Orders"));
@@ -99,7 +112,12 @@ function Application() {
                 {commerceNavigation[locale].tickets}
               </Link>
               {hasRole(user, ["organizer"]) ? (
-                <Link to="/organizer/profile">{t.organizer}</Link>
+                <>
+                  <Link to="/organizer/profile">{t.organizer}</Link>
+                  <Link to="/organizer/payouts">
+                    {paymentCopy[locale].finances}
+                  </Link>
+                </>
               ) : null}
               <button
                 className="secondary"
@@ -148,165 +166,204 @@ function Application() {
           <p className="environment-notice">{t.mockNotice}</p>
         ) : null}
         {logoutError ? <Status>{t.logoutFailed}</Status> : null}
-        <Routes>
-          <Route
-            path="/events/:eventId/checkout"
-            element={
-              <RequireSession locale={locale}>
-                <Suspense fallback={<Status>{t.loading}</Status>}>
-                  <Checkout key={user?.id} locale={locale} />
-                </Suspense>
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/account/orders"
-            element={
-              <RequireSession locale={locale}>
-                <Suspense fallback={<Status>{t.loading}</Status>}>
-                  <Orders key={user?.id} locale={locale} />
-                </Suspense>
-              </RequireSession>
-            }
-          />
-          {["/account/orders/:orderId", "/orders/:orderId/status"].map(
-            (path) => (
+        <PageErrorBoundary
+          key={`${location.key}:${user?.id ?? "public"}`}
+          locale={locale}
+          navigation={
+            <>
+              <Link to="/events">{eventCopy[locale].back}</Link>
+              <Link to="/account/orders">
+                {commerceNavigation[locale].orders}
+              </Link>
+            </>
+          }
+        >
+          <Routes>
+            {[
+              {
+                path: "/organizer/events/:eventId/activation",
+                Component: Activation,
+              },
+              {
+                path: "/organizer/events/:eventId/financials",
+                Component: Financials,
+              },
+              { path: "/organizer/payout-accounts", Component: Accounts },
+              { path: "/organizer/payouts", Component: Payouts },
+            ].map(({ path, Component }) => (
               <Route
                 key={path}
                 path={path}
                 element={
-                  <RequireSession locale={locale}>
+                  <RequireSession locale={locale} roles={["organizer"]}>
                     <Suspense fallback={<Status>{t.loading}</Status>}>
-                      <OrderDetail key={user?.id} locale={locale} />
+                      <Component key={user?.id} locale={locale} />
                     </Suspense>
                   </RequireSession>
                 }
               />
-            ),
-          )}
-          <Route
-            path="/account/tickets"
-            element={
-              <RequireSession locale={locale}>
-                <Suspense fallback={<Status>{t.loading}</Status>}>
-                  <Tickets key={user?.id} locale={locale} />
-                </Suspense>
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/account/tickets/:ticketId"
-            element={
-              <RequireSession locale={locale}>
-                <Suspense fallback={<Status>{t.loading}</Status>}>
-                  <TicketDetail key={user?.id} locale={locale} />
-                </Suspense>
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/"
-            element={<EventList key={user?.id ?? "public"} locale={locale} />}
-          />
-          <Route
-            path="/events"
-            element={<EventList key={user?.id ?? "public"} locale={locale} />}
-          />
-          <Route
-            path="/events/:eventId"
-            element={<EventDetail key={user?.id ?? "public"} locale={locale} />}
-          />
-          <Route
-            path="/organizer/events"
-            element={
-              <RequireSession locale={locale} roles={["organizer"]}>
-                <EventList key={user?.id} locale={locale} organizer />
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/organizer/events/new"
-            element={
-              <RequireSession locale={locale} roles={["organizer"]}>
-                <EventEditor key={user?.id} locale={locale} />
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/organizer/events/:eventId/edit"
-            element={
-              <RequireSession locale={locale} roles={["organizer"]}>
-                <EventEditor key={user?.id} locale={locale} />
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/organizer/events/:eventId/preview"
-            element={
-              <RequireSession locale={locale} roles={["organizer"]}>
-                <EventDetail key={user?.id} locale={locale} preview />
-              </RequireSession>
-            }
-          />
-          {authKinds.map((kind) => (
+            ))}
             <Route
-              key={kind}
-              path={`/${kind}`}
-              element={<AuthPage key={kind} kind={kind} locale={locale} />}
-            />
-          ))}
-          <Route
-            path="/account"
-            element={
-              <RequireSession locale={locale}>
-                <ProfilePage key={user?.id} locale={locale} />
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/organizer/profile"
-            element={
-              <RequireSession locale={locale} roles={["organizer"]}>
-                <OrganizerPage key={user?.id} locale={locale} />
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/organizer/*"
-            element={
-              <RequireSession locale={locale} roles={["organizer"]}>
-                <p>{t.unavailable}</p>
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/admin/*"
-            element={
-              <RequireSession locale={locale} roles={["platform_admin"]}>
-                <p>{t.unavailable}</p>
-              </RequireSession>
-            }
-          />
-          {FoundationPage ? (
-            <Route
-              path="/dev/foundation"
+              path="/events/:eventId/checkout"
               element={
-                <Suspense fallback={<Status>{t.loading}</Status>}>
-                  <FoundationPage locale={locale} />
-                </Suspense>
+                <RequireSession locale={locale}>
+                  <Suspense fallback={<Status>{t.loading}</Status>}>
+                    <Checkout key={user?.id} locale={locale} />
+                  </Suspense>
+                </RequireSession>
               }
             />
-          ) : null}
-          <Route
-            path="*"
-            element={
-              <>
-                <h1>{t.notFound}</h1>
-                <Link to="/">{t.home}</Link>
-              </>
-            }
-          />
-        </Routes>
+            <Route
+              path="/account/orders"
+              element={
+                <RequireSession locale={locale}>
+                  <Suspense fallback={<Status>{t.loading}</Status>}>
+                    <Orders key={user?.id} locale={locale} />
+                  </Suspense>
+                </RequireSession>
+              }
+            />
+            {["/account/orders/:orderId", "/orders/:orderId/status"].map(
+              (path) => (
+                <Route
+                  key={path}
+                  path={path}
+                  element={
+                    <RequireSession locale={locale}>
+                      <Suspense fallback={<Status>{t.loading}</Status>}>
+                        <OrderDetail key={user?.id} locale={locale} />
+                      </Suspense>
+                    </RequireSession>
+                  }
+                />
+              ),
+            )}
+            <Route
+              path="/account/tickets"
+              element={
+                <RequireSession locale={locale}>
+                  <Suspense fallback={<Status>{t.loading}</Status>}>
+                    <Tickets key={user?.id} locale={locale} />
+                  </Suspense>
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/account/tickets/:ticketId"
+              element={
+                <RequireSession locale={locale}>
+                  <Suspense fallback={<Status>{t.loading}</Status>}>
+                    <TicketDetail key={user?.id} locale={locale} />
+                  </Suspense>
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/"
+              element={<EventList key={user?.id ?? "public"} locale={locale} />}
+            />
+            <Route
+              path="/events"
+              element={<EventList key={user?.id ?? "public"} locale={locale} />}
+            />
+            <Route
+              path="/events/:eventId"
+              element={
+                <EventDetail key={user?.id ?? "public"} locale={locale} />
+              }
+            />
+            <Route
+              path="/organizer/events"
+              element={
+                <RequireSession locale={locale} roles={["organizer"]}>
+                  <EventList key={user?.id} locale={locale} organizer />
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/organizer/events/new"
+              element={
+                <RequireSession locale={locale} roles={["organizer"]}>
+                  <EventEditor key={user?.id} locale={locale} />
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/organizer/events/:eventId/edit"
+              element={
+                <RequireSession locale={locale} roles={["organizer"]}>
+                  <EventEditor key={user?.id} locale={locale} />
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/organizer/events/:eventId/preview"
+              element={
+                <RequireSession locale={locale} roles={["organizer"]}>
+                  <EventDetail key={user?.id} locale={locale} preview />
+                </RequireSession>
+              }
+            />
+            {authKinds.map((kind) => (
+              <Route
+                key={kind}
+                path={`/${kind}`}
+                element={<AuthPage key={kind} kind={kind} locale={locale} />}
+              />
+            ))}
+            <Route
+              path="/account"
+              element={
+                <RequireSession locale={locale}>
+                  <ProfilePage key={user?.id} locale={locale} />
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/organizer/profile"
+              element={
+                <RequireSession locale={locale} roles={["organizer"]}>
+                  <OrganizerPage key={user?.id} locale={locale} />
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/organizer/*"
+              element={
+                <RequireSession locale={locale} roles={["organizer"]}>
+                  <p>{t.unavailable}</p>
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/admin/*"
+              element={
+                <RequireSession locale={locale} roles={["platform_admin"]}>
+                  <p>{t.unavailable}</p>
+                </RequireSession>
+              }
+            />
+            {FoundationPage ? (
+              <Route
+                path="/dev/foundation"
+                element={
+                  <Suspense fallback={<Status>{t.loading}</Status>}>
+                    <FoundationPage locale={locale} />
+                  </Suspense>
+                }
+              />
+            ) : null}
+            <Route
+              path="*"
+              element={
+                <>
+                  <h1>{t.notFound}</h1>
+                  <Link to="/">{t.home}</Link>
+                </>
+              }
+            />
+          </Routes>
+        </PageErrorBoundary>
       </main>
     </>
   );
