@@ -22,11 +22,13 @@ KZT integer tiyn; Kazakh and Russian customer UI plus English locale. Payments, 
 
 ## Current implementation boundary
 
-F0 establishes web/mobile entry points, contracts/adapters, locales, mocks and checks; it does not implement F1 authentication or business screens. Yernur Slyamshaikhov is the sole F0 owner, including full wireframes, shared styling, fixture/language review and acceptance evidence. Each later module also has one owner as recorded in FRONTEND_PLAN.md. The backend currently implements health only. The technical shell uses restrained platform controls; the selected Figma visual direction below has not yet been applied to application code.
+F0's web/mobile entry points, contracts/adapters, locales, mocks and checks are merged into master, and frontend CI passed. F1's current-contract web authentication/profile/permission flows and native sessions, including refresh fix `d10826b`, are merged through PR #7; evidence is in frontend/docs/F1_CHECKLIST.md. Yernur Slyamshaikhov is the sole F0/F1 owner. Each later module also has one owner as recorded in FRONTEND_PLAN.md, whose dependency/timeline rule governs incremental implementation and parallel work. The current local checkout contains health, P1 authentication/profile/staff and P8 ticket/QR/PDF source; it is behind remote master, so later backend modules require version-specific inspection. Real frontend integration and physical-device checks remain unverified. The functional frontend uses restrained platform controls.
 
 ## Visual direction
 
-The user selected university branding with a gold university mark to the left of BiletFlow, deep burgundy surfaces inspired by the supplied swatch/reference, and rounded sans-serif typography. Figma uses burgundy `#380403`, canvas `#1E0201`, gold `#DFB054`, cream text and DM Sans Regular/Medium/Bold as a close reference match. The printable ticket keeps white paper. Palette roles, asset provenance and design evidence are recorded in frontend/docs/WIREFRAMES.md.
+The Figma file contains 43 editable explorations whose structure and appearance can still change. The gold university mark, burgundy palette and DM Sans are provisional design references, not approved application branding. Existing palette/asset exploration evidence is recorded in frontend/docs/WIREFRAMES.md.
+
+Do not implement Figma screens, layouts, assets, fonts or branding in web/mobile code until Yernur Slyamshaikhov explicitly approves the design for implementation and requests that work. Until then, develop functional modules in the current restrained technical style. A later approved design pass can replace the presentation while preserving required behavior, API contracts, permissions and verification.
 
 ## Accessibility
 

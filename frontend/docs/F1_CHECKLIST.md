@@ -73,7 +73,15 @@ For native development, use the existing README LAN-origin/Expo launch instructi
 
 ## Remaining integrated acceptance
 
-- [ ] Restore a running backend/database and verify direct and proxied health with mocks disabled. This task did not restart or repair Docker.
+### Current preflight — 8 November 2026
+
+GitHub confirms [PR #7](https://github.com/yernurKaltayev/SWE_ticketing_project_team_starpers/pull/7) merged on 5 November with head `d10826b` and merge commit `2058599`. This supersedes the historical row above saying the refresh fix was only local; no fresh automated/CI passes are asserted here. The local checkout remains at `d10826b`, 18 commits behind remote master `793243c`.
+
+The initial Docker startup failed on its inaccessible `sailor-ingest.sock`; after Docker's update, its engine responded. A separate CRLF startup-script issue was confirmed and corrected locally without changing the script's commands. Compose startup/seed, direct/proxied health, the real frontend's Check connection action, and a canonical anonymous API error passed at 14:33 (UTC+05:00). See [F0 recovery evidence](F0_CHECKLIST.md#recovery-observed-on-8-november-2026-1433-utc0500). The API's effective SMTP is local MailHog; its empty inbox is reachable. Web mocks are now explicitly disabled. No real registration, mail delivery, login, profile, session or device pass was recorded. Existing changes and stash were preserved; no publication actions were performed.
+
+The local event router contains only an `APIRouter` scaffold. Remote master has newer event functionality, but it has not been checked out or exercised here. Cross-organizer event isolation remains dependent on the actual event endpoints/F2 flow; attendee profile denial is not substitute evidence. Payout setup remains dependent on the agreed later contract/F4. Assigned-event and scanning work remains F7.
+
+- [x] Restore a running backend/database and verify direct and proxied health with mocks disabled. Passed on 8 November at local F1 `d10826b`; the browser connection action also passed. This is connectivity evidence only.
 - [ ] Verify real register → development-mail verification → login → `/me` read/PATCH and organizer profile GET/PATCH through the web client. Check omitted/null profile semantics and retain request IDs without recording credentials.
 - [ ] Verify live access expiry, one rotating refresh under concurrent reads, reuse/revocation, password-reset invalidation, logout and uncertain-network behavior. Backend source and MSW behavior are separate evidence.
 - [ ] Use two real organizer accounts to prove protected event-resource isolation once the relevant module/routes are available. An attendee's mock profile denial is not proof of cross-organizer authorization.
