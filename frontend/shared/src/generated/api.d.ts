@@ -2268,11 +2268,8 @@ export interface components {
              * Format: uuid
              */
             venue_id: string;
-            /**
-             * Layout Id
-             * @default null
-             */
-            layout_id: string | null;
+            /** Layout Id */
+            layout_id?: string | null;
             /**
              * Starts At
              * Format: date-time
@@ -2299,16 +2296,10 @@ export interface components {
             seating_mode: "general_admission" | "assigned";
             /** Capacity */
             capacity: number;
-            /**
-             * Registration Opens At
-             * @default null
-             */
-            registration_opens_at: string | null;
-            /**
-             * Registration Closes At
-             * @default null
-             */
-            registration_closes_at: string | null;
+            /** Registration Opens At */
+            registration_opens_at?: string | null;
+            /** Registration Closes At */
+            registration_closes_at?: string | null;
             /**
              * Id
              * Format: uuid
@@ -2322,6 +2313,7 @@ export interface components {
             share_token: string;
             /** Images */
             images: string[];
+            refund_policy?: components["schemas"]["RefundPolicyOut"] | null;
         };
         /** EventReportIn */
         EventReportIn: {
@@ -2934,15 +2926,19 @@ export interface components {
             /** Completed At */
             completed_at: string | null;
         };
+        /** RefundPolicyOut */
+        RefundPolicyOut: {
+            /** Summary */
+            summary: string;
+            /** Refundable Until */
+            refundable_until?: string | null;
+        };
         /** RefundPolicyIn */
         RefundPolicyIn: {
             /** Summary */
             summary: string;
-            /**
-             * Refundable Until
-             * @default null
-             */
-            refundable_until: string | null;
+            /** Refundable Until */
+            refundable_until?: string | null;
         };
         /** RegisterIn */
         RegisterIn: {
@@ -4010,6 +4006,7 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
     };
@@ -4964,6 +4961,7 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
     };

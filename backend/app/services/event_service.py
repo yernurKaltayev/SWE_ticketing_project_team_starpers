@@ -50,6 +50,9 @@ def _out(event: Event, *, reveal_token: bool = False) -> EventOut:
             "paid_sales_status": event.paid_sales_status,
             "share_token": event.share_token,
             "images": event.image_urls,
+            "refund_policy": event.refund_policy
+            if isinstance(event.refund_policy, dict) and event.refund_policy.get("summary")
+            else None,
         }
     )
     return value if reveal_token else value.model_copy(update={"share_token": ""})
@@ -384,16 +387,16 @@ async def duplicate_event(db: AsyncSession, event_id: uuid.UUID, user: User) -> 
 
 
 async def cancel_event(db: AsyncSession, event_id: uuid.UUID, user: User) -> EventOut:
-    """Cancel an event with no orders. Never leave purchases unrefunded."""
+    """Cancel an event. Never leaves purchases unrefunded: P7 settles every order first,
+    in this same transaction (pending released, free cancelled, paid fully refunded)."""
+    from app.services import refund_service  # deferred: keeps P2 importable without P7 deps
+
     event = await _locked_event(db, event_id)
     if event.status == EventStatus.cancelled:
         raise ConflictError("Event is already cancelled.", code="event_cancelled")
+    settled = {"released": 0, "cancelled": 0, "refunded": 0}
     if await _has_orders(db, event_id):
-        raise ConflictError(
-            "Event has orders; the P7 refund and P9 notification workflow must be "
-            "integrated before it can be cancelled safely.",
-            code="event_cancellation_requires_refund_flow",
-        )
+        settled = await refund_service.cancel_event_orders(db, event, user)
     event.status = EventStatus.cancelled
     event.cancelled_at = datetime.now(UTC)
     event.paid_sales_status = PaidSalesStatus.disabled
@@ -404,7 +407,8 @@ async def cancel_event(db: AsyncSession, event_id: uuid.UUID, user: User) -> Eve
         entity_id=event.id,
         event_id=event.id,
         actor=user,
-        description="Cancelled an event with no orders",
+        description="Cancelled event; orders settled by P7",
+        metadata=settled,
     )
     await db.commit()
     return _out(event, reveal_token=True)

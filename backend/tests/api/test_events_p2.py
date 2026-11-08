@@ -9,7 +9,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 
 from app.models.event import Event, EventStatus, EventVisibility
-from app.models.order import Order
+from app.models.order import Order, OrderStatus
 from app.models.ticket_type import TicketType
 from app.models.venue import Venue
 from tests.factories import (
@@ -209,7 +209,7 @@ async def test_duplicated_event_is_new_draft_without_orders(client, db):
     assert (await db.get(Event, clone_id)).duplicated_from_id == source.id
 
 
-async def test_cancel_without_orders_and_block_cancel_with_orders(client, db):
+async def test_cancel_without_orders_and_cancel_with_orders_settles_them(client, db):
     owner, profile = await make_organizer(db)
     empty = await make_event(db, profile, status=EventStatus.published)
     response = await client.post(f"{PREFIX}/events/{empty.id}/cancel", headers=auth_header(owner))
@@ -217,10 +217,14 @@ async def test_cancel_without_orders_and_block_cancel_with_orders(client, db):
     assert response.json()["status"] == "cancelled"
     assert (await db.get(Event, empty.id)).cancelled_at is not None
     occupied = await make_event(db, profile, status=EventStatus.published)
-    await make_order(db, occupied)
-    denied = await client.post(f"{PREFIX}/events/{occupied.id}/cancel", headers=auth_header(owner))
-    assert denied.status_code == 409, denied.text
-    assert (await db.get(Event, occupied.id)).status == EventStatus.published
+    order = await make_order(db, occupied)
+    occupied_id = occupied.id
+    # P7 settles orders during cancellation: a pending checkout is released.
+    done = await client.post(f"{PREFIX}/events/{occupied_id}/cancel", headers=auth_header(owner))
+    assert done.status_code == 200, done.text
+    assert done.json()["status"] == "cancelled"
+    await db.refresh(order)
+    assert order.status == OrderStatus.cancelled
 
 
 async def test_unpublish_with_orders_returns_409(client, db):

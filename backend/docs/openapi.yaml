@@ -687,6 +687,8 @@ paths:
           $ref: '#/components/responses/Error'
         '404':
           $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
   /events/{event_id}/duplicate:
@@ -1820,6 +1822,8 @@ paths:
         '403':
           $ref: '#/components/responses/Error'
         '404':
+          $ref: '#/components/responses/Error'
+        '409':
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
@@ -3903,7 +3907,6 @@ components:
           - format: uuid
             type: string
           - type: 'null'
-          default: null
           title: Layout Id
         starts_at:
           format: date-time
@@ -3939,14 +3942,12 @@ components:
           - format: date-time
             type: string
           - type: 'null'
-          default: null
           title: Registration Opens At
         registration_closes_at:
           anyOf:
           - format: date-time
             type: string
           - type: 'null'
-          default: null
           title: Registration Closes At
         id:
           format: uuid
@@ -3966,6 +3967,10 @@ components:
             type: string
           title: Images
           type: array
+        refund_policy:
+          anyOf:
+          - $ref: '#/components/schemas/RefundPolicyOut'
+          - type: 'null'
       required:
       - title
       - description
@@ -5075,6 +5080,8 @@ components:
     RefundIn:
       properties:
         reason:
+          maxLength: 500
+          minLength: 1
           title: Reason
           type: string
       required:
@@ -5119,7 +5126,7 @@ components:
       - completed_at
       title: RefundOut
       type: object
-    RefundPolicyIn:
+    RefundPolicyOut:
       properties:
         summary:
           title: Summary
@@ -5129,7 +5136,23 @@ components:
           - format: date-time
             type: string
           - type: 'null'
-          default: null
+          title: Refundable Until
+      required:
+      - summary
+      title: RefundPolicyOut
+      type: object
+    RefundPolicyIn:
+      properties:
+        summary:
+          maxLength: 2000
+          minLength: 1
+          title: Summary
+          type: string
+        refundable_until:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
           title: Refundable Until
       required:
       - summary
