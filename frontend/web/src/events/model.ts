@@ -130,7 +130,10 @@ export function eventBody(form: FormData): EventInput {
     layout_id: null,
   };
 }
-export function ticketBody(form: FormData, zone: string): TicketInput {
+export function ticketBody(
+  form: FormData,
+  zone: string,
+): TicketInput & { is_free: boolean; currency: string } {
   const value = (key: string) => String(form.get(key) ?? "").trim();
   if (!value("name")) throw new InputError("name");
   const sales_start = value("sales_start")
@@ -141,10 +144,13 @@ export function ticketBody(form: FormData, zone: string): TicketInput {
     : null;
   if (sales_start && sales_end && sales_start > sales_end)
     throw new InputError("sales_end");
+  const price = parsePrice(value("price"));
   return {
     name: value("name"),
     description: value("ticket_description") || null,
-    price_amount: parsePrice(value("price")),
+    price_amount: price,
+    is_free: price === 0,
+    currency: "KZT",
     quantity_total: positive(value("quantity_total"), "quantity_total"),
     max_per_order: positive(value("max_per_order"), "max_per_order"),
     is_hidden: form.has("is_hidden"),

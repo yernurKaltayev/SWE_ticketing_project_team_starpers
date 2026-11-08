@@ -3,6 +3,7 @@ import type { components } from "@biletflow/shared/api";
 import { eventHandlers } from "./events";
 import { authHandlers } from "./auth";
 import { orderHandlers } from "./orders";
+import { paymentHandlers } from "./payments";
 
 export const scenarios = [
   "success",
@@ -80,6 +81,7 @@ function failure() {
   return null;
 }
 export const handlers = [
+  ...paymentHandlers,
   ...orderHandlers,
   ...eventHandlers,
   http.get(

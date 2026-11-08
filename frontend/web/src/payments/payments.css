@@ -1,0 +1,47 @@
+.payment-panel {
+  margin-block: 2rem;
+  padding-block: 0.5rem 1.5rem;
+  border-block: 1px solid #d7dfd8;
+}
+.activation-steps {
+  list-style: none;
+  padding: 0;
+  margin-block: 1.5rem;
+}
+.activation-steps li {
+  padding-block: 1rem;
+  border-bottom: 1px solid #d7dfd8;
+}
+.activation-step-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.payment-form {
+  max-width: 36rem;
+  margin-block: 1.5rem;
+}
+.payment-form select {
+  width: 100%;
+}
+.payout-accounts {
+  list-style: none;
+  padding: 0;
+}
+.payout-accounts > li {
+  padding-block: 1.25rem;
+  border-bottom: 1px solid #d7dfd8;
+  overflow-wrap: anywhere;
+}
+.payment-panel dd,
+.payment-panel dt {
+  overflow-wrap: anywhere;
+}
+.payout-history td {
+  overflow-wrap: anywhere;
+}
+.payout-history {
+  min-width: 42rem;
+}

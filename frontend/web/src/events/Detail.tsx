@@ -8,6 +8,7 @@ import { salesState } from "./model";
 import type { Availability, Event, Venue } from "./model";
 import { EventError, Image } from "./ui";
 import { commerceNavigation } from "../checkout/navigation";
+import { parseEvent, parsePublicAvailability, parseVenue } from "./contracts";
 
 export function EventDetail({
   locale,
@@ -22,7 +23,10 @@ export function EventDetail({
     data: event,
     error,
     reload,
-  } = useResource<Event>(`/api/v1/events/${encodeURIComponent(eventId)}`);
+  } = useResource<Event>(
+    `/api/v1/events/${encodeURIComponent(eventId)}`,
+    parseEvent,
+  );
   return (
     <section>
       <Link to={preview ? `/organizer/events/${eventId}/edit` : "/events"}>
@@ -53,9 +57,11 @@ function EventContent({
   const t = eventCopy[locale];
   const venue = useResource<Venue>(
     `/api/v1/venues/${encodeURIComponent(event.venue_id)}`,
+    parseVenue,
   );
   const tickets = useResource<Availability[]>(
     `/api/v1/events/${encodeURIComponent(event.id)}/availability`,
+    parsePublicAvailability,
   );
   return (
     <>

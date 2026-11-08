@@ -29,7 +29,14 @@ export function EventError({
   const fields =
     error instanceof ApiError && Array.isArray(error.details)
       ? error.details
-          .map((v: { field?: string }) => v.field?.replace(/^body\./, ""))
+          .map((v: unknown) =>
+            v &&
+            typeof v === "object" &&
+            "field" in v &&
+            typeof v.field === "string"
+              ? v.field.replace(/^body\./, "")
+              : undefined,
+          )
           .filter((v): v is string => !!v && v in t)
       : [];
   if (error instanceof InputError) fields.push(error.field);

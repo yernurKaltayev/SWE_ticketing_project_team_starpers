@@ -1,11 +1,31 @@
 import { http, HttpResponse } from "msw";
 import { mockCurrentUser } from "./auth";
-import { mockCheckoutEvent, mockConfirmCheckout } from "./events";
+import {
+  mockCheckoutEvent,
+  mockConfirmCheckout,
+  mockReleaseCheckout,
+} from "./events";
 import type { Order, OrderBody, Ticket } from "../checkout/model";
 import { mockTicketPng, mockTicketPdf } from "./ticket-assets";
 
 const orders = new Map<string, { owner: string; value: Order }>();
 const attempts = new Map<string, { body: string; id: string }>();
+const awaiting = new Map<string, { eventId: string; tickets: Ticket[] }>();
+export function mockOrder(request: Request, id: string) {
+  const user = mockCurrentUser(request);
+  if (user instanceof Response) return user;
+  const order = orders.get(id);
+  return order?.owner === user.id ? order.value : error(404, "order_not_found");
+}
+export function mockSettleOrder(id: string, success: boolean) {
+  const row = orders.get(id);
+  const held = awaiting.get(id);
+  if (!row || !held || row.value.status !== "pending") return;
+  row.value.status = success ? "paid" : "failed";
+  if (success) row.value.tickets = held.tickets;
+  else mockReleaseCheckout(held.eventId, row.value.items);
+  awaiting.delete(id);
+}
 const headers = {
   "X-Request-ID": "f3-mock",
   "Cache-Control": "private, no-store",
@@ -13,6 +33,7 @@ const headers = {
 export function resetOrderMocks() {
   orders.clear();
   attempts.clear();
+  awaiting.clear();
 }
 const error = (status: number, code: string) =>
   HttpResponse.json(
@@ -80,7 +101,8 @@ export const orderHandlers = [
       const ticket = context.tickets.find((v) => v.id === item.ticket_type_id);
       if (
         !ticket ||
-        ticket.price_amount !== 0 ||
+        (ticket.price_amount !== 0 &&
+          context.event.paid_sales_status !== "active") ||
         ticket.is_hidden ||
         !Number.isSafeInteger(item.quantity) ||
         item.quantity < 1 ||
@@ -129,6 +151,19 @@ export const orderHandlers = [
       }
     }
     mockConfirmCheckout(body.event_id, body.items);
+    value.subtotal = value.items.reduce((sum, item) => {
+      const type = context.tickets.find((t) => t.id === item.ticket_type_id)!;
+      item.unit_price = type.price_amount;
+      item.line_total = item.unit_price * item.quantity;
+      return sum + item.line_total;
+    }, 0);
+    value.total = value.subtotal;
+    if (value.total > 0) {
+      value.status = "pending";
+      value.is_simulated = true;
+      awaiting.set(id, { eventId: body.event_id, tickets: value.tickets });
+      value.tickets = [];
+    }
     orders.set(id, { owner: user.id, value });
     attempts.set(scoped, { body: JSON.stringify(body), id });
     return HttpResponse.json(value, { status: 201, headers });

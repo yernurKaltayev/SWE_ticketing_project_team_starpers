@@ -12,6 +12,8 @@ export type Page<T> = {
   offset: number;
 };
 export type Choice = {
+  /** Integer tiyn, matching the persisted P3 value and P5 order amount. */
+  price?: number;
   id: string;
   name: string;
   free: boolean;
@@ -63,8 +65,8 @@ export function parseVenue(value: unknown): {
     return invalidResponse();
   return value as { name: string; address: string; city: string };
 }
-/** P3's implemented envelope differs from the older static F2 array contract.
- * Free-only checkout never converts or guesses the units of a paid price. */
+/** P3 serializes its persisted tiyn amount as a Decimal string; the older static
+ * F2 contract uses an integer. Fractional tiyn is rejected rather than rounded. */
 export function parseAvailability(value: unknown): Availability {
   const live = record(value) && Array.isArray(value.ticket_types);
   const rows = live
@@ -103,6 +105,13 @@ export function parseAvailability(value: unknown): Availability {
         open,
         limit: Math.min(100, limit as number),
         free: Number(price) === 0 && (!live || row.is_free === true),
+        ...(Number(price) === 0
+          ? {}
+          : {
+              price: Number.isSafeInteger(Number(price))
+                ? Number(price)
+                : undefined,
+            }),
       };
     }),
   };
@@ -128,13 +137,15 @@ export function makeOrderBody(
   choices: Choice[],
   quantities: Record<string, number>,
   attendees: Attendee[],
+  paidSalesActive = false,
 ): OrderBody {
   const items = choices
     .filter((c) => (quantities[c.id] ?? 0) > 0)
     .map((c) => {
       const quantity = quantities[c.id]!;
       if (
-        !c.free ||
+        (!c.free &&
+          (!paidSalesActive || !c.price || !Number.isSafeInteger(c.price))) ||
         !c.open ||
         !Number.isSafeInteger(quantity) ||
         quantity < 1 ||

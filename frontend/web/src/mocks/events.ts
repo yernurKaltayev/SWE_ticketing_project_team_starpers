@@ -30,6 +30,22 @@ export function mockCheckoutEvent(id: string) {
       }
     : null;
 }
+export function mockPaidSales(id: string, status: string) {
+  const row = events.get(id);
+  if (row) row.value.paid_sales_status = status;
+}
+export function mockReleaseCheckout(
+  id: string,
+  items: { ticket_type_id: string; quantity: number }[],
+) {
+  for (const item of items) {
+    const ticket = tickets.get(id)?.find((t) => t.id === item.ticket_type_id);
+    if (ticket) {
+      ticket.available += item.quantity;
+      ticket.sold -= item.quantity;
+    }
+  }
+}
 export function mockConfirmCheckout(
   id: string,
   items: { ticket_type_id: string; quantity: number }[],

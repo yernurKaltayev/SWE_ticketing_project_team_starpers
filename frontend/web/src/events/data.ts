@@ -13,7 +13,7 @@ export function useEventRequest() {
     [user, controller],
   );
 }
-export function useResource<T>(path: string) {
+export function useResource<T>(path: string, parse?: (value: unknown) => T) {
   const request = useEventRequest();
   const [version, setVersion] = useState(0);
   const [state, setState] = useState<{
@@ -27,7 +27,8 @@ export function useResource<T>(path: string) {
     if (!path) return;
     const abort = new AbortController();
     // The request identity below hides obsolete data without an effect-driven reset.
-    void request<T>(path, { signal: abort.signal })
+    void request<unknown>(path, { signal: abort.signal })
+      .then((value) => (parse ? parse(value) : (value as T)))
       .then((data) => {
         if (!abort.signal.aborted) setState({ path, version, request, data });
       })
@@ -35,7 +36,7 @@ export function useResource<T>(path: string) {
         if (!abort.signal.aborted) setState({ path, version, request, error });
       });
     return () => abort.abort();
-  }, [path, version, request]);
+  }, [path, version, request, parse]);
   const reload = useCallback(() => setVersion((n) => n + 1), []);
   return {
     ...(state.path === path &&
