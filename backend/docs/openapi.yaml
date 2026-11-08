@@ -2175,7 +2175,7 @@ paths:
     patch:
       tags:
       - promos
-      summary: Edit or disable a campaign
+      summary: Edit or disable a campaign; 409 if max_redemptions < redemptions already made
       description: 'Owner: P16. Access: event owner, platform admin, or staff (manager).'
       operationId: patch_campaigns_campaign_id
       parameters:
@@ -2205,6 +2205,8 @@ paths:
         '403':
           $ref: '#/components/responses/Error'
         '404':
+          $ref: '#/components/responses/Error'
+        '409':
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
@@ -3454,6 +3456,8 @@ components:
     CampaignIn:
       properties:
         name:
+          maxLength: 200
+          minLength: 1
           title: Name
           type: string
         discount_type:
@@ -3463,6 +3467,7 @@ components:
           title: Discount Type
           type: string
         discount_value:
+          exclusiveMinimum: 0
           title: Discount Value
           type: integer
         valid_from:
@@ -3474,12 +3479,15 @@ components:
           title: Valid To
           type: string
         max_redemptions:
+          maximum: 1000000
+          minimum: 1
           title: Max Redemptions
           type: integer
         ticket_type_ids:
           items:
             format: uuid
             type: string
+          maxItems: 100
           title: Ticket Type Ids
           type: array
       required:
@@ -3489,11 +3497,18 @@ components:
       - valid_from
       - valid_to
       - max_redemptions
-      - ticket_type_ids
       title: CampaignIn
       type: object
     CampaignOut:
       properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
         name:
           title: Name
           type: string
@@ -3523,14 +3538,6 @@ components:
             type: string
           title: Ticket Type Ids
           type: array
-        id:
-          format: uuid
-          title: Id
-          type: string
-        event_id:
-          format: uuid
-          title: Event Id
-          type: string
         code:
           title: Code
           type: string
@@ -3544,6 +3551,8 @@ components:
           title: Qr Url
           type: string
       required:
+      - id
+      - event_id
       - name
       - discount_type
       - discount_value
@@ -3551,8 +3560,6 @@ components:
       - valid_to
       - max_redemptions
       - ticket_type_ids
-      - id
-      - event_id
       - code
       - redemptions_count
       - is_enabled
@@ -3615,35 +3622,34 @@ components:
       properties:
         name:
           anyOf:
-          - type: string
+          - maxLength: 200
+            minLength: 1
+            type: string
           - type: 'null'
-          default: null
           title: Name
         valid_from:
           anyOf:
           - format: date-time
             type: string
           - type: 'null'
-          default: null
           title: Valid From
         valid_to:
           anyOf:
           - format: date-time
             type: string
           - type: 'null'
-          default: null
           title: Valid To
         max_redemptions:
           anyOf:
-          - type: integer
+          - maximum: 1000000
+            minimum: 1
+            type: integer
           - type: 'null'
-          default: null
           title: Max Redemptions
         is_enabled:
           anyOf:
           - type: boolean
           - type: 'null'
-          default: null
           title: Is Enabled
       title: CampaignUpdate
       type: object
@@ -5020,12 +5026,16 @@ components:
           title: Event Id
           type: string
         code:
+          maxLength: 64
+          minLength: 1
           title: Code
           type: string
         ticket_type_ids:
           items:
             format: uuid
             type: string
+          maxItems: 100
+          minItems: 1
           title: Ticket Type Ids
           type: array
       required:

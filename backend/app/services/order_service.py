@@ -33,6 +33,7 @@ from app.models.user import StaffRole, User
 from app.models.venue import Seat, VenueRow, VenueSection
 from app.schemas.order import AttendeeOut, OrderCreate, OrderItemOut, OrderOut
 from app.schemas.ticket import SeatRef
+from app.services import promo_service
 from app.services.audit_service import audit
 from app.services.hold_policy_p4 import HOLD_DURATION
 from app.services.inventory_service import release_inventory
@@ -219,13 +220,6 @@ async def create_order(
             raise ConflictError("This idempotency key belongs to another cart.", code="key_reused")
         return await to_order_out(db, existing)
 
-    if data.promo_code:
-        # P16 is not implemented on master. Silently ignoring a discount would
-        # be a financial error; the P16 owner must wire the atomic promo hook.
-        raise UnprocessableError(
-            "Promo checkout requires P16 integration.", code="promo_unavailable"
-        )
-
     event = await _lock_event(db, data.event_id)
     if not _registration_open(event, now):
         raise ConflictError("Event registration is closed.", code="registration_closed")
@@ -262,6 +256,21 @@ async def create_order(
         tickets_by_id[ticket.id] = ticket
         subtotal += ticket.price_amount * selection.quantity
 
+    # P16: the discount is computed on the server from stored prices, before anything is
+    # reserved; the redemption slot itself is claimed atomically once the order row exists.
+    promo_quote: promo_service.PromoQuote | None = None
+    if data.promo_code:
+        lines = [
+            (item.ticket_type_id, tickets_by_id[item.ticket_type_id].price_amount * item.quantity)
+            for item in data.items
+        ]
+        try:
+            promo_quote = await promo_service.quote(db, event.id, data.promo_code, lines, now)
+        except promo_service.PromoRejected as exc:
+            raise exc.as_error() from exc
+    discount = promo_quote.discount if promo_quote else 0
+    total = subtotal - discount
+
     groups: list[SeatHoldGroup] = []
     seat_holds: dict[uuid.UUID, SeatHold] = {}
     seat_details: dict[uuid.UUID, tuple[str, str, int]] = {}
@@ -274,7 +283,7 @@ async def create_order(
                 raise ConflictError("Not enough ticket inventory.", code="inventory_unavailable")
 
     expires_at = min(group.expires_at for group in groups) if assigned else now + HOLD_DURATION
-    is_free_order = subtotal == 0
+    is_free_order = total == 0
     order = Order(
         order_number=_order_number(),
         event_id=event.id,
@@ -282,10 +291,10 @@ async def create_order(
         buyer_email=user.email,
         status=OrderStatus.free_confirmed if is_free_order else OrderStatus.pending,
         subtotal=subtotal,
-        discount_amount=0,
+        discount_amount=discount,
         processing_fee=0,
-        total=subtotal,
-        promo_code_id=None,
+        total=total,
+        promo_code_id=promo_quote.promo_code.id if promo_quote else None,
         idempotency_key=prefix + body_hash,
         expires_at=None if is_free_order else expires_at,
         is_simulated=True,
@@ -294,6 +303,8 @@ async def create_order(
     db.add(order)
     await db.flush()
     created_order_id = order.id
+    if promo_quote is not None:
+        await promo_service.redeem(db, order, promo_quote, now)
 
     # Insert items and one-to-one attendee assignments in the same request order.
     next_attendee = iter(data.attendees)
@@ -570,6 +581,7 @@ async def _cancel_free(db: AsyncSession, order: Order, actor: User) -> None:
         group = await db.get(SeatHoldGroup, group_id)
         if group is not None and group.status == "sold":
             group.status = "released"
+    await promo_service.release_promo(db, order)
     order.status = OrderStatus.cancelled
     audit(
         db,
