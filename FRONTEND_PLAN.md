@@ -1,6 +1,8 @@
 # BiletFlow Frontend — Implementation Plan
 
-**Status:** frontend implementation plan for Yernur Slyamshaikhov and Dias. The F0 web/mobile foundation is implemented on `feat/frontend-f0`; real backend/session integration, phone launches and Yernur Slyamshaikhov's F0 wireframe/translation review remain pending. Track evidence in [frontend/docs/F0_CHECKLIST.md](frontend/docs/F0_CHECKLIST.md).
+**Status:** frontend implementation plan for Yernur Slyamshaikhov and Dias. The F0 web/mobile foundation and API-type synchronization are merged into `master` through PR #6; frontend CI passed on merge commit `c8678bf`. Backend P1 authentication/profile and P8 ticket routes exist in source. Real backend/session integration, phone launches and Yernur Slyamshaikhov's F0 wireframe/translation review remain pending. Track evidence in [frontend/docs/F0_CHECKLIST.md](frontend/docs/F0_CHECKLIST.md).
+
+F1's current-contract web authentication/profile/permission flows and native session integration, including refresh fix `d10826b`, were merged through [PR #7](https://github.com/yernurKaltayev/SWE_ticketing_project_team_starpers/pull/7) at `2058599`. Historical local checks and mock browser journeys passed; real backend/session and physical-device acceptance remain unverified. On 8 November, the local checkout still points to `d10826b`, 18 commits behind remote `master` at `793243c`; later backend readiness must be checked against the version actually running. See [frontend/docs/F1_CHECKLIST.md](frontend/docs/F1_CHECKLIST.md).
 
 **F2 client progress (6 November 2026):** Dias’s discovery/editor/ticket-type/publication implementation and controlled tests are recorded in [frontend/docs/F2_CHECKLIST.md](frontend/docs/F2_CHECKLIST.md). Live integration, image attachment, policy readback and real-browser acceptance remain pending; F2 is not marked fully accepted.
 
@@ -65,6 +67,38 @@ Each module has exactly one frontend owner: its named lead implements all of tha
 | F10 — Analytics/history/admin | Dias | Organizer analytics/history and all platform admin screens, settings, moderation and operational exports. |
 | F11 — Calendar/final delivery | Yernur Slyamshaikhov | Optional calendar, cross-application checks, responsive/accessibility verification, deployment, documentation and demo coordination; fixes in other modules return to their owners. |
 
+## Incremental delivery and start rule — both frontend owners
+
+**Frontend modules must be delivered incrementally, following their dependencies and the phase timeline in section 5. F numbers identify scope and ownership; they are not a strict one-at-a-time queue from F0 through F11. This rule applies to Yernur Slyamshaikhov and Dias.**
+
+1. Establish a usable F0 foundation/contracts handoff first. F1 authentication/shared UI and F2 discovery/event setup can then progress in parallel. A dependent screen consumes an available, reviewed interface from its owner; do not duplicate or replace another owner's shared code because their work is still local or unmerged.
+2. Build the first required journey in small increments: shared foundation → authentication and event discovery/setup → F3 general-admission registration/orders/tickets. Add simulated paid checkout, cancellation/refunds, campaigns, mobile check-in, support and required reporting in the plan's dependency/timeline order. Finish and review each usable slice before expanding it; avoid starting unrelated modules as one large change.
+3. A frontend UI can be implemented against agreed OpenAPI types and clearly labeled contract-aligned mocks before its backend endpoints run. **Real API integration needs the implemented backend dependencies; acceptance needs observed end-to-end results.** Track `contract agreed → UI with mocks → API integrated → acceptance verified` separately. Do not invent an endpoint/field or call a module complete because a mock or build passes.
+4. Start dependent implementation when the specific contracts/helpers it needs are stable and shared, rather than requiring every acceptance item in an earlier-numbered module to be closed. Keep outstanding gates explicit. For example, F3's print-and-scan acceptance needs F7, so F7 must be able to start while that F3 acceptance item is pending. F0 backend/device/owner-review gaps likewise remain open while independent client work proceeds.
+5. Keep one frontend owner per module. Publish/share reviewed dependencies through the normal git/PR process before a teammate relies on them; a change existing only in another developer's working tree is not a team handoff. Each owner implements, tests, documents and resolves defects in their own module.
+6. F5 assigned seating is a bonus and must not block required general-admission work. F11 verification/delivery preparation runs throughout; optional calendar waits until required work is stable. The backend's P0–P16 Plan Gate is separate and does not automatically enforce this F0–F11 frontend workflow.
+
+**Dias's delivery lane:** F2 discovery/event setup → F6 organizer order/attendee lists alongside F3 → F8 promotions plus F6 cancellation/refund integration → F9 notifications/support → F10 required analytics/history/admin. Prepare the next slice's contracts/mocks as the required shared interfaces become available. F5 seating starts only after the required flows are stable and capacity remains. This lane does not transfer any F0/F1/shared-session implementation ownership to Dias.
+
+### Frontend-to-backend integration dependencies
+
+These are integration requirements, not a claim that every listed endpoint is already implemented or verified. Backend source availability, a running API and frontend acceptance are separate checks. Payout/terms fields missing from P1 must use the later agreed contract/F4 rather than being invented in F1.
+
+| Frontend module | Backend parts needed for its relevant real integrations |
+|---|---|
+| F0 foundation/contracts | P0; P1 for real session/profile adapter evidence |
+| F1 auth/profiles/permissions | P0/P1 |
+| F2 discovery/event setup | P2/P3; P1 for authorization |
+| F3 checkout/orders/tickets | P3/P5/P8/P9; F8/P16 when promotions are added |
+| F4 payments/activation/payouts | P6/P11 |
+| F5 seating/holds — bonus | P4/P5/P6 |
+| F6 cancellation/refunds/organizer orders | P5/P7/P9/P12 |
+| F7 mobile/staff/check-in | P1/P15 |
+| F8 promotions | P16/P13 |
+| F9 notifications/support | P9/P10 |
+| F10 analytics/history/admin | P11/P12/P13 |
+| F11 delivery/calendar | P0 and the parts used by each integrated journey; P14 for optional calendar |
+
 ## 2. Proposed technical approach
 
 | Concern | Proposed choice | Purpose |
@@ -121,9 +155,9 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 **Frontend lead:** Yernur Slyamshaikhov — sole owner of all F0 tasks, including wireframes, fixtures, styles/layouts, locale review, infrastructure and acceptance evidence.
 
-**Backend dependencies:** Yernur (backend), Dos (backend), and Dima (backend); P0.
+**Backend dependencies:** Yernur (backend), Dos (backend), and Dima (backend); P0 foundation and P1 for real session/profile verification. P8 ticket routes inform F3's later integration.
 
-- Agree the F0/first-integration subset using the existing `backend/docs/openapi.yaml`. Generate from the static contract: the live specification currently describes only implemented health. Track feature/auth readiness and transport decisions in [frontend/docs/API_CONTRACT.md](frontend/docs/API_CONTRACT.md).
+- Agree the F0/first-integration subset using the existing `backend/docs/openapi.yaml`. Generate from the static contract, which also covers planned operations; the live specification includes implemented health, P1 authentication/profile/staff and P8 ticket routes. Source implementation and successful frontend runtime integration are separate evidence. Track readiness and transport decisions in [frontend/docs/API_CONTRACT.md](frontend/docs/API_CONTRACT.md).
 - Create `frontend/web`, `frontend/mobile`, and a small shared-contract area with agreed routing, environment validation, lint/typecheck/build scripts and CI. The web/admin application and mobile verifier consume the same backend.
 - Produce Figma wireframes in Weeks 1–2 for organizer creation, event detail, checkout, ticket/PDF access, mobile scanning and operational views. Define web/mobile navigation and loading/error states before parallel implementation. [S2 p.7 §6]
 - Agree API/error contracts with platform-specific session/storage adapters. Verify web session recovery and a mobile authenticated request; document supported iOS/Android targets, device/build access, and the demo launch method.
@@ -322,7 +356,7 @@ Work in module-specific PRs such as `feat/frontend-free-checkout`. The sole modu
 
 ## 6. API contracts to agree before dependent work
 
-The backend now has a static `backend/docs/openapi.yaml` contract with 101 operations, while only `GET /health` is implemented. F0 generates types from the YAML; API readiness and remaining auth decisions are recorded in the handoff document. Verify the requests below with backend owners rather than assuming endpoints already work. The contact column identifies backend API owners; frontend ownership is defined above.
+The backend static `backend/docs/openapi.yaml` contract now contains 102 operations across 88 paths. Health, P1 authentication/profile/staff and P8 ticket/QR/PDF routes are implemented in source; other planned feature routers remain separate dependencies. F0's generated types are synchronized with this contract. Runtime checks remain pending because the local Docker engine has not started successfully. Readiness and remaining auth decisions are recorded in the handoff document. The contact column identifies backend API owners; frontend ownership is defined above.
 
 | Contract | Backend API contact(s) | Required decision / response |
 |---|---|---|
@@ -341,7 +375,7 @@ The backend now has a static `backend/docs/openapi.yaml` contract with 101 opera
 | Reports/admin | Yernur (backend) | Exact required metrics/filters, past-event classifications/retained records, timeline fields, export authorization, settings units/ranges, basic disputes/failures monitoring and suspension stopping sales |
 | Calendar | Dos (backend) | `.ics` access/download and event cancellation/update behavior |
 
-Proposed **web** session contract: short-lived access token in memory and refresh token in a Secure/HttpOnly cookie, with backend-owned rotation and appropriate CSRF protection. The backend example returns both tokens in JSON, so agree this rather than assuming it is implemented. The **mobile** app needs a separately agreed native-compatible authentication/refresh/revocation contract and platform secure storage for any persisted credential; browser cookie/CSRF assumptions do not automatically transfer to React Native. Do not persist credentials in web local storage or plain mobile app storage.
+Current **P1** session transport returns access and refresh tokens in JSON and uses bearer authorization. F0's web adapter keeps tokens in memory; its native adapter keeps access in memory and persists only refresh credentials in SecureStore. A Secure/HttpOnly web-refresh cookie remains a proposal requiring an explicit backend change and CSRF/CORS review. P1 rotates refresh tokens and treats reuse of a rotated token as theft, revoking the user's sessions; dependent session code must coordinate refresh requests and avoid automatic refresh retries. F0's JSON client performs neither implicit refresh nor mutation retries. Do not persist credentials in web local storage or plain mobile app storage.
 
 For development and demo, prefer a same-origin frontend/API deployment with a reverse proxy. If separate origins are required, agree exact allowed origins, credential handling, cookie attributes, and HTTPS before implementing session recovery.
 
@@ -366,7 +400,7 @@ Additional open choices from S2 p.7 and S5 p.3 §12: demonstration seating layou
 
 ## 8. UI, accessibility, and responsive requirements
 
-Visual branding is intentionally undecided in this roadmap. Establish a small shared set of color, spacing, typography, focus, and status tokens before building many screens; capture the chosen values when implementation/design begins.
+**Figma implementation gate:** the 43 editable Figma screens and their structure, gold university logo, burgundy palette and DM Sans are explorations, not an approved implementation specification. Keep the current functional frontend in its restrained technical styling. Do not copy Figma screens, layouts, assets or branding into web/mobile code until Yernur Slyamshaikhov explicitly approves the design for implementation and requests that work. A later approved design pass can update presentation while retaining the required functionality, API contracts, permissions and acceptance checks. Functional module work does not constitute Figma approval.
 
 - Prioritize mobile event discovery, checkout, tickets, and scanning; organizer/admin work must remain usable on narrow screens. Use content-driven layouts, labeled summary rows, and scrollable or adapted tables rather than clipping actions.
 - Use semantic landmarks/headings, visible labels, keyboard access, visible focus, accessible dialogs and sufficient contrast. Event pages must meet the source WCAG 2.1 AA baseline; WCAG 2.2 AA is a proposed stronger implementation target, not a substituted source requirement. Verify rendered pages and native screen-reader labels/focus on chosen devices. [S2 p.6 §5]

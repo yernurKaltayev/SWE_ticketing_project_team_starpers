@@ -6,14 +6,17 @@ This document records the current frontend/backend boundary. The backend source 
 
 ## Endpoint readiness
 
-At the P0 snapshot reviewed for F0, the YAML declares 101 operations across 87 paths, while the only implemented application route is `GET /health`. Feature routers are registered but contain no operations. Treat the table as a readiness record to update when implementations land.
+**8 November version check:** the local checkout remains at F1 `d10826b`, while remote master is `793243c` (18 commits ahead). The local event router is still a scaffold; newer remote event/order implementations have not been exercised here. After Docker's update and a local startup-script line-ending correction, direct/proxied and browser health passed with mocks disabled. The API reports local MailHog SMTP and its inbox is reachable; email delivery/auth/profile/session journeys remain unverified. See [F0 recovery evidence](F0_CHECKLIST.md#recovery-observed-on-8-november-2026-1433-utc0500).
+
+This checkout includes P1 authentication/user operations and P8 ticket operations alongside health. The table records implementation found in source; only the health connectivity and anonymous API error checks have current runtime evidence. Keep each other integration check pending until its actual responses are recorded.
 
 | Area | Contract | Current implementation | Frontend consequence |
 |---|---|---|---|
 | Health | `GET /health`, at API origin root | Implemented; queries PostgreSQL | Real read/error/request-ID checks are possible when backend/database are running |
-| Authentication | `/api/v1/auth/*` | Not implemented; current calls return `404` | Mock client/session behavior; real login, refresh and logout remain blocked |
-| Current user/profile | `/api/v1/me`, organizer profile operations | Not implemented | Real identity/capabilities and a profile mutation cannot yet be verified |
-| Events, orders, tickets, check-in and other features | `/api/v1/*` operations in YAML | Not implemented | Use reviewed fixtures and retain explicit API-integration tasks |
+| Authentication | `/api/v1/auth/*` | P1 implements registration, verification/resend, login, refresh, logout and password recovery | Real session checks are now possible once the stack is running; frontend auth screens/session recovery belong to F1 |
+| Current user/profile and staff | `/api/v1/me`, `/api/v1/organizers/me`, event staff operations | P1 implements current-user/profile reads and PATCH operations plus authorized staff assignment/removal | Verify a real bearer-authenticated read and safe profile mutation; keep permission and assigned-event discovery review explicit |
+| Tickets | `/api/v1/me/tickets`, ticket details, `/tickets/{ticket_id}/qr` and `/pdf` | P8 implements authorized ticket reads, PNG QR and PDF responses | F3 integrates ticket UI and authenticated binary downloads; F0's shared client is currently JSON-only |
+| Other event, order, check-in and feature operations | Remaining `/api/v1/*` operations in YAML | Readiness varies; these operations are not established by the P1/P8 merge alone | Use reviewed fixtures and retain explicit feature integration tasks; verify each operation before relying on it |
 
 The live `/api/v1/openapi.json` reflects implemented routes, not the full agreed future contract. Generating from it today would omit the planned feature schemas.
 
@@ -39,6 +42,9 @@ The backend currently allows browser origins `http://localhost:3000` and `http:/
 - Timestamps include an ISO 8601 offset; display event times in their explicit event time zone, not silently in the device's zone.
 - Payments, verification and payouts are simulated. Respect `is_simulated` in future financial views.
 - The client must support JSON success, empty `204` responses, error bodies, network failure and cancellation. It must not silently retry mutations.
+- P1 login distinguishes `401 invalid_credentials`, `403 email_not_verified` and `403 account_suspended`. Public auth operations can return `429` with `Retry-After`; preserve the error/request ID and implement the corresponding user-facing states in F1.
+- For profile PATCH operations, omitted fields remain unchanged. `UserUpdate.full_name` is optional but cannot be null; `phone` is optional and can be cleared with null. Organizer profile fields are optional but cannot be explicitly null. The static contract and backend now agree on these semantics.
+- P8 QR/PDF responses use `image/png` and `application/pdf`, with private/no-store cache headers. Do not send these successful binary responses through F0's JSON-only `request<T>` method; add an authenticated binary-response path when implementing F3 downloads while retaining JSON error handling.
 
 Health succeeds with:
 
@@ -58,7 +64,9 @@ TokenOut: { access_token, refresh_token, token_type }
 RefreshIn: { refresh_token }
 ```
 
-No authentication routes or `Set-Cookie` implementation exist yet. A future HttpOnly-cookie web-refresh contract needs an explicit backend change and review; F0 must not describe it as implemented.
+P1 implements this JSON bearer contract. Login and refresh return token pairs; refresh consumes and replaces the old refresh token. Logout requires the current bearer credential and a `RefreshIn` body, then returns `204`. There is no `Set-Cookie` implementation. A future HttpOnly-cookie web-refresh contract requires an explicit backend change and review.
+
+Coordinate refresh as a single in-flight operation per session. Reusing an unexpired, already rotated refresh token causes P1 to revoke all refresh sessions for that user. Do not refresh in parallel or blindly retry a refresh after an uncertain response. F0's JSON client performs no implicit refresh; F1 must implement and verify session recovery against this behavior.
 
 F0 separates platform storage adapters:
 
@@ -66,7 +74,7 @@ F0 separates platform storage adapters:
 - **Native:** access tokens stay in memory; only refresh credentials use `expo-secure-store`. A restarted process must exchange its stored refresh credential before it has an access token. Keep the adapter separate from browser assumptions and clear credentials on logout/session failure; backend lifecycle and actual device verification remain pending.
 - **Shared:** portable client/types and an asynchronous token-store interface. No DOM, native storage dependency or hidden authentication state in shared contract code.
 
-Tests of a token store or mock bearer request prove client infrastructure only. Real authentication, token rotation/revocation and session recovery require implemented backend endpoints and integrated tests. Login/reset/profile screens belong to F1.
+Tests of a token store or mock bearer request prove client infrastructure only. P1 supplies the backend endpoints, but real authentication, token rotation/revocation and session recovery still require integrated tests. Login/reset/profile screens belong to F1. The current F0 diagnostic page can check real health; its mock-only mutation controls do not verify live authenticated frontend behavior.
 
 ## Decisions for backend handoff
 
@@ -75,9 +83,9 @@ Tests of a token store or mock bearer request prove client infrastructure only. 
 | Web token transport/recovery | Yernur Slyamshaikhov | Yernur (backend) | Keep JSON/memory semantics or add a reviewed cookie contract; define refresh expiry, revocation and CSRF/CORS requirements |
 | Native session lifecycle | Yernur Slyamshaikhov | Yernur (backend) | Native-compatible login/refresh/logout, persisted credential policy and assigned-event discovery |
 | Event permissions | Yernur Slyamshaikhov | Yernur (backend) | Global role versus per-event `manager`, `checkin`, `support` assignments; current-user capability/assignment response |
-| First real mutation | Yernur Slyamshaikhov | Yernur (backend) or Dos (backend) | Identify the first implemented mutation and its readiness; verify auth/validation/error behavior against it |
+| First real mutation | Yernur Slyamshaikhov | Yernur (backend) | P1 provides profile PATCH operations; select safe test data and verify auth/validation/error behavior against the running backend |
 | Event/ticket fixture shapes | Yernur Slyamshaikhov | Dos (backend) | Review the shared F0 fixtures against YAML; later F2 implementation remains with its sole owner |
-| Payment/QR readiness | Yernur Slyamshaikhov | Dima (backend) | Record foundational payment/ticket validity and state/error contracts; later module implementation stays with each module's sole owner |
-| Partial profile update | Yernur Slyamshaikhov | Yernur (backend) | YAML currently marks nullable `UserUpdate.full_name` and `phone` as required, unlike the Python defaults. F0's typed mock supplies both; agree optional-versus-null behavior before real profile editing. |
+| Payment/QR readiness | Yernur Slyamshaikhov | Dima (backend) | P8 ticket/QR/PDF source is implemented; verify authorized reads and binary content during F3 integration. Payment and ticket issuance dependencies require their own readiness checks |
+| Partial profile update | Yernur Slyamshaikhov | Yernur (backend) | Schema mismatch resolved in P1: omitted fields stay unchanged, only user phone accepts explicit null. Verify these semantics in real profile editing and keep fixtures aligned |
 
 Neither frontend student should change backend schemas or declare these decisions agreed without the corresponding backend review. Yernur (backend) and Yernur Slyamshaikhov are different people.
