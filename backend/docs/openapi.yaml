@@ -1981,7 +1981,9 @@ paths:
       tags:
       - checkin
       summary: Verify a QR payload and check in atomically; rejects Campaign QR codes
-      description: 'Owner: P15. Access: event owner, platform admin, or staff (checkin).'
+      description: 'Owner: P15. Access: event owner, platform admin, or staff (checkin).
+        Always 200 with a result: accepted, already_used, refunded, invalid (forged, unknown
+        or cancelled), wrong_event (no ticket details), not_a_ticket (Campaign QR or other).'
       operationId: post_checkin_verify
       security:
       - bearerAuth: []
@@ -2038,6 +2040,8 @@ paths:
         '403':
           $ref: '#/components/responses/Error'
         '404':
+          $ref: '#/components/responses/Error'
+        '409':
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
@@ -5648,6 +5652,8 @@ components:
     UndoCheckInIn:
       properties:
         reason:
+          maxLength: 500
+          minLength: 1
           title: Reason
           type: string
       required:
@@ -5758,6 +5764,8 @@ components:
           title: Event Id
           type: string
         qr_payload:
+          maxLength: 2048
+          minLength: 1
           title: Qr Payload
           type: string
       required:

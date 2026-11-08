@@ -1,14 +1,14 @@
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.schemas.ticket import TicketOut
 
 
 class VerifyIn(BaseModel):
     event_id: UUID
-    qr_payload: str
+    qr_payload: str = Field(min_length=1, max_length=2048)
 
 
 class VerifyOut(BaseModel):
@@ -20,7 +20,7 @@ class VerifyOut(BaseModel):
 
 
 class UndoCheckInIn(BaseModel):
-    reason: str
+    reason: str = Field(min_length=1, max_length=500)
 
 
 class CheckInStatsOut(BaseModel):
