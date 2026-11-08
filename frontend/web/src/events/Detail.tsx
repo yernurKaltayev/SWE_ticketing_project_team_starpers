@@ -7,6 +7,7 @@ import { eventCopy } from "./copy";
 import { salesState } from "./model";
 import type { Availability, Event, Venue } from "./model";
 import { EventError, Image } from "./ui";
+import { commerceNavigation } from "../checkout/navigation";
 
 export function EventDetail({
   locale,
@@ -110,7 +111,13 @@ function EventContent({
           </li>
         ))}
       </ul>
-      <p className="field-hint">{t.checkoutGap}</p>
+      {!preview && (
+        <p>
+          <Link className="action-link" to={`/events/${event.id}/checkout`}>
+            {commerceNavigation[locale].register}
+          </Link>
+        </p>
+      )}
       <h2>{t.refund}</h2>
       <p>{t.policyGap}</p>
     </>

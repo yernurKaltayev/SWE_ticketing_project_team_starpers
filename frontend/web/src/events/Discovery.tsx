@@ -7,6 +7,7 @@ import { useResource } from "./data";
 import { searchQuery } from "./model";
 import type { Event, Page } from "./model";
 import { EventError, Image } from "./ui";
+import { commerceNavigation } from "../checkout/navigation";
 
 export function EventList({
   locale,
@@ -154,6 +155,11 @@ export function EventList({
                   <span className="status-badge">
                     {t[event.status as "draft"] ?? event.status}
                   </span>
+                )}
+                {!organizer && (
+                  <Link to={`/events/${event.id}/checkout`}>
+                    {commerceNavigation[locale].register}
+                  </Link>
                 )}
               </article>
             ))}

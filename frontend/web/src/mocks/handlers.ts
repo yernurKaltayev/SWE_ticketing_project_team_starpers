@@ -2,6 +2,7 @@ import { http, HttpResponse } from "msw";
 import type { components } from "@biletflow/shared/api";
 import { eventHandlers } from "./events";
 import { authHandlers } from "./auth";
+import { orderHandlers } from "./orders";
 
 export const scenarios = [
   "success",
@@ -79,6 +80,7 @@ function failure() {
   return null;
 }
 export const handlers = [
+  ...orderHandlers,
   ...eventHandlers,
   http.get(
     "*/health",

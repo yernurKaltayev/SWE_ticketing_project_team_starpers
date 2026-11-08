@@ -28,6 +28,8 @@ export interface ApiRequestOptions {
   body?: unknown;
   signal?: AbortSignal;
   headers?: HeadersInit;
+  /** Successful binary downloads retain the same URL/auth/error boundaries. */
+  responseType?: "json" | "blob";
 }
 
 export interface ApiClientOptions {
@@ -50,7 +52,8 @@ function isAbort(error: unknown): boolean {
 }
 
 /**
- * JSON-only transport. It performs one request, without retries or implicit refresh.
+ * JSON by default, with an explicit Blob path for protected downloads.
+ * It performs one request, without retries or implicit refresh.
  * Pass an origin base URL to request both /health and /api/v1/... paths.
  * With a path-prefixed base, relative paths resolve inside that prefix; a rooted
  * path must explicitly include it. Cross-origin and path-escaping URLs are refused.
@@ -115,6 +118,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
 
       let response: Response;
       let raw: string;
+      let binary: Blob | undefined;
       try {
         response = await requestFetch(url.toString(), {
           method: requestOptions.method ?? "GET",
@@ -125,7 +129,12 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
           credentials: "omit",
           redirect: "error",
         });
-        raw = response.status === 204 ? "" : await response.text();
+        if (response.ok && requestOptions.responseType === "blob") {
+          binary = await response.blob();
+          raw = "";
+        } else {
+          raw = response.status === 204 ? "" : await response.text();
+        }
       } catch (error) {
         if (requestOptions.signal?.aborted || isAbort(error)) throw error;
         throw new ApiError(0, "network_error", "The API could not be reached.");
@@ -164,7 +173,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
           response.headers.get("Retry-After"),
         );
       }
-      return data as T;
+      return (requestOptions.responseType === "blob" ? binary : data) as T;
     },
   };
 }

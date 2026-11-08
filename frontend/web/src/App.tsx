@@ -24,6 +24,17 @@ import { EventList } from "./events/Discovery";
 import { EventDetail } from "./events/Detail";
 import { EventEditor } from "./events/Editor";
 import { eventCopy } from "./events/copy";
+import { commerceNavigation } from "./checkout/navigation";
+
+const Checkout = lazy(() => import("./checkout/CheckoutPage"));
+const Orders = lazy(() => import("./checkout/Orders"));
+const OrderDetail = lazy(() =>
+  import("./checkout/Orders").then((m) => ({ default: m.OrderDetail })),
+);
+const Tickets = lazy(() => import("./checkout/Tickets"));
+const TicketDetail = lazy(() =>
+  import("./checkout/Tickets").then((m) => ({ default: m.TicketDetail })),
+);
 
 const FoundationPage = import.meta.env.DEV
   ? lazy(() => import("./dev/FoundationPage"))
@@ -81,6 +92,12 @@ function Application() {
           {user ? (
             <>
               <Link to="/account">{t.account}</Link>
+              <Link to="/account/orders">
+                {commerceNavigation[locale].orders}
+              </Link>
+              <Link to="/account/tickets">
+                {commerceNavigation[locale].tickets}
+              </Link>
               {hasRole(user, ["organizer"]) ? (
                 <Link to="/organizer/profile">{t.organizer}</Link>
               ) : null}
@@ -132,6 +149,61 @@ function Application() {
         ) : null}
         {logoutError ? <Status>{t.logoutFailed}</Status> : null}
         <Routes>
+          <Route
+            path="/events/:eventId/checkout"
+            element={
+              <RequireSession locale={locale}>
+                <Suspense fallback={<Status>{t.loading}</Status>}>
+                  <Checkout key={user?.id} locale={locale} />
+                </Suspense>
+              </RequireSession>
+            }
+          />
+          <Route
+            path="/account/orders"
+            element={
+              <RequireSession locale={locale}>
+                <Suspense fallback={<Status>{t.loading}</Status>}>
+                  <Orders key={user?.id} locale={locale} />
+                </Suspense>
+              </RequireSession>
+            }
+          />
+          {["/account/orders/:orderId", "/orders/:orderId/status"].map(
+            (path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <RequireSession locale={locale}>
+                    <Suspense fallback={<Status>{t.loading}</Status>}>
+                      <OrderDetail key={user?.id} locale={locale} />
+                    </Suspense>
+                  </RequireSession>
+                }
+              />
+            ),
+          )}
+          <Route
+            path="/account/tickets"
+            element={
+              <RequireSession locale={locale}>
+                <Suspense fallback={<Status>{t.loading}</Status>}>
+                  <Tickets key={user?.id} locale={locale} />
+                </Suspense>
+              </RequireSession>
+            }
+          />
+          <Route
+            path="/account/tickets/:ticketId"
+            element={
+              <RequireSession locale={locale}>
+                <Suspense fallback={<Status>{t.loading}</Status>}>
+                  <TicketDetail key={user?.id} locale={locale} />
+                </Suspense>
+              </RequireSession>
+            }
+          />
           <Route
             path="/"
             element={<EventList key={user?.id ?? "public"} locale={locale} />}
