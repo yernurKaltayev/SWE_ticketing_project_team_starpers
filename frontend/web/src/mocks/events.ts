@@ -20,6 +20,28 @@ export const demoEventId = "04e1dfa3-c0a1-43d7-a774-32c7dc9fb419";
 type Record = { value: Event; owner: string; policy?: { summary: string } };
 const events = new Map<string, Record>();
 const tickets = new Map<string, Ticket[]>();
+/** Shared fixture boundary for F3; production F2 behavior is unchanged. */
+export function mockCheckoutEvent(id: string) {
+  const event = events.get(id)?.value;
+  return event
+    ? {
+        event: structuredClone(event),
+        tickets: structuredClone(tickets.get(id) ?? []),
+      }
+    : null;
+}
+export function mockConfirmCheckout(
+  id: string,
+  items: { ticket_type_id: string; quantity: number }[],
+) {
+  for (const item of items) {
+    const ticket = tickets.get(id)?.find((t) => t.id === item.ticket_type_id);
+    if (ticket) {
+      ticket.available -= item.quantity;
+      ticket.sold += item.quantity;
+    }
+  }
+}
 export function resetEventMocks() {
   events.clear();
   tickets.clear();

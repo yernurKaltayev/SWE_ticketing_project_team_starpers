@@ -1,8 +1,10 @@
 # BiletFlow Frontend — Implementation Plan
 
-**Status:** frontend implementation plan for Yernur Slyamshaikhov and Dias. The F0 web/mobile foundation and API-type synchronization are merged into `master` through PR #6; frontend CI passed on merge commit `c8678bf`. Backend P1 authentication/profile and P8 ticket routes exist in source. Real backend/session integration, phone launches and Yernur Slyamshaikhov's F0 wireframe/translation review remain pending. Track evidence in [frontend/docs/F0_CHECKLIST.md](frontend/docs/F0_CHECKLIST.md).
+**Status:** frontend implementation plan for Yernur Slyamshaikhov and Dias. F0 is merged through PR #6 and F1 through PR #7. Real web and basic iPhone outcomes are user-reported in the F0/F1 checklists; Android and genuine access-expiry/refresh acceptance were deferred by the user. Owner review and remaining unchecked criteria are still pending. Track evidence in [frontend/docs/F0_CHECKLIST.md](frontend/docs/F0_CHECKLIST.md) and [frontend/docs/F1_CHECKLIST.md](frontend/docs/F1_CHECKLIST.md).
 
-F1's current-contract web authentication/profile/permission flows and native session integration, including refresh fix `d10826b`, were merged through [PR #7](https://github.com/yernurKaltayev/SWE_ticketing_project_team_starpers/pull/7) at `2058599`. Historical local checks and mock browser journeys passed; real backend/session and physical-device acceptance remain unverified. On 8 November, the local checkout still points to `d10826b`, 18 commits behind remote `master` at `793243c`; later backend readiness must be checked against the version actually running. See [frontend/docs/F1_CHECKLIST.md](frontend/docs/F1_CHECKLIST.md).
+F1 includes refresh fix `d10826b`. Its partial acceptance documentation was merged through PR #13 at `f94f783`; that is the base of `feat/frontend-f3`. Later backend readiness is checked operation by operation, not inferred from scaffold files or a merge.
+
+**F3 local implementation (8 November 2026):** free general-admission checkout/review, stable idempotent recovery, own order/ticket pages and authenticated canonical QR/PDF downloads are implemented on `feat/frontend-f3`. The real free checkout/retry/download/authorization path and 105 frontend tests passed. Full F3 acceptance still needs P9 order-email delivery, F2/backend contract reconciliation, owner accessibility/translation review and F7 paper/digital scan evidence. See [frontend/docs/F3_CHECKLIST.md](frontend/docs/F3_CHECKLIST.md). No Figma implementation or automatic git publication is included.
 
 **F2 client progress (6 November 2026):** Dias’s discovery/editor/ticket-type/publication implementation and controlled tests are recorded in [frontend/docs/F2_CHECKLIST.md](frontend/docs/F2_CHECKLIST.md). Live integration, image attachment, policy readback and real-browser acceptance remain pending; F2 is not marked fully accepted.
 
@@ -196,6 +198,8 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 **Done when:** an organizer creates a valid free general-admission event, publishes it, and an attendee can find and view it. Invalid publication stays in draft with specific correction instructions.
 
 ### F3 — Free checkout, orders, and attendee tickets [A]
+
+**Implementation evidence:** [F3_CHECKLIST.md](frontend/docs/F3_CHECKLIST.md) separates local code, real API checks, injected failure tests, mocks and pending external acceptance. In particular, P9 is still a notification stub and physical print/scan requires F7; these gates are not marked complete by frontend implementation.
 
 **Frontend lead:** Yernur Slyamshaikhov — sole owner, including checkout's use of agreed event/ticket, seating and promotion interfaces.
 
