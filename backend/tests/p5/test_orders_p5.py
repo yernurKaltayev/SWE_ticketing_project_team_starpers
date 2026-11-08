@@ -245,6 +245,7 @@ async def test_access_guard_and_promos_fail_closed(client, db, order_scene, app)
         "/api/v1/orders", json=_payload(s["event"].id, s["free"].id, promo_code="SAVE50")
     )
     assert response.status_code == 422
+    assert response.json()["code"] == "promo_not_found"  # P16: unknown codes fail closed
     await db.refresh(s["event"])
     await db.refresh(s["stranger"])
 

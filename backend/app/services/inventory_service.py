@@ -12,6 +12,7 @@ from app.core.errors import ConflictError, NotFoundError
 from app.models.event import Event
 from app.models.order import Order, OrderItem, OrderStatus
 from app.models.seat_hold import SeatHold, SeatHoldGroup, SeatHoldStatus
+from app.services.promo_service import release_promo
 from app.services.ticket_type_service import release_inventory as release_ticket_quantity
 
 
@@ -93,5 +94,7 @@ async def release_inventory(
         group = await db.get(SeatHoldGroup, group_id)
         if group is not None and group.status == "held":
             group.status = "released"
+    # P16: a failed, expired or cancelled checkout gives its promo slot back.
+    await release_promo(db, locked)
     locked.status = terminal_status
     await db.flush()

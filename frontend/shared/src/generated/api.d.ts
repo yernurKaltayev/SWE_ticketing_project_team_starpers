@@ -1233,7 +1233,7 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * Edit or disable a campaign
+         * Edit or disable a campaign; 409 if max_redemptions < redemptions already made
          * @description Owner: P16. Access: event owner, platform admin, or staff (manager).
          */
         patch: operations["patch_campaigns_campaign_id"];
@@ -2016,10 +2016,20 @@ export interface components {
             /** Max Redemptions */
             max_redemptions: number;
             /** Ticket Type Ids */
-            ticket_type_ids: string[];
+            ticket_type_ids?: string[];
         };
         /** CampaignOut */
         CampaignOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
             /** Name */
             name: string;
             /**
@@ -2043,16 +2053,6 @@ export interface components {
             max_redemptions: number;
             /** Ticket Type Ids */
             ticket_type_ids: string[];
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /**
-             * Event Id
-             * Format: uuid
-             */
-            event_id: string;
             /** Code */
             code: string;
             /** Redemptions Count */
@@ -2096,31 +2096,16 @@ export interface components {
          * @description Partial update: only the fields sent are changed.
          */
         CampaignUpdate: {
-            /**
-             * Name
-             * @default null
-             */
-            name: string | null;
-            /**
-             * Valid From
-             * @default null
-             */
-            valid_from: string | null;
-            /**
-             * Valid To
-             * @default null
-             */
-            valid_to: string | null;
-            /**
-             * Max Redemptions
-             * @default null
-             */
-            max_redemptions: number | null;
-            /**
-             * Is Enabled
-             * @default null
-             */
-            is_enabled: boolean | null;
+            /** Name */
+            name?: string | null;
+            /** Valid From */
+            valid_from?: string | null;
+            /** Valid To */
+            valid_to?: string | null;
+            /** Max Redemptions */
+            max_redemptions?: number | null;
+            /** Is Enabled */
+            is_enabled?: boolean | null;
         };
         /** CaseCreate */
         CaseCreate: {
@@ -5310,6 +5295,7 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
     };

@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     log_json: bool = True
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
     web_base_url: str = "http://localhost:5173"
+    # Where this API is reachable from phones: Campaign QR codes (P16) encode {this}/c/{token}.
+    public_base_url: str = "http://localhost:8000"
 
     database_url: str = "postgresql+asyncpg://biletflow:biletflow@localhost:5432/biletflow"
     database_pool_size: int = 10
