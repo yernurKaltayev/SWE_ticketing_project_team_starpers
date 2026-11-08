@@ -124,6 +124,8 @@ Full cross-organizer **event** resource isolation remains pending until the rele
 
 ## 5. Verify recovery, expiry and failure states
 
+**8 November deferral:** the user postponed the genuine web access-expiry/refresh check for lack of time and requested moving on. Keep it deferred/not tested in the acceptance record. Basic password-reset behavior was user-reported passed; cross-session refresh invalidation and other unchecked failure/recovery cases remain pending. The procedures below are retained for later execution, not evidence of completion.
+
 - Forgot password: request a link for a disposable verified account, inspect MailHog, set a new password and sign in with it. The old password must fail. Reusing the reset link must show an invalid/expired-link error. Known/unknown addresses receive generic success wording.
 - Password reset revokes refresh sessions under P1. Existing access tokens on other sessions may remain valid until their configured expiry; do not expect immediate access-token revocation from this backend contract.
 - With a disposable signed-in account, wait beyond the configured access-token lifetime (default 30 minutes). Keep the web page open; reloading it would discard credentials and would not test refresh. Navigate to a profile that requires a real read. Inspect Network for rejected access → one rotating refresh → successful read.
@@ -147,6 +149,8 @@ await Promise.all([
 
 ## 6. Launch and verify both physical phones
 
+**Current availability (8 November):** the user reports the basic iPhone connection/SecureStore/sign-in/restart/logout checks passed, without model/OS/Expo Go details. The user has no Android device yet and requested proceeding under an assumption of Android success. Continue independent checks, but record Android as deferred/not tested. Do not convert the planning assumption or native exports into a physical-Android pass. The procedures below remain for the outstanding device work when available.
+
 Keep Docker/backend and Metro running on the computer. Connect the computer and both phones to the same reachable LAN. Find the computer's active adapter IPv4 address:
 
 ```powershell
@@ -164,6 +168,18 @@ Start/restart Metro from `frontend/`:
 ```powershell
 npm.cmd run dev:mobile
 ```
+
+For physical iOS, [Expo requires the same Expo account](https://docs.expo.dev/troubleshooting/expo-go-sign-in-required/) in Expo CLI and Expo Go. If the launch reports that sign-in is required, stop Metro with Ctrl+C and run:
+
+```powershell
+cd mobile
+npx.cmd expo login
+npx.cmd expo whoami
+cd ..
+npm.cmd run dev:mobile
+```
+
+Sign in to Expo Go on the iPhone with the same Expo account shown by `whoami`. This is separate from the BiletFlow test account used inside the app. Complete Expo sign-in interactively; do not put its credentials in project files or evidence.
 
 Scan the Metro QR using compatible Expo Go on Android and iPhone. Record each model, OS and Expo Go version separately. A bundle/export or browser preview is not this evidence.
 

@@ -10,7 +10,7 @@ Responsive organizer/attendee and platform-administration web interfaces, plus a
 
 ## Stack
 
-User confirmed React, TypeScript, Vite and Tailwind for web; React Native with Expo for mobile. FastAPI/PostgreSQL are owned by the backend team. Both Android and iPhone test devices are available to the user; successful launches remain to be recorded.
+User confirmed React, TypeScript, Vite and Tailwind for web; React Native with Expo for mobile. FastAPI/PostgreSQL are owned by the backend team. The user reports basic iPhone connection/storage/session checks passed. On 8 November the user clarified that no Android device is currently available; Android acceptance is deferred and remains untested. Device/version details for the iPhone are unrecorded.
 
 ## Users and purpose
 
@@ -22,7 +22,7 @@ KZT integer tiyn; Kazakh and Russian customer UI plus English locale. Payments, 
 
 ## Current implementation boundary
 
-F0's web/mobile entry points, contracts/adapters, locales, mocks and checks are merged into master, and frontend CI passed. F1's current-contract web authentication/profile/permission flows and native sessions, including refresh fix `d10826b`, are merged through PR #7; evidence is in frontend/docs/F1_CHECKLIST.md. Yernur Slyamshaikhov is the sole F0/F1 owner. Each later module also has one owner as recorded in FRONTEND_PLAN.md, whose dependency/timeline rule governs incremental implementation and parallel work. The current local checkout contains health, P1 authentication/profile/staff and P8 ticket/QR/PDF source; it is behind remote master, so later backend modules require version-specific inspection. Real frontend integration and physical-device checks remain unverified. The functional frontend uses restrained platform controls.
+F0's web/mobile entry points, contracts/adapters, locales, mocks and checks are merged into master, and frontend CI passed. F1's current-contract web authentication/profile/permission flows and native sessions, including refresh fix `d10826b`, are merged through PR #7; evidence is in frontend/docs/F1_CHECKLIST.md. Yernur Slyamshaikhov is the sole F0/F1 owner. Each later module also has one owner as recorded in FRONTEND_PLAN.md, whose dependency/timeline rule governs incremental implementation and parallel work. The acceptance branch includes remote master `793243c` through merge commit `4b3ced4`; later backend modules still require operation-specific integration checks. Real health and the current 79-test frontend check passed; basic web registration/verification/auth/profile/reset/role-denial and iPhone connection/storage/startup/sign-out checks are user-reported passes. Acceptance remains partial: Android is deferred because no device is available; on 8 November the user also deferred the genuine web access-expiry/refresh test for lack of time. Other unchecked request/session, event-isolation and review criteria remain explicit in the checklists. The functional frontend uses restrained platform controls.
 
 ## Visual direction
 
