@@ -1142,7 +1142,7 @@ export interface paths {
         put?: never;
         /**
          * Verify a QR payload and check in atomically; rejects Campaign QR codes
-         * @description Owner: P15. Access: event owner, platform admin, or staff (checkin).
+         * @description Owner: P15. Access: event owner, platform admin, or staff (checkin). Always 200 with a result: accepted, already_used, refunded, invalid (forged, unknown or cancelled), wrong_event (no ticket details), not_a_ticket (Campaign QR or other).
          */
         post: operations["post_checkin_verify"];
         delete?: never;
@@ -5152,6 +5152,7 @@ export interface operations {
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
     };
