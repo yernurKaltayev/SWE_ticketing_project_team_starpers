@@ -5,7 +5,7 @@ from typing import Literal
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class EventCreate(BaseModel):
@@ -70,6 +70,11 @@ class EventUpdate(BaseModel):
     registration_closes_at: datetime | None = None
 
 
+class RefundPolicyOut(BaseModel):
+    summary: str
+    refundable_until: datetime | None = None
+
+
 class EventOut(EventCreate):
     model_config = ConfigDict(from_attributes=True)
 
@@ -78,6 +83,8 @@ class EventOut(EventCreate):
     paid_sales_status: str
     share_token: str
     images: list[str]
+    # Set by the organizer through PUT /events/{id}/refund-policy (P7); null until then.
+    refund_policy: RefundPolicyOut | None = None
 
 
 class ImageUploadIn(BaseModel):
@@ -91,5 +98,5 @@ class ImageUploadOut(BaseModel):
 
 
 class RefundPolicyIn(BaseModel):
-    summary: str
+    summary: str = Field(min_length=1, max_length=2000)
     refundable_until: datetime | None = None
