@@ -1383,6 +1383,48 @@ paths:
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
+  /payments/{payment_id}/simulate:
+    post:
+      tags:
+      - payments
+      summary: 'SANDBOX: make the simulated provider report success or failure'
+      description: 'Owner: P6. Access: order buyer (ticket payments) or event owner, platform
+        admin, or staff (manager) (activation fees). Runs the same signed-webhook path as a real
+        callback; idempotent once the payment is settled. Disabled when PAYMENT_SIMULATION_ENABLED
+        is false.'
+      operationId: post_payments_payment_id_simulate
+      parameters:
+      - name: payment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulatePaymentIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
   /payments/webhooks/{provider}:
     post:
       tags:
@@ -1394,6 +1436,12 @@ paths:
       - name: provider
         in: path
         required: true
+        schema:
+          type: string
+      - name: X-Sandbox-Signature
+        in: header
+        required: false
+        description: HMAC-SHA256 of the raw body (sandbox provider).
         schema:
           type: string
       security: []
@@ -4823,12 +4871,20 @@ components:
     PayoutAccountIn:
       properties:
         bank_name:
+          maxLength: 200
+          minLength: 1
           title: Bank Name
           type: string
         iban:
+          description: IBAN with a valid ISO 13616 checksum. Stored encrypted; only the last
+            four characters are ever returned.
+          maxLength: 42
+          minLength: 15
           title: Iban
           type: string
         holder_name:
+          maxLength: 200
+          minLength: 1
           title: Holder Name
           type: string
       required:
@@ -4836,6 +4892,25 @@ components:
       - iban
       - holder_name
       title: PayoutAccountIn
+      type: object
+    SimulatePaymentIn:
+      description: SANDBOX control. Decides what the simulated provider reports; no card data.
+      properties:
+        outcome:
+          enum:
+          - succeeded
+          - failed
+          title: Outcome
+          type: string
+        failure_reason:
+          anyOf:
+          - maxLength: 200
+            type: string
+          - type: 'null'
+          title: Failure Reason
+      required:
+      - outcome
+      title: SimulatePaymentIn
       type: object
     PayoutAccountOut:
       properties:
