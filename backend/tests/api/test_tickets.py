@@ -140,7 +140,9 @@ async def test_buyer_is_notified_once(db):
     with patch("app.services.ticket_service.notify", new=AsyncMock()) as notify:
         await issue_tickets(db, order)
     notify.assert_awaited_once()
-    assert notify.await_args.args[2] is buyer
+    call_args = notify.await_args
+    assert call_args is not None
+    assert call_args.args[2] is buyer
 
 
 # --- endpoints ---------------------------------------------------------------

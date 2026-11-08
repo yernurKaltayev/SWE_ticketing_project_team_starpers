@@ -20,6 +20,11 @@ import { SessionProvider } from "./auth/SessionProvider";
 import { useSession } from "./auth/session";
 import { Status } from "./auth/ui";
 
+import { EventList } from "./events/Discovery";
+import { EventDetail } from "./events/Detail";
+import { EventEditor } from "./events/Editor";
+import { eventCopy } from "./events/copy";
+
 const FoundationPage = import.meta.env.DEV
   ? lazy(() => import("./dev/FoundationPage"))
   : null;
@@ -69,6 +74,10 @@ function Application() {
           BiletFlow
         </Link>
         <nav className="site-nav" aria-label="BiletFlow">
+          <Link to="/events">{eventCopy[locale].events}</Link>
+          {hasRole(user, ["organizer"]) && (
+            <Link to="/organizer/events">{eventCopy[locale].organizer}</Link>
+          )}
           {user ? (
             <>
               <Link to="/account">{t.account}</Link>
@@ -125,21 +134,46 @@ function Application() {
         <Routes>
           <Route
             path="/"
+            element={<EventList key={user?.id ?? "public"} locale={locale} />}
+          />
+          <Route
+            path="/events"
+            element={<EventList key={user?.id ?? "public"} locale={locale} />}
+          />
+          <Route
+            path="/events/:eventId"
+            element={<EventDetail key={user?.id ?? "public"} locale={locale} />}
+          />
+          <Route
+            path="/organizer/events"
             element={
-              <>
-                <h1>BiletFlow</h1>
-                <p>{t.homeDescription}</p>
-                <div className="auth-links">
-                  <Link to={user ? "/account" : "/login"}>
-                    {user ? t.account : t.login}
-                  </Link>
-                  {FoundationPage ? (
-                    <Link to="/dev/foundation">
-                      {messages[locale].foundationTitle}
-                    </Link>
-                  ) : null}
-                </div>
-              </>
+              <RequireSession locale={locale} roles={["organizer"]}>
+                <EventList key={user?.id} locale={locale} organizer />
+              </RequireSession>
+            }
+          />
+          <Route
+            path="/organizer/events/new"
+            element={
+              <RequireSession locale={locale} roles={["organizer"]}>
+                <EventEditor key={user?.id} locale={locale} />
+              </RequireSession>
+            }
+          />
+          <Route
+            path="/organizer/events/:eventId/edit"
+            element={
+              <RequireSession locale={locale} roles={["organizer"]}>
+                <EventEditor key={user?.id} locale={locale} />
+              </RequireSession>
+            }
+          />
+          <Route
+            path="/organizer/events/:eventId/preview"
+            element={
+              <RequireSession locale={locale} roles={["organizer"]}>
+                <EventDetail key={user?.id} locale={locale} preview />
+              </RequireSession>
             }
           />
           {authKinds.map((kind) => (

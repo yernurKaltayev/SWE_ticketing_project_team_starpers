@@ -1,8 +1,11 @@
+"""Request and response schemas for P2 events."""
+
 from datetime import datetime
 from typing import Literal
 from uuid import UUID
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class EventCreate(BaseModel):
@@ -20,9 +23,37 @@ class EventCreate(BaseModel):
     registration_opens_at: datetime | None = None
     registration_closes_at: datetime | None = None
 
+    @model_validator(mode="after")
+    def validate_event(self) -> "EventCreate":
+        if not self.title.strip() or not self.category.strip():
+            raise ValueError("title and category must not be blank")
+        if self.capacity <= 0:
+            raise ValueError("capacity must be positive")
+        try:
+            ZoneInfo(self.timezone)
+        except (ZoneInfoNotFoundError, ValueError) as exc:
+            raise ValueError("timezone must be a valid IANA time zone") from exc
+        for name in ("starts_at", "ends_at", "registration_opens_at", "registration_closes_at"):
+            value = getattr(self, name)
+            if value is not None and (value.tzinfo is None or value.utcoffset() is None):
+                raise ValueError(f"{name} must include a UTC offset")
+        if self.ends_at <= self.starts_at:
+            raise ValueError("ends_at must be after starts_at")
+        if (
+            self.registration_opens_at is not None
+            and self.registration_closes_at is not None
+            and self.registration_opens_at > self.registration_closes_at
+        ):
+            raise ValueError("registration_opens_at must not be after registration_closes_at")
+        if self.registration_closes_at is not None and self.registration_closes_at > self.ends_at:
+            raise ValueError("registration must close by the end of the event")
+        if self.seating_mode == "assigned" and self.layout_id is None:
+            raise ValueError("assigned seating requires layout_id")
+        return self
+
 
 class EventUpdate(BaseModel):
-    """Partial update: only the fields sent are changed."""
+    """PATCH schema: omitted fields stay unchanged; required fields cannot be null."""
 
     title: str | None = None
     description: str | None = None
@@ -40,6 +71,8 @@ class EventUpdate(BaseModel):
 
 
 class EventOut(EventCreate):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     status: str
     paid_sales_status: str

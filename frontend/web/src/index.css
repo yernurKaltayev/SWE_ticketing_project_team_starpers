@@ -260,3 +260,135 @@ main:focus {
     transition: background-color 120ms ease-out;
   }
 }
+
+/* F2 shares the existing paper/green foundation. */
+.event-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.event-filters,
+.event-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 0 1rem;
+}
+.event-filters {
+  padding: 1.25rem;
+  border: 1px solid #d7dfd8;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 1.25rem;
+}
+.event-card {
+  background: white;
+  padding: 1.25rem;
+  border: 1px solid #d7dfd8;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.event-card h2 {
+  margin-top: 0.5rem;
+}
+.event-category {
+  display: block;
+  font-size: 0.9rem;
+  color: #43594d;
+  margin-top: 1rem;
+}
+.event-image {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+.event-description {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-top: 2rem;
+}
+.action-link {
+  padding: 0.65rem 1rem;
+  background: #176756;
+  color: white;
+  border-radius: 5px;
+}
+.action-link:hover {
+  color: white;
+  background: #11503f;
+}
+.ticket-list {
+  list-style: none;
+  padding: 0;
+}
+.ticket-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #d7dfd8;
+}
+.ticket-list strong {
+  flex: 1 1 160px;
+}
+.field textarea {
+  font: inherit;
+  border: 1px solid #70837b;
+  border-radius: 5px;
+  background: white;
+  padding: 0.6rem 0.8rem;
+  width: 100%;
+  resize: vertical;
+  color: var(--color-ink);
+}
+.table-scroll {
+  overflow-x: auto;
+  margin-bottom: 1.25rem;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+caption {
+  text-align: left;
+  font-weight: 600;
+}
+th,
+td {
+  padding: 0.65rem;
+  text-align: left;
+  border-bottom: 1px solid #d7dfd8;
+}
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 44px;
+}
+.checkbox-field input {
+  width: 20px;
+  height: 20px;
+}
+dialog {
+  color: var(--color-ink);
+  background: white;
+  border: 1px solid #70837b;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: min(90vw, 520px);
+}
+dialog::backdrop {
+  background: #192c2a88;
+}
+fieldset:disabled textarea {
+  opacity: 0.7;
+}

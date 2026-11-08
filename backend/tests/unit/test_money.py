@@ -16,7 +16,12 @@ def test_from_major_rejects_fractions_of_a_tiyn():
 
 
 @pytest.mark.parametrize(
-    "build", [lambda: Money(1.5), lambda: Money.from_major(1.5), lambda: Money(True)]
+    "build",
+    [
+        lambda: Money(1.5),  # type: ignore[arg-type]
+        lambda: Money.from_major(1.5),  # type: ignore[arg-type]
+        lambda: Money(True),
+    ],
 )
 def test_floats_and_bools_are_rejected(build):
     with pytest.raises(TypeError):

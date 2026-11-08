@@ -4,6 +4,8 @@
 
 F1's current-contract web authentication/profile/permission flows and native session integration, including refresh fix `d10826b`, were merged through [PR #7](https://github.com/yernurKaltayev/SWE_ticketing_project_team_starpers/pull/7) at `2058599`. Historical local checks and mock browser journeys passed; real backend/session and physical-device acceptance remain unverified. On 8 November, the local checkout still points to `d10826b`, 18 commits behind remote `master` at `793243c`; later backend readiness must be checked against the version actually running. See [frontend/docs/F1_CHECKLIST.md](frontend/docs/F1_CHECKLIST.md).
 
+**F2 client progress (6 November 2026):** Dias’s discovery/editor/ticket-type/publication implementation and controlled tests are recorded in [frontend/docs/F2_CHECKLIST.md](frontend/docs/F2_CHECKLIST.md). Live integration, image attachment, policy readback and real-browser acceptance remain pending; F2 is not marked fully accepted.
+
 **Basis:** all five supplied BiletFlow SRS v0.3 PDF extracts, reviewed in full, plus the implementation interfaces in [CLAUDE.md](CLAUDE.md). PDF references below use printed page numbers and original SRS section/use-case identifiers. These are initial-draft requirements; proposed implementation details and unresolved decisions are identified separately.
 
 | Source | Supplied document | Relevant scope |

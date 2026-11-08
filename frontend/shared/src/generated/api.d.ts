@@ -2553,6 +2553,11 @@ export interface components {
             /** Attendees */
             attendees: components["schemas"]["AttendeeIn"][];
             /**
+             * Hold Ids
+             * @default []
+             */
+            hold_ids: string[];
+            /**
              * Promo Code
              * @default null
              */
@@ -3754,6 +3759,11 @@ export interface operations {
             query?: {
                 limit?: components["parameters"]["Limit"];
                 offset?: components["parameters"]["Offset"];
+                q?: string;
+                category?: string;
+                city?: string;
+                date_from?: string;
+                date_to?: string;
             };
             header?: never;
             path?: never;
@@ -4448,6 +4458,9 @@ export interface operations {
             query?: {
                 limit?: components["parameters"]["Limit"];
                 offset?: components["parameters"]["Offset"];
+                q?: string;
+                ticket_type_id?: string;
+                status?: string;
             };
             header?: never;
             path: {
@@ -4474,7 +4487,11 @@ export interface operations {
     };
     get_events_event_id_attendees_csv: {
         parameters: {
-            query?: never;
+            query?: {
+                q?: string;
+                ticket_type_id?: string;
+                status?: string;
+            };
             header?: never;
             path: {
                 event_id: string;

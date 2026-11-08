@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     include: [
       "shared/tests/**/*.test.ts",
-      "web/src/**/*.test.ts",
+      "web/src/**/*.test.{ts,tsx}",
       "mobile/src/**/*.test.ts",
     ],
   },
