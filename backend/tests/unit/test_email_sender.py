@@ -101,6 +101,13 @@ async def test_a_failed_delivery_is_logged_without_the_password(smtp, authentica
     assert SMTP_PASSWORD not in caplog.text
 
 
+async def test_deliver_email_raises_so_the_worker_can_retry(smtp, authenticated):
+    smtp.login_error = smtplib.SMTPAuthenticationError(535, b"bad credentials")
+
+    with pytest.raises(smtplib.SMTPAuthenticationError):
+        await email_sender.deliver_email("to@example.com", "Subject", "Body")
+
+
 def _production_settings(**overrides) -> Settings:
     values = {
         "environment": "production",

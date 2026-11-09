@@ -4,6 +4,7 @@ import enum
 import uuid
 from datetime import datetime
 
+from sqlalchemy import Index, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, Counter, JsonObject, Timestamps, UUIDPrimaryKey, fk, pg_enum
@@ -31,6 +32,15 @@ class EmailStatus(enum.StrEnum):
 
 class Notification(UUIDPrimaryKey, Timestamps, Base):
     __tablename__ = "notifications"
+    __table_args__ = (
+        # The email worker scans pending rows oldest first (migration p9_notifications).
+        Index(
+            "ix_notifications_email_pending",
+            "created_at",
+            postgresql_where=text("email_status = 'pending'"),
+        ),
+        Index("ix_notifications_user_id_created_at", "user_id", "created_at"),
+    )
 
     user_id: Mapped[uuid.UUID] = fk("users.id")
     type: Mapped[NotificationType] = mapped_column(pg_enum(NotificationType, "notification_type"))
