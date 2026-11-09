@@ -2337,6 +2337,13 @@ paths:
       parameters:
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Offset'
+      - name: unread_only
+        in: query
+        required: false
+        description: Only notifications not yet marked as read
+        schema:
+          type: boolean
+          default: false
       security:
       - bearerAuth: []
       responses:

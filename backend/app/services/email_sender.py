@@ -24,14 +24,26 @@ def _deliver(message: EmailMessage) -> None:
         smtp.send_message(message)
 
 
-async def send_email(to: str, subject: str, body: str) -> None:
-    """Send an email. A delivery failure is logged, never raised: see P9 in the plan."""
+def _build(to: str, subject: str, body: str) -> EmailMessage:
     message = EmailMessage()
     message["From"] = get_settings().email_from
     message["To"] = to
     message["Subject"] = subject
     message.set_content(body)
+    return message
+
+
+async def deliver_email(to: str, subject: str, body: str) -> None:
+    """Send an email and raise `OSError`/`SMTPException` on failure, so a caller can retry.
+
+    The notification worker uses this. Request handlers should use `send_email` instead.
+    """
+    await asyncio.to_thread(_deliver, _build(to, subject, body))
+
+
+async def send_email(to: str, subject: str, body: str) -> None:
+    """Send an email. A delivery failure is logged, never raised: see P9 in the plan."""
     try:
-        await asyncio.to_thread(_deliver, message)
+        await deliver_email(to, subject, body)
     except (OSError, smtplib.SMTPException):
         logger.exception("email delivery failed", extra={"subject": subject})

@@ -65,6 +65,8 @@ class Settings(BaseSettings):
     smtp_password: SecretStr | None = None
     smtp_starttls: bool = False
     email_from: str = "noreply@example.com"
+    # P9: the worker retries a notification email this many times before marking it failed.
+    notification_max_email_attempts: int = 5
 
     s3_endpoint_url: str = "http://localhost:9000"
     s3_access_key: str = "biletflow"
