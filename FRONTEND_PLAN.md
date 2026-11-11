@@ -232,6 +232,8 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F5 — Assigned seating and hold recovery [Bonus]
 
+**11 November frontend slice:** existing-layout setup, interactive SVG/list, a reservation demo and a tested hold interface are implemented; public category mapping, hold recovery and F3 checkout integration remain pending. See [F5_CHECKLIST.md](frontend/docs/F5_CHECKLIST.md). Not fully accepted.
+
 **Frontend lead:** Dias — sole owner of seating/holds and its public interface; F3 consumes that interface within its own checkout code.
 
 **Backend dependencies:** Dos (backend), coordinating payment timing with Dima (backend); P4/P5/P6.

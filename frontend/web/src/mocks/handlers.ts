@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw";
 import type { components } from "@biletflow/shared/api";
+import { seatingHandlers } from "./seating";
 import { eventHandlers } from "./events";
 import { authHandlers } from "./auth";
 import { orderHandlers } from "./orders";
@@ -81,6 +82,7 @@ function failure() {
   return null;
 }
 export const handlers = [
+  ...seatingHandlers,
   ...paymentHandlers,
   ...orderHandlers,
   ...eventHandlers,

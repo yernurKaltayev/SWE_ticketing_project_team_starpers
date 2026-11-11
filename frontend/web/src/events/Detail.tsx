@@ -1,3 +1,4 @@
+import { seatingCopy } from "../seating/copy";
 import { Link, useParams } from "react-router-dom";
 import { formatEventDateTime, formatMoney } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
@@ -97,6 +98,7 @@ function EventContent({
         .map((date) => (
           <p key={date}>{formatEventDateTime(date!, event.timezone, locale)}</p>
         ))}
+      {event.seating_mode === "assigned" && !preview && <p><Link to={`/events/${event.id}/seats`}>{seatingCopy[locale].title}</Link></p>}
       <h2>{t.tickets}</h2>
       <EventError error={tickets.error} t={t} retry={tickets.reload} />
       {!tickets.data && !tickets.error && <Status>{t.loading}</Status>}
