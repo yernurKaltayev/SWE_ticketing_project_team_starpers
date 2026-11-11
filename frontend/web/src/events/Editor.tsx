@@ -1,3 +1,4 @@
+import { seatingCopy } from "../seating/copy";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { formatMoney } from "@biletflow/shared";
@@ -139,6 +140,13 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
         }}
       />
       <p id="zone-hint">{t.zoneHint}</p>
+      {event && (
+        <p>
+          <Link to={`/organizer/events/${event.id}/seating`}>
+            {seatingCopy[locale].setup}
+          </Link>
+        </p>
+      )}
       {event?.seating_mode === "assigned" && <Status>{t.assignedHint}</Status>}
       <form
         key={revision}
@@ -301,7 +309,7 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
             {event.status !== "cancelled" && (
               <button
                 ref={actionButton}
-                disabled={disabled || dirty || !user?.email_verified_at}
+                disabled={pending || dirty || !user?.email_verified_at}
                 onClick={() =>
                   setAction(
                     event.status === "published" ? "unpublish" : "publish",
@@ -524,7 +532,16 @@ function TicketEditor({
             setPending(true);
             void request<Ticket>(
               `/api/v1/events/${event.id}/ticket-types${selected ? `/${selected.id}` : ""}`,
-              { method: selected ? "PATCH" : "POST", body },
+              {
+                method: selected ? "PATCH" : "POST",
+                body: selected
+                  ? Object.fromEntries(
+                      Object.entries(body).filter(
+                        ([key]) => key !== "price_category",
+                      ),
+                    )
+                  : body,
+              },
             )
               .then(() => {
                 select(undefined);

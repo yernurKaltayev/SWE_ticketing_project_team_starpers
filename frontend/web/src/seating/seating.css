@@ -1,0 +1,52 @@
+.seating {
+  display: grid;
+  gap: 1rem;
+}
+.seating label {
+  display: grid;
+  gap: 0.5rem;
+}
+.seating fieldset {
+  min-width: 0;
+  border: 1px solid #aaa;
+  padding: 0.75rem;
+}
+.seat-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.seat-list button {
+  min-width: 6rem;
+  min-height: 44px;
+  white-space: normal;
+}
+.seat-list button[aria-pressed="true"] {
+  outline: 3px solid #245c45;
+}
+.seat-map-scroll {
+  overflow: auto;
+}
+.seat-map-scroll svg {
+  min-width: 640px;
+  width: 100%;
+}
+.seat-dot {
+  fill: #fff;
+  stroke: #245c45;
+  stroke-width: 2;
+}
+.seat-dot.held {
+  fill: #edce89;
+}
+.seat-dot.sold {
+  fill: #bbb;
+  stroke-dasharray: 3;
+}
+.seat-dot.selected {
+  fill: #91c9ad;
+  stroke-width: 4;
+}
+.seat-map-scroll [role="button"][aria-disabled="false"] { cursor: pointer; }
+.seat-map-scroll [role="button"]:focus-visible .seat-dot { stroke: #111; stroke-width: 5; }
+.seating-handoff { max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }

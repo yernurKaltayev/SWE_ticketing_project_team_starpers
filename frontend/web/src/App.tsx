@@ -28,6 +28,13 @@ import { commerceNavigation } from "./checkout/navigation";
 import { paymentCopy } from "./payments/copy";
 import { PageErrorBoundary } from "./PageErrorBoundary";
 
+const SeatPage = lazy(() =>
+  import("./seating/Pages").then((m) => ({ default: m.SeatPage })),
+);
+const SeatingSetup = lazy(() =>
+  import("./seating/Pages").then((m) => ({ default: m.SeatingSetup })),
+);
+
 const Activation = lazy(() => import("./payments/Organizer"));
 const Accounts = lazy(() =>
   import("./payments/Organizer").then((m) => ({ default: m.AccountsPage })),
@@ -48,6 +55,11 @@ const Tickets = lazy(() => import("./checkout/Tickets"));
 const TicketDetail = lazy(() =>
   import("./checkout/Tickets").then((m) => ({ default: m.TicketDetail })),
 );
+
+const SeatingDemo =
+  import.meta.env.DEV && config.useMocks
+    ? lazy(() => import("./seating/Demo"))
+    : null;
 
 const FoundationPage = import.meta.env.DEV
   ? lazy(() => import("./dev/FoundationPage"))
@@ -179,6 +191,36 @@ function Application() {
           }
         >
           <Routes>
+            {SeatingDemo && (
+              <Route
+                path="/dev/seating"
+                element={
+                  <RequireSession locale={locale}>
+                    <Suspense fallback={<Status>{t.loading}</Status>}>
+                      <SeatingDemo key={user?.id} locale={locale} />
+                    </Suspense>
+                  </RequireSession>
+                }
+              />
+            )}
+            <Route
+              path="/events/:eventId/seats"
+              element={
+                <Suspense fallback={<Status>{t.loading}</Status>}>
+                  <SeatPage key={user?.id ?? "public"} locale={locale} />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/organizer/events/:eventId/seating"
+              element={
+                <RequireSession locale={locale} roles={["organizer"]}>
+                  <Suspense fallback={<Status>{t.loading}</Status>}>
+                    <SeatingSetup key={user?.id} locale={locale} />
+                  </Suspense>
+                </RequireSession>
+              }
+            />
             {[
               {
                 path: "/organizer/events/:eventId/activation",

@@ -5402,6 +5402,8 @@ export interface operations {
             query?: {
                 limit?: components["parameters"]["Limit"];
                 offset?: components["parameters"]["Offset"];
+                /** @description Only notifications not yet marked as read */
+                unread_only?: boolean;
             };
             header?: never;
             path?: never;
