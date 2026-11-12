@@ -2400,6 +2400,33 @@ paths:
       parameters:
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Offset'
+      - name: status
+        in: query
+        required: false
+        description: Only cases with this status
+        schema:
+          type: string
+          enum:
+          - open
+          - in_progress
+          - waiting_customer
+          - resolved
+      - name: event_id
+        in: query
+        required: false
+        description: Only cases about this event
+        schema:
+          type: string
+          format: uuid
+      - name: role
+        in: query
+        required: false
+        description: 'requester: cases I opened; handler: cases I handle. Default: both'
+        schema:
+          type: string
+          enum:
+          - requester
+          - handler
       security:
       - bearerAuth: []
       responses:
@@ -3671,9 +3698,20 @@ components:
     CaseCreate:
       properties:
         category:
+          enum:
+          - ticket_delivery
+          - payment
+          - refund
+          - seating
+          - event_info
+          - check_in
+          - account
+          - technical
           title: Category
           type: string
         subject:
+          maxLength: 200
+          minLength: 1
           title: Subject
           type: string
         event_id:
@@ -3698,6 +3736,8 @@ components:
           default: null
           title: Ticket Id
         message:
+          maxLength: 5000
+          minLength: 1
           title: Message
           type: string
       required:
@@ -4287,6 +4327,8 @@ components:
     MessageIn:
       properties:
         body:
+          maxLength: 5000
+          minLength: 1
           title: Body
           type: string
       required:
