@@ -2109,8 +2109,11 @@ export interface components {
         };
         /** CaseCreate */
         CaseCreate: {
-            /** Category */
-            category: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "ticket_delivery" | "payment" | "refund" | "seating" | "event_info" | "check_in" | "account" | "technical";
             /** Subject */
             subject: string;
             /**
@@ -5456,6 +5459,12 @@ export interface operations {
             query?: {
                 limit?: components["parameters"]["Limit"];
                 offset?: components["parameters"]["Offset"];
+                /** @description Only cases with this status */
+                status?: "open" | "in_progress" | "waiting_customer" | "resolved";
+                /** @description Only cases about this event */
+                event_id?: string;
+                /** @description requester: cases I opened; handler: cases I handle. Default: both */
+                role?: "requester" | "handler";
             };
             header?: never;
             path?: never;

@@ -6,6 +6,13 @@
       "reason": "there is a mistake, it was supposed to go consequently by numerations",
       "by": "Yernur",
       "date": "2026-11-09"
+    },
+    {
+      "part": "P10",
+      "kind": "start-early",
+      "reason": "The order you are looking at is incorrect. It should have been like p1->p2->p3 and so on, in other words it should have been consequent",
+      "by": "Yernur",
+      "date": "2026-11-12"
     }
   ]
 }
