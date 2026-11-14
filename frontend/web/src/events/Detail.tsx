@@ -98,7 +98,13 @@ function EventContent({
         .map((date) => (
           <p key={date}>{formatEventDateTime(date!, event.timezone, locale)}</p>
         ))}
-      {event.seating_mode === "assigned" && !preview && <p><Link to={`/events/${event.id}/seats`}>{seatingCopy[locale].title}</Link></p>}
+      {event.seating_mode === "assigned" && !preview && (
+        <p>
+          <Link to={`/events/${event.id}/seats`}>
+            {seatingCopy[locale].title}
+          </Link>
+        </p>
+      )}
       <h2>{t.tickets}</h2>
       <EventError error={tickets.error} t={t} retry={tickets.reload} />
       {!tickets.data && !tickets.error && <Status>{t.loading}</Status>}
@@ -119,7 +125,7 @@ function EventContent({
           </li>
         ))}
       </ul>
-      {!preview && (
+      {!preview && event.status === "published" && (
         <p>
           <Link className="action-link" to={`/events/${event.id}/checkout`}>
             {commerceNavigation[locale].register}

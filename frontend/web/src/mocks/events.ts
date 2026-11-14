@@ -117,6 +117,12 @@ function access(request: Request, record?: Record) {
     return fail(403, "forbidden");
   return user;
 }
+export function mockManagedEvent(request: Request, id: string) {
+  const r = events.get(id);
+  if (!r) return fail(404, "event_not_found");
+  const actor = access(request, r);
+  return actor instanceof Response ? actor : r.value;
+}
 function canView(request: Request, record: Record) {
   return (
     (record.value.status === "published" &&

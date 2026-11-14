@@ -28,6 +28,8 @@ import { commerceNavigation } from "./checkout/navigation";
 import { paymentCopy } from "./payments/copy";
 import { PageErrorBoundary } from "./PageErrorBoundary";
 
+const Operations = lazy(() => import("./operations/Workspace"));
+
 const SeatPage = lazy(() =>
   import("./seating/Pages").then((m) => ({ default: m.SeatPage })),
 );
@@ -191,6 +193,22 @@ function Application() {
           }
         >
           <Routes>
+            {[
+              "/organizer/events/:eventId/orders",
+              "/organizer/events/:eventId/orders/:orderId",
+            ].map((path) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <RequireSession locale={locale} roles={["organizer"]}>
+                    <Suspense fallback={<Status>{t.loading}</Status>}>
+                      <Operations key={user?.id} locale={locale} />
+                    </Suspense>
+                  </RequireSession>
+                }
+              />
+            ))}
             {SeatingDemo && (
               <Route
                 path="/dev/seating"

@@ -1,3 +1,4 @@
+import { operationsCopy } from "../operations/copy";
 import { seatingCopy } from "../seating/copy";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -125,6 +126,10 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
       <h1>{event ? t.edit : t.create}</h1>
       {event && (
         <p>
+          <Link to={`/organizer/events/${event.id}/orders`}>
+            {operationsCopy[locale].title}
+          </Link>
+          {" · "}
           <span className="status-badge">
             {t[event.status as "draft"] ?? event.status}
           </span>
@@ -174,14 +179,19 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
           )
             .then(parseEvent)
             .then((result) => {
+              // On create, let the destination route load the saved event before
+              // showing its edit controls. Publishing local edit state first can
+              // flash an editor that disappears when navigation starts loading.
+              if (!event) {
+                navigate(`/organizer/events/${result.id}/edit`, {
+                  replace: true,
+                });
+                return;
+              }
               setDirty(false);
               setEvent(result);
               setRevision((n) => n + 1);
               setSaved(true);
-              if (!event)
-                navigate(`/organizer/events/${result.id}/edit`, {
-                  replace: true,
-                });
             })
             .catch(setError)
             .finally(() => setPending(false));
@@ -323,7 +333,7 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
               <button
                 className="secondary"
                 disabled={pending || dirty}
-                onClick={() => setAction("cancel")}
+                onClick={() => navigate(`/organizer/events/${event.id}/orders`)}
               >
                 {t.cancel}
               </button>

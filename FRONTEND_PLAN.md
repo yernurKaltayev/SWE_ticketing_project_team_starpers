@@ -250,6 +250,8 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F6 — Refunds, cancellation, and organizer order operations [B]
 
+**15 November frontend implementation:** organizer order/attendee/refund workspace, filtered CSV, confirmed free cancellation/full refunds, event impact review and lost-response recovery are implemented against current P2/P5/P7 APIs. Automated frontend checks pass; live mail/audit/F7/browser acceptance remains open. See [F6_CHECKLIST.md](frontend/docs/F6_CHECKLIST.md).
+
 **Frontend lead:** Dias — sole owner of refund/cancellation/order operations and record/cache updates through agreed interfaces.
 
 **Backend dependencies:** Dos (backend) for order lists; Dima (backend) for refund lifecycle; Yernur (backend) for notifications/audit; P5/P7/P9/P12.
