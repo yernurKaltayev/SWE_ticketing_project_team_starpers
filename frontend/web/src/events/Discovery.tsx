@@ -1,3 +1,4 @@
+import { operationsCopy } from "../operations/copy";
 import { Link, useSearchParams } from "react-router-dom";
 import { formatEventDateTime } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
@@ -161,6 +162,11 @@ export function EventList({
                     </span>
                     <nav className="controls">
                       <Link
+                        to={`/organizer/events/${encodeURIComponent(event.id)}/orders`}
+                      >
+                        {operationsCopy[locale].title}
+                      </Link>
+                      <Link
                         to={`/organizer/events/${encodeURIComponent(event.id)}/activation`}
                       >
                         {paymentCopy[locale].activation}
@@ -173,7 +179,7 @@ export function EventList({
                     </nav>
                   </>
                 )}
-                {!organizer && (
+                {!organizer && event.status === "published" && (
                   <Link to={`/events/${event.id}/checkout`}>
                     {commerceNavigation[locale].register}
                   </Link>

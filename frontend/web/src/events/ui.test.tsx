@@ -9,12 +9,16 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { setupServer } from "msw/node";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { createMemoryTokenStore, createSession } from "@biletflow/shared";
 import { handlers } from "../mocks/handlers";
 import { resetAuthMocks } from "../mocks/auth";
-import { demoEventId, resetEventMocks } from "../mocks/events";
+import {
+  demoEventId,
+  mockCheckoutEvent,
+  resetEventMocks,
+} from "../mocks/events";
 import { SessionContext } from "../auth/session";
 import { EventEditor } from "./Editor";
 import { EventDetail } from "./Detail";
@@ -167,7 +171,18 @@ it("reports invalid wall-time fields with a focused, linked error and sends no c
 it("creates an event with live P4 venue arrays, then saves and edits a paid ticket using live P3 arrays", async () => {
   const rows: Record<string, unknown>[] = [];
   let savedBody: Record<string, unknown> | undefined;
+  let destinationLoaded = false;
   server.use(
+    http.get("*/api/v1/events/:id", async ({ params }) => {
+      // Model a slower destination read: editing must begin only after this
+      // request completes, never from transient state on the create route.
+      await delay(150);
+      const context = mockCheckoutEvent(String(params.id));
+      destinationLoaded = true;
+      return context
+        ? HttpResponse.json(context.event)
+        : new HttpResponse(null, { status: 404 });
+    }),
     http.get("*/api/v1/venues", () =>
       HttpResponse.json([
         {
@@ -200,6 +215,7 @@ it("creates an event with live P4 venue arrays, then saves and edits a paid tick
     screen.getByRole("button", { name: "Save draft / changes" }),
   );
   await screen.findByRole("heading", { name: "Edit event" });
+  expect(destinationLoaded).toBe(true);
   await userEvent.click(
     screen.getByRole("button", { name: "Add ticket type" }),
   );

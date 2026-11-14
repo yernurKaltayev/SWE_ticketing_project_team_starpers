@@ -157,3 +157,10 @@ Owner: **Yernur Slyamshaikhov**. Keep the existing local environment files and s
 - Existing F2 live detail currently fails on its availability array/envelope mismatch. Use the discovery card's **Registration** entry for F3; F2 venue/ticket/availability contract reconciliation remains with Dias and the backend owners. F3 adds entry links without replacing F2's implementation.
 
 `npm.cmd run check` passed **105 tests**, API drift, lint, all workspace TypeScript and the production web build. Both native exports passed after the shared transport extension. Real registration/retry/inventory/attendee-API/QR/PDF/ownership checks are recorded in [F3_CHECKLIST.md](docs/F3_CHECKLIST.md), with injected failure states identified separately. Local development fixtures and screenshots are under ignored `web/output/f3/`. Mock QR/PDF assets are explicitly labeled fixtures and do not prove admission or printing. Full F3 acceptance remains pending the listed external and physical checks. No code was committed, pushed or merged automatically.
+
+
+## F6 organizer operations
+
+Dias owns `/organizer/events/:eventId/orders` (Orders, Attendees and Refunds), with detail routes under `/orders/:orderId`. Open it from My events or the event editor. CSV exports, free cancellation/full-refund confirmations, event-wide impact review and conservative lost-response recovery use the existing P2/P5/P7 APIs. See [F6 checklist](docs/F6_CHECKLIST.md) for contracts, mock demo, Windows commands and remaining live acceptance.
+
+Order search/export uses a complete authorized client list up to 10,000 orders because P5 has no server order-search/export endpoint. Attendee search/export runs on the server. Do not clear recovery storage to bypass an unresolved operation.

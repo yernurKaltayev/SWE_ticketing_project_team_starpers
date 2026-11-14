@@ -8,7 +8,26 @@ import {
 import type { Order, OrderBody, Ticket } from "../checkout/model";
 import { mockTicketPng, mockTicketPdf } from "./ticket-assets";
 
-const orders = new Map<string, { owner: string; value: Order }>();
+type OrderFixture = {
+  owner: string;
+  value: Order;
+  eventId: string;
+  attendees: {
+    id: string;
+    full_name: string;
+    email: string;
+    typeId: string;
+    typeName: string;
+  }[];
+};
+const orders = new Map<string, OrderFixture>();
+export function mockOperationsOrders(eventId: string) {
+  return [...orders.values()].filter((r) => r.eventId === eventId);
+}
+export function mockOperationsOrder(id: string) {
+  return orders.get(id);
+}
+
 const attempts = new Map<string, { body: string; id: string }>();
 const awaiting = new Map<string, { eventId: string; tickets: Ticket[] }>();
 export function mockOrder(request: Request, id: string) {
@@ -164,7 +183,25 @@ export const orderHandlers = [
       awaiting.set(id, { eventId: body.event_id, tickets: value.tickets });
       value.tickets = [];
     }
-    orders.set(id, { owner: user.id, value });
+    orders.set(id, {
+      owner: user.id,
+      value,
+      eventId: body.event_id,
+      attendees: body.attendees.map((a, i) => ({
+        id: crypto.randomUUID(),
+        ...a,
+        typeId: body.items.flatMap((item) =>
+          Array(item.quantity).fill(item.ticket_type_id),
+        )[i] as string,
+        typeName: context.tickets.find(
+          (t) =>
+            t.id ===
+            body.items.flatMap((item) =>
+              Array(item.quantity).fill(item.ticket_type_id),
+            )[i],
+        )!.name,
+      })),
+    });
     attempts.set(scoped, { body: JSON.stringify(body), id });
     return HttpResponse.json(value, { status: 201, headers });
   }),
@@ -208,9 +245,11 @@ export const orderHandlers = [
     const ticket = ownTicket(request, String(params.id));
     return ticket instanceof Response
       ? ticket
-      : new HttpResponse(mockTicketPng(), {
-          headers: { ...headers, "Content-Type": "image/png" },
-        });
+      : ticket.status !== "valid"
+        ? error(409, "ticket_not_valid")
+        : new HttpResponse(mockTicketPng(), {
+            headers: { ...headers, "Content-Type": "image/png" },
+          });
   }),
   http.get("*/api/v1/tickets/:id/pdf", ({ request, params }) => {
     const ticket = ownTicket(request, String(params.id));
