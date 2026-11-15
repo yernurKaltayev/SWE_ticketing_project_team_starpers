@@ -224,6 +224,7 @@ async def set_user_suspension(
                 update(RefreshToken)
                 .where(RefreshToken.user_id == user.id, RefreshToken.revoked_at.is_(None))
                 .values(revoked_at=datetime.now(UTC))
+                .execution_options(synchronize_session="fetch")
             )
         audit(
             db,
