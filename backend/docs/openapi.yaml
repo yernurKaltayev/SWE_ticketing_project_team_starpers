@@ -2616,13 +2616,13 @@ paths:
       tags:
       - admin
       summary: Report an event
-      description: 'Owner: P11. Access: any signed-in user.'
+      description: 'Owner: P11. Access: any signed-in user. Only published, non-private events can be reported.'
       operationId: post_events_event_id_reports
       parameters:
       - name: event_id
         in: path
         required: true
-        schema:
+        schema: &id002
           type: string
           format: uuid
       security:
@@ -2635,14 +2635,12 @@ paths:
               $ref: '#/components/schemas/EventReportIn'
       responses:
         '201':
-          description: Success
+          description: Created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/EventReportOut'
         '401':
-          $ref: '#/components/responses/Error'
-        '403':
           $ref: '#/components/responses/Error'
         '404':
           $ref: '#/components/responses/Error'
@@ -2652,12 +2650,49 @@ paths:
     get:
       tags:
       - admin
-      summary: Search users (q)
+      summary: Search users
       description: 'Owner: P11. Access: platform_admin.'
       operationId: get_admin_users
       parameters:
-      - $ref: '#/components/parameters/Limit'
-      - $ref: '#/components/parameters/Offset'
+      - &id003
+        name: q
+        in: query
+        required: false
+        schema: &id008
+          type: string
+        description: Free-text search
+      - name: role
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - attendee
+          - organizer
+          - platform_admin
+      - name: suspended
+        in: query
+        required: false
+        schema:
+          type: boolean
+      - &id004
+        name: created_from
+        in: query
+        required: false
+        schema: &id001
+          type: string
+          format: date-time
+        description: Created at or after
+      - &id005
+        name: created_to
+        in: query
+        required: false
+        schema: *id001
+        description: Created before
+      - &id006
+        $ref: '#/components/parameters/Limit'
+      - &id007
+        $ref: '#/components/parameters/Offset'
       security:
       - bearerAuth: []
       responses:
@@ -2666,12 +2701,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageUserOut'
+                $ref: '#/components/schemas/PageAdminUserOut'
         '401':
           $ref: '#/components/responses/Error'
         '403':
-          $ref: '#/components/responses/Error'
-        '422':
           $ref: '#/components/responses/Error'
   /admin/users/{user_id}/suspend:
     post:
@@ -2684,9 +2717,7 @@ paths:
       - name: user_id
         in: path
         required: true
-        schema:
-          type: string
-          format: uuid
+        schema: *id002
       security:
       - bearerAuth: []
       requestBody:
@@ -2701,12 +2732,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserOut'
+                $ref: '#/components/schemas/AdminUserOut'
         '401':
           $ref: '#/components/responses/Error'
         '403':
           $ref: '#/components/responses/Error'
         '404':
+          $ref: '#/components/responses/Error'
+        '409':
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
@@ -2714,12 +2747,25 @@ paths:
     get:
       tags:
       - admin
-      summary: Search events (q, status)
+      summary: Search events
       description: 'Owner: P11. Access: platform_admin.'
       operationId: get_admin_events
       parameters:
-      - $ref: '#/components/parameters/Limit'
-      - $ref: '#/components/parameters/Offset'
+      - *id003
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - draft
+          - published
+          - cancelled
+          - suspended
+      - *id004
+      - *id005
+      - *id006
+      - *id007
       security:
       - bearerAuth: []
       responses:
@@ -2728,27 +2774,23 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageEventOut'
+                $ref: '#/components/schemas/PageAdminEventOut'
         '401':
           $ref: '#/components/responses/Error'
         '403':
-          $ref: '#/components/responses/Error'
-        '422':
           $ref: '#/components/responses/Error'
   /admin/events/{event_id}/suspend:
     post:
       tags:
       - admin
-      summary: Suspend or reinstate an event
+      summary: Suspend or reinstate an event (hides it, blocks holds and checkout, pauses paid sales)
       description: 'Owner: P11. Access: platform_admin.'
       operationId: post_admin_events_event_id_suspend
       parameters:
       - name: event_id
         in: path
         required: true
-        schema:
-          type: string
-          format: uuid
+        schema: *id002
       security:
       - bearerAuth: []
       requestBody:
@@ -2763,12 +2805,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EventOut'
+                $ref: '#/components/schemas/AdminEventOut'
         '401':
           $ref: '#/components/responses/Error'
         '403':
           $ref: '#/components/responses/Error'
         '404':
+          $ref: '#/components/responses/Error'
+        '409':
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
@@ -2776,16 +2820,14 @@ paths:
     post:
       tags:
       - admin
-      summary: Suspend or restore paid sales
+      summary: Suspend or restore paid sales only
       description: 'Owner: P11. Access: platform_admin.'
       operationId: post_admin_events_event_id_paid_sales_suspend
       parameters:
       - name: event_id
         in: path
         required: true
-        schema:
-          type: string
-          format: uuid
+        schema: *id002
       security:
       - bearerAuth: []
       requestBody:
@@ -2800,12 +2842,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ActivationOut'
+                $ref: '#/components/schemas/AdminActivationOut'
         '401':
           $ref: '#/components/responses/Error'
         '403':
           $ref: '#/components/responses/Error'
         '404':
+          $ref: '#/components/responses/Error'
+        '409':
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
@@ -2813,12 +2857,23 @@ paths:
     get:
       tags:
       - admin
-      summary: Search orders (q, status)
+      summary: Search orders
       description: 'Owner: P11. Access: platform_admin.'
       operationId: get_admin_orders
       parameters:
-      - $ref: '#/components/parameters/Limit'
-      - $ref: '#/components/parameters/Offset'
+      - *id003
+      - name: status
+        in: query
+        required: false
+        schema: *id008
+      - name: event_id
+        in: query
+        required: false
+        schema: *id002
+      - *id004
+      - *id005
+      - *id006
+      - *id007
       security:
       - bearerAuth: []
       responses:
@@ -2827,23 +2882,34 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageOrderOut'
+                $ref: '#/components/schemas/PageAdminOrderOut'
         '401':
           $ref: '#/components/responses/Error'
         '403':
-          $ref: '#/components/responses/Error'
-        '422':
           $ref: '#/components/responses/Error'
   /admin/payments:
     get:
       tags:
       - admin
-      summary: Search payments, including failures (status)
+      summary: Search payments, including failures (status=failed)
       description: 'Owner: P11. Access: platform_admin.'
       operationId: get_admin_payments
       parameters:
-      - $ref: '#/components/parameters/Limit'
-      - $ref: '#/components/parameters/Offset'
+      - *id003
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - pending
+          - succeeded
+          - failed
+          - cancelled
+      - *id004
+      - *id005
+      - *id006
+      - *id007
       security:
       - bearerAuth: []
       responses:
@@ -2852,23 +2918,32 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PagePaymentOut'
+                $ref: '#/components/schemas/PageAdminPaymentOut'
         '401':
           $ref: '#/components/responses/Error'
         '403':
-          $ref: '#/components/responses/Error'
-        '422':
           $ref: '#/components/responses/Error'
   /admin/refunds:
     get:
       tags:
       - admin
-      summary: Monitor refunds (status)
+      summary: Monitor refunds
       description: 'Owner: P11. Access: platform_admin.'
       operationId: get_admin_refunds
       parameters:
-      - $ref: '#/components/parameters/Limit'
-      - $ref: '#/components/parameters/Offset'
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - pending
+          - completed
+          - failed
+      - *id004
+      - *id005
+      - *id006
+      - *id007
       security:
       - bearerAuth: []
       responses:
@@ -2877,23 +2952,60 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageRefundOut'
+                $ref: '#/components/schemas/PageAdminRefundOut'
         '401':
           $ref: '#/components/responses/Error'
         '403':
           $ref: '#/components/responses/Error'
-        '422':
+  /admin/disputes:
+    get:
+      tags:
+      - admin
+      summary: 'Dispute queue: failed refunds and open payment/refund support cases (derived, no dispute
+        table)'
+      description: 'Owner: P11. Access: platform_admin.'
+      operationId: get_admin_disputes
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisputesOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
           $ref: '#/components/responses/Error'
   /admin/activations:
     get:
       tags:
       - admin
-      summary: Inspect activation records (status)
+      summary: Inspect activation records
       description: 'Owner: P11. Access: platform_admin.'
       operationId: get_admin_activations
       parameters:
-      - $ref: '#/components/parameters/Limit'
-      - $ref: '#/components/parameters/Offset'
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - incomplete
+          - active
+          - suspended
+      - *id006
+      - *id007
       security:
       - bearerAuth: []
       responses:
@@ -2902,7 +3014,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageActivationOut'
+                $ref: '#/components/schemas/PageAdminActivationOut'
         '401':
           $ref: '#/components/responses/Error'
         '403':
@@ -2913,12 +3025,22 @@ paths:
     get:
       tags:
       - admin
-      summary: Reported events (status)
+      summary: Reported events
       description: 'Owner: P11. Access: platform_admin.'
       operationId: get_admin_reports
       parameters:
-      - $ref: '#/components/parameters/Limit'
-      - $ref: '#/components/parameters/Offset'
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - open
+          - reviewed
+          - dismissed
+          - actioned
+      - *id006
+      - *id007
       security:
       - bearerAuth: []
       responses:
@@ -2932,8 +3054,6 @@ paths:
           $ref: '#/components/responses/Error'
         '403':
           $ref: '#/components/responses/Error'
-        '422':
-          $ref: '#/components/responses/Error'
   /admin/reports/{report_id}:
     patch:
       tags:
@@ -2945,9 +3065,7 @@ paths:
       - name: report_id
         in: path
         required: true
-        schema:
-          type: string
-          format: uuid
+        schema: *id002
       security:
       - bearerAuth: []
       requestBody:
@@ -2975,12 +3093,22 @@ paths:
     get:
       tags:
       - admin
-      summary: Escalated support cases
+      summary: Escalated support cases (organizer cases that are not resolved)
       description: 'Owner: P11. Access: platform_admin.'
       operationId: get_admin_support_cases
       parameters:
-      - $ref: '#/components/parameters/Limit'
-      - $ref: '#/components/parameters/Offset'
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - open
+          - in_progress
+          - waiting_customer
+          - resolved
+      - *id006
+      - *id007
       security:
       - bearerAuth: []
       responses:
@@ -2989,12 +3117,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageCaseOut'
+                $ref: '#/components/schemas/PageAdminSupportCaseOut'
         '401':
           $ref: '#/components/responses/Error'
         '403':
-          $ref: '#/components/responses/Error'
-        '422':
           $ref: '#/components/responses/Error'
   /admin/campaigns:
     get:
@@ -3004,8 +3130,8 @@ paths:
       description: 'Owner: P11. Access: platform_admin.'
       operationId: get_admin_campaigns
       parameters:
-      - $ref: '#/components/parameters/Limit'
-      - $ref: '#/components/parameters/Offset'
+      - *id006
+      - *id007
       security:
       - bearerAuth: []
       responses:
@@ -3014,18 +3140,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageCampaignOut'
+                $ref: '#/components/schemas/PagePromoActivityOut'
         '401':
           $ref: '#/components/responses/Error'
         '403':
-          $ref: '#/components/responses/Error'
-        '422':
           $ref: '#/components/responses/Error'
   /admin/settings:
     get:
       tags:
       - admin
-      summary: Platform settings
+      summary: Platform settings (effective values)
       description: 'Owner: P11. Access: platform_admin.'
       operationId: get_admin_settings
       security:
@@ -3073,7 +3197,8 @@ paths:
       tags:
       - admin
       summary: Operational report as CSV
-      description: 'Owner: P11. Access: platform_admin.'
+      description: 'Owner: P11. Access: platform_admin. Up to 10000 rows; cells starting with = + - @ are
+        prefixed with '' (formula-injection guard).'
       operationId: get_admin_exports_report_csv
       parameters:
       - name: report
@@ -3081,6 +3206,14 @@ paths:
         required: true
         schema:
           type: string
+          enum:
+          - orders
+          - payments
+          - refunds
+          - users
+          - events
+      - *id004
+      - *id005
       security:
       - bearerAuth: []
       responses:
@@ -4041,6 +4174,8 @@ components:
     EventReportIn:
       properties:
         reason:
+          maxLength: 2000
+          minLength: 1
           title: Reason
           type: string
       required:
@@ -4067,6 +4202,13 @@ components:
         status:
           title: Status
           type: string
+        created_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          default: null
+          title: Created At
       required:
       - id
       - event_id
@@ -5382,6 +5524,7 @@ components:
       properties:
         settings:
           additionalProperties: true
+          minProperties: 1
           title: Settings
           type: object
       required:
@@ -5460,11 +5603,14 @@ components:
       title: SupportMessageOut
       type: object
     SuspendIn:
+      description: '`suspended=true` suspends, `false` lifts it. A reason is always recorded in the audit log.'
       properties:
         suspended:
           title: Suspended
           type: boolean
         reason:
+          maxLength: 500
+          minLength: 1
           title: Reason
           type: string
       required:
@@ -5870,3 +6016,566 @@ components:
       - message
       title: VerifyOut
       type: object
+    AdminUserOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        email:
+          title: Email
+          type: string
+        full_name:
+          title: Full Name
+          type: string
+        role:
+          title: Role
+          type: string
+        is_suspended:
+          title: Is Suspended
+          type: boolean
+        email_verified_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Email Verified At
+        last_login_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Last Login At
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+      required:
+      - id
+      - email
+      - full_name
+      - role
+      - is_suspended
+      - email_verified_at
+      - last_login_at
+      - created_at
+      title: AdminUserOut
+      type: object
+    AdminEventOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        organizer_id:
+          format: uuid
+          title: Organizer Id
+          type: string
+        title:
+          title: Title
+          type: string
+        status:
+          title: Status
+          type: string
+        paid_sales_status:
+          title: Paid Sales Status
+          type: string
+        starts_at:
+          format: date-time
+          title: Starts At
+          type: string
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+      required:
+      - id
+      - organizer_id
+      - title
+      - status
+      - paid_sales_status
+      - starts_at
+      - created_at
+      title: AdminEventOut
+      type: object
+    AdminOrderOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        order_number:
+          title: Order Number
+          type: string
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        buyer_user_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Buyer User Id
+        buyer_email:
+          title: Buyer Email
+          type: string
+        status:
+          title: Status
+          type: string
+        total:
+          title: Total
+          type: integer
+        currency:
+          title: Currency
+          type: string
+        is_simulated:
+          title: Is Simulated
+          type: boolean
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+      required:
+      - id
+      - order_number
+      - event_id
+      - buyer_user_id
+      - buyer_email
+      - status
+      - total
+      - currency
+      - is_simulated
+      - created_at
+      title: AdminOrderOut
+      type: object
+    AdminPaymentOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        order_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Order Id
+        activation_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Activation Id
+        kind:
+          title: Kind
+          type: string
+        provider:
+          title: Provider
+          type: string
+        provider_ref:
+          title: Provider Ref
+          type: string
+        status:
+          title: Status
+          type: string
+        amount:
+          title: Amount
+          type: integer
+        fee_amount:
+          title: Fee Amount
+          type: integer
+        currency:
+          title: Currency
+          type: string
+        is_simulated:
+          title: Is Simulated
+          type: boolean
+        failure_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Failure Reason
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+      required:
+      - id
+      - order_id
+      - activation_id
+      - kind
+      - provider
+      - provider_ref
+      - status
+      - amount
+      - fee_amount
+      - currency
+      - is_simulated
+      - failure_reason
+      - created_at
+      title: AdminPaymentOut
+      type: object
+    AdminRefundOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        order_id:
+          format: uuid
+          title: Order Id
+          type: string
+        payment_id:
+          format: uuid
+          title: Payment Id
+          type: string
+        amount:
+          title: Amount
+          type: integer
+        currency:
+          title: Currency
+          type: string
+        status:
+          title: Status
+          type: string
+        reason:
+          title: Reason
+          type: string
+        initiated_by:
+          format: uuid
+          title: Initiated By
+          type: string
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+      required:
+      - id
+      - order_id
+      - payment_id
+      - amount
+      - currency
+      - status
+      - reason
+      - initiated_by
+      - created_at
+      title: AdminRefundOut
+      type: object
+    AdminActivationOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        status:
+          title: Status
+          type: string
+        identity_verified:
+          title: Identity Verified
+          type: boolean
+        payout_account_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Payout Account Id
+        activation_payment_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Activation Payment Id
+        terms_accepted_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Terms Accepted At
+        suspended_reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Suspended Reason
+        activated_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Activated At
+      required:
+      - id
+      - event_id
+      - status
+      - identity_verified
+      - payout_account_id
+      - activation_payment_id
+      - terms_accepted_at
+      - suspended_reason
+      - activated_at
+      title: AdminActivationOut
+      type: object
+    AdminSupportCaseOut:
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        requester_id:
+          format: uuid
+          title: Requester Id
+          type: string
+        audience:
+          title: Audience
+          type: string
+        category:
+          title: Category
+          type: string
+        status:
+          title: Status
+          type: string
+        assignee_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Assignee Id
+        event_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Event Id
+        order_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Order Id
+        subject:
+          title: Subject
+          type: string
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+      required:
+      - id
+      - requester_id
+      - audience
+      - category
+      - status
+      - assignee_id
+      - event_id
+      - order_id
+      - subject
+      - created_at
+      title: AdminSupportCaseOut
+      type: object
+    PromoActivityOut:
+      properties:
+        campaign_id:
+          format: uuid
+          title: Campaign Id
+          type: string
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        name:
+          title: Name
+          type: string
+        is_enabled:
+          title: Is Enabled
+          type: boolean
+        max_redemptions:
+          title: Max Redemptions
+          type: integer
+        redemptions_count:
+          title: Redemptions Count
+          type: integer
+        applied_redemptions:
+          title: Applied Redemptions
+          type: integer
+        discount_total:
+          title: Discount Total
+          type: integer
+      required:
+      - campaign_id
+      - event_id
+      - name
+      - is_enabled
+      - max_redemptions
+      - redemptions_count
+      - applied_redemptions
+      - discount_total
+      title: PromoActivityOut
+      type: object
+    DisputesOut:
+      description: 'Derived queue: there is no dispute table, so disputes are failed refunds plus open
+
+        support cases about payments or refunds.'
+      properties:
+        failed_refunds:
+          items:
+            $ref: '#/components/schemas/AdminRefundOut'
+          title: Failed Refunds
+          type: array
+        payment_cases:
+          items:
+            $ref: '#/components/schemas/AdminSupportCaseOut'
+          title: Payment Cases
+          type: array
+      required:
+      - failed_refunds
+      - payment_cases
+      title: DisputesOut
+      type: object
+    PageAdminUserOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminUserOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageAdminEventOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminEventOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageAdminOrderOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminOrderOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageAdminPaymentOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminPaymentOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageAdminRefundOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminRefundOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageAdminActivationOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminActivationOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PageAdminSupportCaseOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminSupportCaseOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    PagePromoActivityOut:
+      type: object
+      required:
+      - items
+      - total
+      - limit
+      - offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PromoActivityOut'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer

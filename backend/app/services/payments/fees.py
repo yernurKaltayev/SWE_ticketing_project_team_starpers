@@ -1,5 +1,6 @@
 """Configurable P6 amounts. A platform_settings row (managed by P11) wins over the env default."""
 
+from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
@@ -12,6 +13,8 @@ from app.models.setting import PlatformSetting
 ACTIVATION_FEE_KEY = "activation_fee_amount"
 PROCESSING_FEE_KEY = "processing_fee_percent"
 PAYOUT_DELAY_KEY = "payout_delay_days"
+HOLD_MINUTES_KEY = "hold_minutes"
+DEFAULT_HOLD_MINUTES = 10
 
 
 async def _setting(db: AsyncSession, key: str) -> Any:
@@ -49,3 +52,15 @@ async def payout_delay_days(db: AsyncSession) -> int:
     if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
         return value
     return get_settings().payout_delay_days
+
+
+async def hold_minutes(db: AsyncSession) -> int:
+    value = await _setting(db, HOLD_MINUTES_KEY)
+    if isinstance(value, int) and not isinstance(value, bool) and value >= 1:
+        return value
+    return DEFAULT_HOLD_MINUTES
+
+
+async def hold_duration(db: AsyncSession) -> timedelta:
+    """How long a seat hold or pending order keeps its inventory (admin setting, P11)."""
+    return timedelta(minutes=await hold_minutes(db))

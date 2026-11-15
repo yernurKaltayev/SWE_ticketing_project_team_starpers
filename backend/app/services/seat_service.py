@@ -31,7 +31,8 @@ from app.schemas.seat_p4 import (
     SeatP4,
     VenueSummaryP4,
 )
-from app.services.hold_policy_p4 import HOLD_DURATION, category_matches, now_utc
+from app.services.hold_policy_p4 import category_matches, now_utc
+from app.services.payments.fees import hold_duration
 from app.services.ticket_type_service import (
     confirm_inventory,
     release_inventory,
@@ -299,7 +300,7 @@ async def create_hold(
         )
 
     hold_id = uuid4()
-    expiry = now + HOLD_DURATION
+    expiry = now + await hold_duration(db)
     await db.execute(
         text("""
         INSERT INTO seat_hold_groups (id, event_id, user_id, status, expires_at)
