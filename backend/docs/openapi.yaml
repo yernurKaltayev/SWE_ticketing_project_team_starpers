@@ -3300,8 +3300,14 @@ paths:
     get:
       tags:
       - analytics
-      summary: Analytics from DB records (date_from, date_to, ticket_type_id)
-      description: 'Owner: P13. Access: event owner, platform admin, or staff (manager).'
+      summary: Sales, inventory and check-in analytics from DB records
+      description: 'Owner: P13. Access: event owner, platform admin, or staff (manager); check-in and
+        support staff get 403. Read-only, from authoritative rows (never GA4). Sale orders are paid,
+        free_confirmed and refunded; gross is list price, net = gross - discounts - refunds (tiyn).
+        sold/remaining/checked_in are the current ticket state and ignore the date filter; money and
+        sales_over_time follow date_from (inclusive) / date_to (exclusive) on order creation, with
+        days in the event time zone. With ticket_type_id, order-level discounts and refunds are split
+        by that type''s share of the order.'
       operationId: get_events_event_id_analytics
       parameters:
       - name: event_id
@@ -3310,6 +3316,27 @@ paths:
         schema:
           type: string
           format: uuid
+      - name: date_from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+        description: Orders at or after
+      - name: date_to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+        description: Orders before
+      - name: ticket_type_id
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Only this ticket type
       security:
       - bearerAuth: []
       responses:
