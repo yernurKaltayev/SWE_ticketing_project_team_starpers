@@ -163,6 +163,7 @@ async def test_suspending_a_user_blocks_access_and_revokes_sessions(client, db):
         headers=auth_header(admin),
     )
     assert response.status_code == 200 and response.json()["is_suspended"] is True
+    await db.refresh(token)  # the revoke is a bulk UPDATE; reload the row
     assert token.revoked_at is not None
     blocked = await client.get(f"{PREFIX}/me", headers=auth_header(user))
     assert blocked.status_code == 403 and blocked.json()["code"] == "account_suspended"
