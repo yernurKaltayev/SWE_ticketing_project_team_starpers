@@ -203,6 +203,7 @@ async def update_ticket_type(
         raise ConflictError(
             "Cannot change ticket pricing after reservations or sales.", code="price_locked"
         )
+    before = {key: getattr(item, key) for key in changes}
     for key in changes:
         setattr(item, key, getattr(merged, key))
     audit(
@@ -213,7 +214,15 @@ async def update_ticket_type(
         event_id=event_id,
         actor=user,
         description="Updated ticket type",
-        metadata={"fields": sorted(changes)},
+        metadata={
+            "fields": sorted(changes),
+            # Price and quantity changes must be traceable (P12); other fields stay names-only.
+            "changes": {
+                key: {"from": before[key], "to": getattr(item, key)}
+                for key in ("price_amount", "quantity_total")
+                if key in changes
+            },
+        },
     )
     await db.commit()
     return _ticket_out(item)

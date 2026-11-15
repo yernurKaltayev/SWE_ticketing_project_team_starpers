@@ -4,7 +4,7 @@ import asyncio
 import uuid
 
 import pytest
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
@@ -223,6 +223,10 @@ async def test_concurrent_scans_admit_a_ticket_once(engine):
             organizer_user = await cleanup.scalar(
                 select(OrganizerProfile.user_id).where(OrganizerProfile.id == event.organizer_id)
             )
+            # audit_logs is append-only (P12); the owner may switch the trigger off for cleanup.
+            await cleanup.execute(
+                text("ALTER TABLE audit_logs DISABLE TRIGGER audit_logs_append_only")
+            )
             for statement in (
                 delete(AuditLog).where(AuditLog.event_id == event.id),
                 delete(CheckInRecord).where(CheckInRecord.event_id == event.id),
@@ -242,4 +246,7 @@ async def test_concurrent_scans_admit_a_ticket_once(engine):
                 delete(OrganizerProfile).where(OrganizerProfile.id == event.organizer_id)
             )
             await cleanup.execute(delete(User).where(User.id.in_((staff.id, organizer_user))))
+            await cleanup.execute(
+                text("ALTER TABLE audit_logs ENABLE TRIGGER audit_logs_append_only")
+            )
             await cleanup.commit()
