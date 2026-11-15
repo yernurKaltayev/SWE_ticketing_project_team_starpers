@@ -1824,7 +1824,7 @@ export interface paths {
         };
         /**
          * iCalendar file; cancelled events have STATUS:CANCELLED
-         * @description Owner: P14. Access: public.
+         * @description Owner: P14. Access: public for published/cancelled public events; unlisted events need a share_token or event access, while private/draft events need event access. Downloads have stable UID and increasing SEQUENCE.
          */
         get: operations["get_events_event_id_calendar_ics"];
         put?: never;
@@ -6562,7 +6562,10 @@ export interface operations {
     };
     get_events_event_id_calendar_ics: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Share token for an unlisted published/cancelled event */
+                share_token?: string;
+            };
             header?: never;
             path: {
                 event_id: string;
@@ -6580,6 +6583,8 @@ export interface operations {
                     "text/calendar": string;
                 };
             };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
             404: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };

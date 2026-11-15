@@ -3359,7 +3359,7 @@ paths:
       tags:
       - calendar
       summary: iCalendar file; cancelled events have STATUS:CANCELLED
-      description: 'Owner: P14. Access: public.'
+      description: 'Owner: P14. Access: public for published/cancelled public events; unlisted events need a share_token or event access, while private/draft events need event access. Downloads have stable UID and increasing SEQUENCE.'
       operationId: get_events_event_id_calendar_ics
       parameters:
       - name: event_id
@@ -3368,7 +3368,15 @@ paths:
         schema:
           type: string
           format: uuid
-      security: []
+      - name: share_token
+        in: query
+        required: false
+        description: Share token for an unlisted published/cancelled event
+        schema:
+          type: string
+      security:
+      - {}
+      - bearerAuth: []
       responses:
         '200':
           description: File
@@ -3376,6 +3384,10 @@ paths:
             text/calendar:
               schema:
                 type: string
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
         '404':
           $ref: '#/components/responses/Error'
         '422':
