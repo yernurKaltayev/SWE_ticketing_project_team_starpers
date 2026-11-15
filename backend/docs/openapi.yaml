@@ -3235,8 +3235,12 @@ paths:
     get:
       tags:
       - history
-      summary: Audit trail (date_from, date_to, action_type)
-      description: 'Owner: P12. Access: event owner, platform admin, or staff (manager).'
+      summary: Audit trail of one event, newest first
+      description: 'Owner: P12. Access: event owner, platform admin, or staff (manager); check-in and support
+        staff get 403. Works for every event status, so completed and cancelled events stay readable. `lifecycle`
+        is derived from dates (upcoming/active/completed) and is `cancelled` for cancelled events. `date_from`
+        is inclusive, `date_to` exclusive. `category` groups action names: event, ticket_type, staff, order,
+        payment, refund, promo, support, checkin, paid_sales, admin.'
       operationId: get_events_event_id_history
       parameters:
       - name: event_id
@@ -3245,17 +3249,45 @@ paths:
         schema:
           type: string
           format: uuid
+      - name: date_from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+        description: Entries at or after
+      - name: date_to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+        description: Entries before
+      - name: action_type
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 100
+        description: Exact action name
+      - name: category
+        in: query
+        required: false
+        schema:
+          type: string
+          maxLength: 50
+        description: Action category
       - $ref: '#/components/parameters/Limit'
       - $ref: '#/components/parameters/Offset'
       security:
       - bearerAuth: []
       responses:
         '200':
-          description: Page of results
+          description: Page of audit entries
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageAuditEntryOut'
+                $ref: '#/components/schemas/HistoryOut'
         '401':
           $ref: '#/components/responses/Error'
         '403':
@@ -3581,9 +3613,9 @@ components:
         description:
           title: Description
           type: string
-        meta:
+        metadata:
           additionalProperties: true
-          title: Meta
+          title: Metadata
           type: object
       required:
       - id
@@ -3594,7 +3626,7 @@ components:
       - entity_type
       - entity_id
       - description
-      - meta
+      - metadata
       title: AuditEntryOut
       type: object
     AvailabilityOut:
@@ -4749,24 +4781,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AttendeeOut'
-        total:
-          type: integer
-        limit:
-          type: integer
-        offset:
-          type: integer
-    PageAuditEntryOut:
-      type: object
-      required:
-      - items
-      - total
-      - limit
-      - offset
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/AuditEntryOut'
         total:
           type: integer
         limit:
@@ -6579,3 +6593,40 @@ components:
           type: integer
         offset:
           type: integer
+    HistoryOut:
+      description: One page of an event's audit trail plus where the event is in its lifecycle.
+      properties:
+        event_status:
+          title: Event Status
+          type: string
+        lifecycle:
+          enum:
+          - upcoming
+          - active
+          - completed
+          - cancelled
+          title: Lifecycle
+          type: string
+        items:
+          items:
+            $ref: '#/components/schemas/AuditEntryOut'
+          title: Items
+          type: array
+        total:
+          title: Total
+          type: integer
+        limit:
+          title: Limit
+          type: integer
+        offset:
+          title: Offset
+          type: integer
+      required:
+      - event_status
+      - lifecycle
+      - items
+      - total
+      - limit
+      - offset
+      title: HistoryOut
+      type: object

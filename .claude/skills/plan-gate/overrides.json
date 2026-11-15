@@ -20,6 +20,13 @@
       "reason": "The order is incorrect; parts should go consecutively by number (p1->p2->p3 and so on).",
       "by": "Yernur",
       "date": "2026-11-15"
+    },
+    {
+      "part": "P12",
+      "kind": "start-early",
+      "reason": "The order is incorrect; parts should go consecutively by number (p1->p2->p3 and so on).",
+      "by": "Yernur",
+      "date": "2026-11-15"
     }
   ]
 }
