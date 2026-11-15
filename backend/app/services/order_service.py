@@ -35,9 +35,9 @@ from app.schemas.order import AttendeeOut, OrderCreate, OrderItemOut, OrderOut
 from app.schemas.ticket import SeatRef
 from app.services import promo_service
 from app.services.audit_service import audit
-from app.services.hold_policy_p4 import HOLD_DURATION
 from app.services.inventory_service import release_inventory
 from app.services.notification_service import notify
+from app.services.payments.fees import hold_duration
 from app.services.seat_service import confirm_hold
 from app.services.ticket_service import issue_tickets, to_ticket_out
 from app.services.ticket_type_service import (
@@ -282,7 +282,9 @@ async def create_order(
             if not await reserve_inventory(db, event.id, item.ticket_type_id, item.quantity, now):
                 raise ConflictError("Not enough ticket inventory.", code="inventory_unavailable")
 
-    expires_at = min(group.expires_at for group in groups) if assigned else now + HOLD_DURATION
+    expires_at = (
+        min(group.expires_at for group in groups) if assigned else now + await hold_duration(db)
+    )
     is_free_order = total == 0
     order = Order(
         order_number=_order_number(),

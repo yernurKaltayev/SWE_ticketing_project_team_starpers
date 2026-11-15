@@ -19,6 +19,7 @@ class EventStatus(enum.StrEnum):
     draft = "draft"
     published = "published"
     cancelled = "cancelled"
+    suspended = "suspended"  # set by a platform admin (P11); hidden and not purchasable
 
 
 class EventVisibility(enum.StrEnum):

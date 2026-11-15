@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -18,8 +18,9 @@ from app.core.pagination import Page, Pagination
 from app.core.security import InvalidTokenError, decode_access_token
 from app.models.event import Event
 from app.models.user import StaffRole, User, UserRole
+from app.schemas.admin import EventReportIn, EventReportOut
 from app.schemas.event import EventCreate, EventOut, EventUpdate
-from app.services import event_service
+from app.services import admin_service, event_service
 
 router = APIRouter(tags=["events"])
 Organizer = Annotated[User, Depends(require_role(UserRole.organizer))]
@@ -97,6 +98,19 @@ async def patch_event(
     db: DbSession,
 ) -> EventOut:
     return await event_service.update_event(db, event.id, user, data)
+
+
+@router.post(
+    "/events/{event_id}/reports",
+    response_model=EventReportOut,
+    status_code=status.HTTP_201_CREATED,
+    tags=["admin"],
+)
+async def report_event(
+    event_id: uuid.UUID, payload: EventReportIn, user: CurrentUser, db: DbSession
+) -> Any:
+    """Any signed-in user can flag a public event for admin review (P11)."""
+    return await admin_service.create_event_report(db, user, event_id, payload.reason)
 
 
 @router.post("/events/{event_id}/publish", response_model=EventOut)

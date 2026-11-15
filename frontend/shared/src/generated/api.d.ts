@@ -1442,7 +1442,7 @@ export interface paths {
         put?: never;
         /**
          * Report an event
-         * @description Owner: P11. Access: any signed-in user.
+         * @description Owner: P11. Access: any signed-in user. Only published, non-private events can be reported.
          */
         post: operations["post_events_event_id_reports"];
         delete?: never;
@@ -1459,7 +1459,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Search users (q)
+         * Search users
          * @description Owner: P11. Access: platform_admin.
          */
         get: operations["get_admin_users"];
@@ -1499,7 +1499,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Search events (q, status)
+         * Search events
          * @description Owner: P11. Access: platform_admin.
          */
         get: operations["get_admin_events"];
@@ -1521,7 +1521,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Suspend or reinstate an event
+         * Suspend or reinstate an event (hides it, blocks holds and checkout, pauses paid sales)
          * @description Owner: P11. Access: platform_admin.
          */
         post: operations["post_admin_events_event_id_suspend"];
@@ -1541,7 +1541,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Suspend or restore paid sales
+         * Suspend or restore paid sales only
          * @description Owner: P11. Access: platform_admin.
          */
         post: operations["post_admin_events_event_id_paid_sales_suspend"];
@@ -1559,7 +1559,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Search orders (q, status)
+         * Search orders
          * @description Owner: P11. Access: platform_admin.
          */
         get: operations["get_admin_orders"];
@@ -1579,7 +1579,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Search payments, including failures (status)
+         * Search payments, including failures (status=failed)
          * @description Owner: P11. Access: platform_admin.
          */
         get: operations["get_admin_payments"];
@@ -1599,10 +1599,30 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Monitor refunds (status)
+         * Monitor refunds
          * @description Owner: P11. Access: platform_admin.
          */
         get: operations["get_admin_refunds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/disputes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dispute queue: failed refunds and open payment/refund support cases (derived, no dispute table)
+         * @description Owner: P11. Access: platform_admin.
+         */
+        get: operations["get_admin_disputes"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1619,7 +1639,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Inspect activation records (status)
+         * Inspect activation records
          * @description Owner: P11. Access: platform_admin.
          */
         get: operations["get_admin_activations"];
@@ -1639,7 +1659,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Reported events (status)
+         * Reported events
          * @description Owner: P11. Access: platform_admin.
          */
         get: operations["get_admin_reports"];
@@ -1679,7 +1699,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Escalated support cases
+         * Escalated support cases (organizer cases that are not resolved)
          * @description Owner: P11. Access: platform_admin.
          */
         get: operations["get_admin_support_cases"];
@@ -1719,7 +1739,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Platform settings
+         * Platform settings (effective values)
          * @description Owner: P11. Access: platform_admin.
          */
         get: operations["get_admin_settings"];
@@ -1744,7 +1764,7 @@ export interface paths {
         };
         /**
          * Operational report as CSV
-         * @description Owner: P11. Access: platform_admin.
+         * @description Owner: P11. Access: platform_admin. Up to 10000 rows; cells starting with = + - @ are prefixed with ' (formula-injection guard).
          */
         get: operations["get_admin_exports_report_csv"];
         put?: never;
@@ -2344,6 +2364,11 @@ export interface components {
             reason: string;
             /** Status */
             status: string;
+            /**
+             * Created At
+             * @default null
+             */
+            created_at: string | null;
         };
         /** EventReportUpdate */
         EventReportUpdate: {
@@ -3113,7 +3138,10 @@ export interface components {
              */
             created_at: string;
         };
-        /** SuspendIn */
+        /**
+         * SuspendIn
+         * @description `suspended=true` suspends, `false` lifts it. A reason is always recorded in the audit log.
+         */
         SuspendIn: {
             /** Suspended */
             suspended: boolean;
@@ -3387,6 +3415,306 @@ export interface components {
             ticket: components["schemas"]["TicketOut"] | null;
             /** Message */
             message: string;
+        };
+        /** AdminUserOut */
+        AdminUserOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Email */
+            email: string;
+            /** Full Name */
+            full_name: string;
+            /** Role */
+            role: string;
+            /** Is Suspended */
+            is_suspended: boolean;
+            /** Email Verified At */
+            email_verified_at: string | null;
+            /** Last Login At */
+            last_login_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** AdminEventOut */
+        AdminEventOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Organizer Id
+             * Format: uuid
+             */
+            organizer_id: string;
+            /** Title */
+            title: string;
+            /** Status */
+            status: string;
+            /** Paid Sales Status */
+            paid_sales_status: string;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** AdminOrderOut */
+        AdminOrderOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Order Number */
+            order_number: string;
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
+            /** Buyer User Id */
+            buyer_user_id: string | null;
+            /** Buyer Email */
+            buyer_email: string;
+            /** Status */
+            status: string;
+            /** Total */
+            total: number;
+            /** Currency */
+            currency: string;
+            /** Is Simulated */
+            is_simulated: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** AdminPaymentOut */
+        AdminPaymentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Order Id */
+            order_id: string | null;
+            /** Activation Id */
+            activation_id: string | null;
+            /** Kind */
+            kind: string;
+            /** Provider */
+            provider: string;
+            /** Provider Ref */
+            provider_ref: string;
+            /** Status */
+            status: string;
+            /** Amount */
+            amount: number;
+            /** Fee Amount */
+            fee_amount: number;
+            /** Currency */
+            currency: string;
+            /** Is Simulated */
+            is_simulated: boolean;
+            /** Failure Reason */
+            failure_reason: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** AdminRefundOut */
+        AdminRefundOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /**
+             * Payment Id
+             * Format: uuid
+             */
+            payment_id: string;
+            /** Amount */
+            amount: number;
+            /** Currency */
+            currency: string;
+            /** Status */
+            status: string;
+            /** Reason */
+            reason: string;
+            /**
+             * Initiated By
+             * Format: uuid
+             */
+            initiated_by: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** AdminActivationOut */
+        AdminActivationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
+            /** Status */
+            status: string;
+            /** Identity Verified */
+            identity_verified: boolean;
+            /** Payout Account Id */
+            payout_account_id: string | null;
+            /** Activation Payment Id */
+            activation_payment_id: string | null;
+            /** Terms Accepted At */
+            terms_accepted_at: string | null;
+            /** Suspended Reason */
+            suspended_reason: string | null;
+            /** Activated At */
+            activated_at: string | null;
+        };
+        /** AdminSupportCaseOut */
+        AdminSupportCaseOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Requester Id
+             * Format: uuid
+             */
+            requester_id: string;
+            /** Audience */
+            audience: string;
+            /** Category */
+            category: string;
+            /** Status */
+            status: string;
+            /** Assignee Id */
+            assignee_id: string | null;
+            /** Event Id */
+            event_id: string | null;
+            /** Order Id */
+            order_id: string | null;
+            /** Subject */
+            subject: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** PromoActivityOut */
+        PromoActivityOut: {
+            /**
+             * Campaign Id
+             * Format: uuid
+             */
+            campaign_id: string;
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
+            /** Name */
+            name: string;
+            /** Is Enabled */
+            is_enabled: boolean;
+            /** Max Redemptions */
+            max_redemptions: number;
+            /** Redemptions Count */
+            redemptions_count: number;
+            /** Applied Redemptions */
+            applied_redemptions: number;
+            /** Discount Total */
+            discount_total: number;
+        };
+        /**
+         * DisputesOut
+         * @description Derived queue: there is no dispute table, so disputes are failed refunds plus open
+         *     support cases about payments or refunds.
+         */
+        DisputesOut: {
+            /** Failed Refunds */
+            failed_refunds: components["schemas"]["AdminRefundOut"][];
+            /** Payment Cases */
+            payment_cases: components["schemas"]["AdminSupportCaseOut"][];
+        };
+        PageAdminUserOut: {
+            items: components["schemas"]["AdminUserOut"][];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        PageAdminEventOut: {
+            items: components["schemas"]["AdminEventOut"][];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        PageAdminOrderOut: {
+            items: components["schemas"]["AdminOrderOut"][];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        PageAdminPaymentOut: {
+            items: components["schemas"]["AdminPaymentOut"][];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        PageAdminRefundOut: {
+            items: components["schemas"]["AdminRefundOut"][];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        PageAdminActivationOut: {
+            items: components["schemas"]["AdminActivationOut"][];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        PageAdminSupportCaseOut: {
+            items: components["schemas"]["AdminSupportCaseOut"][];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        PagePromoActivityOut: {
+            items: components["schemas"]["PromoActivityOut"][];
+            total: number;
+            limit: number;
+            offset: number;
         };
     };
     responses: {
@@ -5642,7 +5970,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Success */
+            /** @description Created */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -5652,7 +5980,6 @@ export interface operations {
                 };
             };
             401: components["responses"]["Error"];
-            403: components["responses"]["Error"];
             404: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
@@ -5660,6 +5987,14 @@ export interface operations {
     get_admin_users: {
         parameters: {
             query?: {
+                /** @description Free-text search */
+                q?: string;
+                role?: "attendee" | "organizer" | "platform_admin";
+                suspended?: boolean;
+                /** @description Created at or after */
+                created_from?: string;
+                /** @description Created before */
+                created_to?: string;
                 limit?: components["parameters"]["Limit"];
                 offset?: components["parameters"]["Offset"];
             };
@@ -5675,12 +6010,11 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageUserOut"];
+                    "application/json": components["schemas"]["PageAdminUserOut"];
                 };
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
-            422: components["responses"]["Error"];
         };
     };
     post_admin_users_user_id_suspend: {
@@ -5704,18 +6038,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserOut"];
+                    "application/json": components["schemas"]["AdminUserOut"];
                 };
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
     };
     get_admin_events: {
         parameters: {
             query?: {
+                /** @description Free-text search */
+                q?: string;
+                status?: "draft" | "published" | "cancelled" | "suspended";
+                /** @description Created at or after */
+                created_from?: string;
+                /** @description Created before */
+                created_to?: string;
                 limit?: components["parameters"]["Limit"];
                 offset?: components["parameters"]["Offset"];
             };
@@ -5731,12 +6073,11 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageEventOut"];
+                    "application/json": components["schemas"]["PageAdminEventOut"];
                 };
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
-            422: components["responses"]["Error"];
         };
     };
     post_admin_events_event_id_suspend: {
@@ -5760,12 +6101,13 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["EventOut"];
+                    "application/json": components["schemas"]["AdminEventOut"];
                 };
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
     };
@@ -5790,18 +6132,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ActivationOut"];
+                    "application/json": components["schemas"]["AdminActivationOut"];
                 };
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
     };
     get_admin_orders: {
         parameters: {
             query?: {
+                /** @description Free-text search */
+                q?: string;
+                status?: string;
+                event_id?: string;
+                /** @description Created at or after */
+                created_from?: string;
+                /** @description Created before */
+                created_to?: string;
                 limit?: components["parameters"]["Limit"];
                 offset?: components["parameters"]["Offset"];
             };
@@ -5817,17 +6168,23 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageOrderOut"];
+                    "application/json": components["schemas"]["PageAdminOrderOut"];
                 };
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
-            422: components["responses"]["Error"];
         };
     };
     get_admin_payments: {
         parameters: {
             query?: {
+                /** @description Free-text search */
+                q?: string;
+                status?: "pending" | "succeeded" | "failed" | "cancelled";
+                /** @description Created at or after */
+                created_from?: string;
+                /** @description Created before */
+                created_to?: string;
                 limit?: components["parameters"]["Limit"];
                 offset?: components["parameters"]["Offset"];
             };
@@ -5843,17 +6200,21 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PagePaymentOut"];
+                    "application/json": components["schemas"]["PageAdminPaymentOut"];
                 };
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
-            422: components["responses"]["Error"];
         };
     };
     get_admin_refunds: {
         parameters: {
             query?: {
+                status?: "pending" | "completed" | "failed";
+                /** @description Created at or after */
+                created_from?: string;
+                /** @description Created before */
+                created_to?: string;
                 limit?: components["parameters"]["Limit"];
                 offset?: components["parameters"]["Offset"];
             };
@@ -5869,17 +6230,41 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageRefundOut"];
+                    "application/json": components["schemas"]["PageAdminRefundOut"];
                 };
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
-            422: components["responses"]["Error"];
+        };
+    };
+    get_admin_disputes: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DisputesOut"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
         };
     };
     get_admin_activations: {
         parameters: {
             query?: {
+                status?: "incomplete" | "active" | "suspended";
                 limit?: components["parameters"]["Limit"];
                 offset?: components["parameters"]["Offset"];
             };
@@ -5895,7 +6280,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageActivationOut"];
+                    "application/json": components["schemas"]["PageAdminActivationOut"];
                 };
             };
             401: components["responses"]["Error"];
@@ -5906,6 +6291,7 @@ export interface operations {
     get_admin_reports: {
         parameters: {
             query?: {
+                status?: "open" | "reviewed" | "dismissed" | "actioned";
                 limit?: components["parameters"]["Limit"];
                 offset?: components["parameters"]["Offset"];
             };
@@ -5926,7 +6312,6 @@ export interface operations {
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
-            422: components["responses"]["Error"];
         };
     };
     patch_admin_reports_report_id: {
@@ -5962,6 +6347,7 @@ export interface operations {
     get_admin_support_cases: {
         parameters: {
             query?: {
+                status?: "open" | "in_progress" | "waiting_customer" | "resolved";
                 limit?: components["parameters"]["Limit"];
                 offset?: components["parameters"]["Offset"];
             };
@@ -5977,12 +6363,11 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageCaseOut"];
+                    "application/json": components["schemas"]["PageAdminSupportCaseOut"];
                 };
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
-            422: components["responses"]["Error"];
         };
     };
     get_admin_campaigns: {
@@ -6003,12 +6388,11 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageCampaignOut"];
+                    "application/json": components["schemas"]["PagePromoActivityOut"];
                 };
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
-            422: components["responses"]["Error"];
         };
     };
     get_admin_settings: {
@@ -6062,10 +6446,15 @@ export interface operations {
     };
     get_admin_exports_report_csv: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Created at or after */
+                created_from?: string;
+                /** @description Created before */
+                created_to?: string;
+            };
             header?: never;
             path: {
-                report: string;
+                report: "orders" | "payments" | "refunds" | "users" | "events";
             };
             cookie?: never;
         };
