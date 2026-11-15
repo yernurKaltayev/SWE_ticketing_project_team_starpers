@@ -1803,8 +1803,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Analytics from DB records (date_from, date_to, ticket_type_id)
-         * @description Owner: P13. Access: event owner, platform admin, or staff (manager).
+         * Sales, inventory and check-in analytics from DB records
+         * @description Owner: P13. Access: event owner, platform admin, or staff (manager); check-in and support staff get 403. Read-only, from authoritative rows (never GA4). Sale orders are paid, free_confirmed and refunded; gross is list price, net = gross - discounts - refunds (tiyn). sold/remaining/checked_in are the current ticket state and ignore the date filter; money and sales_over_time follow date_from (inclusive) / date_to (exclusive) on order creation, with days in the event time zone. With ticket_type_id, order-level discounts and refunds are split by that type's share of the order.
          */
         get: operations["get_events_event_id_analytics"];
         put?: never;
@@ -6529,7 +6529,14 @@ export interface operations {
     };
     get_events_event_id_analytics: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Orders at or after */
+                date_from?: string;
+                /** @description Orders before */
+                date_to?: string;
+                /** @description Only this ticket type */
+                ticket_type_id?: string;
+            };
             header?: never;
             path: {
                 event_id: string;
