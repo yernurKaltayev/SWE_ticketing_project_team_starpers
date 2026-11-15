@@ -1783,8 +1783,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Audit trail (date_from, date_to, action_type)
-         * @description Owner: P12. Access: event owner, platform admin, or staff (manager).
+         * Audit trail of one event, newest first
+         * @description Owner: P12. Access: event owner, platform admin, or staff (manager); check-in and support staff get 403. Works for every event status, so completed and cancelled events stay readable. `lifecycle` is derived from dates (upcoming/active/completed) and is `cancelled` for cancelled events. `date_from` is inclusive, `date_to` exclusive. `category` groups action names: event, ticket_type, staff, order, payment, refund, promo, support, checkin, paid_sales, admin.
          */
         get: operations["get_events_event_id_history"];
         put?: never;
@@ -1986,8 +1986,8 @@ export interface components {
             entity_id: string;
             /** Description */
             description: string;
-            /** Meta */
-            meta: {
+            /** Metadata */
+            metadata: {
                 [key: string]: unknown;
             };
         };
@@ -2695,12 +2695,6 @@ export interface components {
         };
         PageAttendeeOut: {
             items: components["schemas"]["AttendeeOut"][];
-            total: number;
-            limit: number;
-            offset: number;
-        };
-        PageAuditEntryOut: {
-            items: components["schemas"]["AuditEntryOut"][];
             total: number;
             limit: number;
             offset: number;
@@ -3714,6 +3708,27 @@ export interface components {
             items: components["schemas"]["PromoActivityOut"][];
             total: number;
             limit: number;
+            offset: number;
+        };
+        /**
+         * HistoryOut
+         * @description One page of an event's audit trail plus where the event is in its lifecycle.
+         */
+        HistoryOut: {
+            /** Event Status */
+            event_status: string;
+            /**
+             * Lifecycle
+             * @enum {string}
+             */
+            lifecycle: "upcoming" | "active" | "completed" | "cancelled";
+            /** Items */
+            items: components["schemas"]["AuditEntryOut"][];
+            /** Total */
+            total: number;
+            /** Limit */
+            limit: number;
+            /** Offset */
             offset: number;
         };
     };
@@ -6478,6 +6493,14 @@ export interface operations {
     get_events_event_id_history: {
         parameters: {
             query?: {
+                /** @description Entries at or after */
+                date_from?: string;
+                /** @description Entries before */
+                date_to?: string;
+                /** @description Exact action name */
+                action_type?: string;
+                /** @description Action category */
+                category?: string;
                 limit?: components["parameters"]["Limit"];
                 offset?: components["parameters"]["Offset"];
             };
@@ -6489,13 +6512,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Page of results */
+            /** @description Page of audit entries */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageAuditEntryOut"];
+                    "application/json": components["schemas"]["HistoryOut"];
                 };
             };
             401: components["responses"]["Error"];
