@@ -6,7 +6,7 @@
   margin-top: 1.5rem;
 }
 .checkout-context {
-  border-top: 1px solid #d7dfd8;
+  border-top: 1px solid var(--color-line);
   padding-top: 1.25rem;
 }
 .checkout-context h2,
@@ -30,7 +30,7 @@
   grid-template-columns: minmax(0, 1fr) minmax(7rem, 0.55fr);
   gap: 1rem;
   padding-block: 1rem;
-  border-bottom: 1px solid #d7dfd8;
+  border-bottom: 1px solid var(--color-line);
   align-items: center;
 }
 .ticket-choice .field {
@@ -42,7 +42,7 @@
 .attendee-fieldset {
   padding-block: 0.5rem 1rem;
   margin-block: 1.5rem;
-  border-bottom: 1px solid #d7dfd8;
+  border-bottom: 1px solid var(--color-line);
 }
 .attendee-fieldset legend {
   font-weight: 650;
@@ -83,7 +83,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.5rem 1.25rem;
-  border-bottom: 1px solid #d7dfd8;
+  border-bottom: 1px solid var(--color-line);
   padding-block: 1rem;
   overflow-wrap: anywhere;
 }
@@ -106,7 +106,7 @@
   padding-block: 0.4rem;
 }
 .commerce-totals > div:last-child {
-  border-top: 1px solid #70837b;
+  border-top: 1px solid var(--color-line-strong);
   font-weight: 700;
   padding-top: 0.75rem;
 }
@@ -153,5 +153,122 @@
   }
   .ticket-qr img {
     margin-inline: 0;
+  }
+}
+
+/* White UI surfaces (Figma A4–A8) */
+.checkout-context,
+.checkout-form,
+.ticket-detail > div {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  padding: clamp(1.15rem, 2.5vw, 1.6rem);
+}
+.checkout-context {
+  position: sticky;
+  top: calc(var(--header-h) + 1.25rem);
+}
+.ticket-detail > div {
+  position: static;
+}
+.checkout-layout {
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.85fr);
+}
+@media (min-width: 681px) {
+  .checkout-layout > .checkout-form {
+    order: -1;
+  }
+}
+.ticket-choice:last-child,
+.attendee-fieldset:last-of-type {
+  border-bottom: 0;
+}
+.attendee-fieldset {
+  padding: 1rem 1.1rem 0.25rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  background: #fbfcfe;
+}
+.attendee-fieldset legend {
+  padding: 0 0.4rem;
+  margin-left: -0.4rem;
+}
+.checkout-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-control);
+  background: var(--color-primary-soft);
+  color: var(--color-ink);
+}
+.commerce-heading {
+  margin-bottom: 0.5rem;
+}
+.commerce-heading p {
+  color: var(--color-muted);
+}
+.commerce-list {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  padding: 0 1.25rem;
+}
+.commerce-list li:last-child {
+  border-bottom: 0;
+}
+.commerce-list p {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+.commerce-totals {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  padding: 1rem 1.25rem;
+}
+.commerce-totals dt {
+  font-weight: 500;
+  color: var(--color-muted);
+}
+.commerce-totals > div:last-child dt {
+  color: var(--color-ink);
+  font-weight: 700;
+}
+.commerce-totals > div:last-child {
+  border-top-color: var(--color-line);
+  margin-top: 0.4rem;
+  font-size: 1.0625rem;
+}
+.commerce-identifier {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+}
+.ticket-metadata {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 0 1.25rem;
+}
+.ticket-metadata dt {
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ticket-metadata dd {
+  font-weight: 600;
+}
+.ticket-qr img {
+  padding: 0.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+}
+@media (max-width: 680px) {
+  .checkout-context {
+    position: static;
   }
 }

@@ -4,14 +4,21 @@ import { formatEventDateTime } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { Field, Status } from "../auth/ui";
 import { eventCopy } from "./copy";
+import { toneFor } from "../tone";
 import { useResource } from "./data";
 import { searchQuery } from "./model";
 import type { Event, Page } from "./model";
-import { EventError, Image } from "./ui";
+import { CoverArt, EventError, Image } from "./ui";
 import { commerceNavigation } from "../checkout/navigation";
 import { paymentCopy } from "../payments/copy";
 import { staffCopy } from "../staff/copy";
 import { parseEvents } from "./contracts";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  PlusIcon,
+  SearchIcon,
+} from "../icons";
 
 export function EventList({
   locale,
@@ -44,6 +51,7 @@ export function EventList({
         </div>
         {organizer && (
           <Link className="action-link" to="/organizer/events/new">
+            <PlusIcon />
             {t.create}
           </Link>
         )}
@@ -116,7 +124,10 @@ export function EventList({
             defaultValue={params.get("date_to") ?? ""}
           />
           <div className="controls">
-            <button>{t.filter}</button>
+            <button>
+              <SearchIcon />
+              {t.filter}
+            </button>
             <button
               type="button"
               className="secondary"
@@ -131,17 +142,32 @@ export function EventList({
       {!data && !error && <Status>{t.loading}</Status>}
       {data && (
         <>
-          <p role="status">
-            {t.results}: {data.total}
-          </p>
-          {data.items.length === 0 && <Status>{t.empty}</Status>}
-          <div className="event-grid">
+          <div className="results-meta">
+            <p role="status">
+              {t.results}: {data.total}
+            </p>
+          </div>
+          {data.items.length === 0 && (
+            <div className="empty-state" role="status">
+              <SearchIcon size={22} />
+              <p>{t.empty}</p>
+            </div>
+          )}
+          <div className={organizer ? "event-grid is-list" : "event-grid"}>
             {data.items.map((event) => (
-              <article className="event-card" key={event.id}>
-                {event.images[0] && (
-                  <Image src={event.images[0]} title={event.title} />
-                )}
-                <span className="event-category">{event.category}</span>
+              <article
+                className={organizer ? "event-card" : "event-card is-public"}
+                key={event.id}
+              >
+                <div className="event-cover">
+                  <CoverArt event={event} locale={locale} />
+                  {event.images[0] && (
+                    <Image src={event.images[0]} title={event.title} />
+                  )}
+                  {event.category && (
+                    <span className="event-category">{event.category}</span>
+                  )}
+                </div>
                 <h2>
                   <Link
                     to={
@@ -158,9 +184,14 @@ export function EventList({
                 </p>
                 {organizer && (
                   <>
-                    <span className="status-badge">
-                      {t[event.status as "draft"] ?? event.status}
-                    </span>
+                    <div className="card-footer">
+                      <span
+                        className="status-badge"
+                        data-tone={toneFor(event.status)}
+                      >
+                        {t[event.status as "draft"] ?? event.status}
+                      </span>
+                    </div>
                     <nav className="controls">
                       <Link
                         to={`/organizer/events/${encodeURIComponent(event.id)}/orders`}
@@ -186,27 +217,36 @@ export function EventList({
                   </>
                 )}
                 {!organizer && event.status === "published" && (
-                  <Link to={`/events/${event.id}/checkout`}>
-                    {commerceNavigation[locale].register}
-                  </Link>
+                  <div className="card-footer">
+                    <Link to={`/events/${event.id}/checkout`}>
+                      {commerceNavigation[locale].register}
+                    </Link>
+                    <ArrowRightIcon className="card-arrow" />
+                  </div>
                 )}
               </article>
             ))}
           </div>
-          <nav className="controls" aria-label={t.results}>
-            <button
-              disabled={offset === 0}
-              onClick={() => page(Math.max(0, offset - 12))}
-            >
-              {t.previous}
-            </button>
-            <button
-              disabled={offset + data.items.length >= data.total}
-              onClick={() => page(offset + 12)}
-            >
-              {t.next}
-            </button>
-          </nav>
+          {(offset > 0 || offset + data.items.length < data.total) && (
+            <nav className="pager" aria-label={t.results}>
+              <button
+                className="secondary"
+                disabled={offset === 0}
+                onClick={() => page(Math.max(0, offset - 12))}
+              >
+                <ArrowLeftIcon />
+                {t.previous}
+              </button>
+              <button
+                className="secondary"
+                disabled={offset + data.items.length >= data.total}
+                onClick={() => page(offset + 12)}
+              >
+                {t.next}
+                <ArrowRightIcon />
+              </button>
+            </nav>
+          )}
         </>
       )}
     </section>

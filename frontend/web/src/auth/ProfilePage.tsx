@@ -8,6 +8,7 @@ import { authCopy } from "./copy";
 import { fieldErrors, validEmail, validName } from "./helpers";
 import { useSession } from "./session";
 import { Field, FormError, Status } from "./ui";
+import { toneFor } from "../tone";
 
 type OrganizerProfile = components["schemas"]["OrganizerProfileOut"];
 export function ProfilePage({ locale }: { locale: Locale }) {
@@ -55,7 +56,10 @@ export function ProfilePage({ locale }: { locale: Locale }) {
       <h1>{t.account}</h1>
       <p className="identity">{user.email}</p>
       <p>
-        <span className="status-badge">
+        <span
+          className="status-badge"
+          data-tone={user.email_verified_at ? "success" : "warning"}
+        >
           {user.email_verified_at ? t.verifiedStatus : t.unverifiedStatus}
         </span>
       </p>
@@ -124,7 +128,9 @@ export function OrganizerPage({ locale }: { locale: Locale }) {
         </Status>
       ) : (
         <p>
-          <span className="status-badge">{t.verifiedStatus}</span>
+          <span className="status-badge" data-tone="success">
+            {t.verifiedStatus}
+          </span>
         </p>
       )}
       {profile.isPending ? (
@@ -238,7 +244,12 @@ function OrganizerForm({
     <>
       <p>
         {t.organizerVerification}:{" "}
-        <span className="status-badge">{verification}</span>
+        <span
+          className="status-badge"
+          data-tone={toneFor(profile.verification_status)}
+        >
+          {verification}
+        </span>
       </p>
       <p className="field-hint">{t.organizerVerificationNote}</p>
       <FormError error={error} fields={errors} locale={locale} />

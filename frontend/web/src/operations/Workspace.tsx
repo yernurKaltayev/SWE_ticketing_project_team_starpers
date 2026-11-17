@@ -401,11 +401,16 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
             ))}
           </nav>
           <div className="controls">
-            <button disabled={busy} onClick={() => void refresh()}>
+            <button
+              className="secondary"
+              disabled={busy}
+              onClick={() => void refresh()}
+            >
               {t.refresh}
             </button>
             {view !== "refunds" && (
               <button
+                className="secondary"
                 disabled={exporting || !ready}
                 onClick={() => void exportRows()}
               >
@@ -414,6 +419,7 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
             )}
             {!["cancelled", "completed"].includes(ev.status) && (
               <button
+                className="danger"
                 disabled={blocked}
                 onClick={() => open({ kind: "event", target: eventId })}
               >

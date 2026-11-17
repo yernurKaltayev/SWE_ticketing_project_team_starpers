@@ -4,6 +4,7 @@ import {
   BrowserRouter,
   Link,
   Navigate,
+  NavLink,
   Route,
   Routes,
   useLocation,
@@ -27,6 +28,24 @@ import { eventCopy } from "./events/copy";
 import { commerceNavigation } from "./checkout/navigation";
 import { paymentCopy } from "./payments/copy";
 import { PageErrorBoundary } from "./PageErrorBoundary";
+import { operationsCopy } from "./operations/copy";
+import { staffCopy } from "./staff/copy";
+import { seatingCopy } from "./seating/copy";
+import {
+  BankIcon,
+  BoltIcon,
+  BrandMark,
+  ChartIcon,
+  EditIcon,
+  EyeIcon,
+  GridIcon,
+  PlusIcon,
+  ReceiptIcon,
+  SeatIcon,
+  UserIcon,
+  UsersIcon,
+  WalletIcon,
+} from "./icons";
 
 const Operations = lazy(() => import("./operations/Workspace"));
 
@@ -93,6 +112,9 @@ function Application() {
   const { user, controller } = useSession();
   const t = authCopy[locale];
   const location = useLocation();
+  const isOrganizer = hasRole(user, ["organizer"]);
+  const showWorkspace =
+    isOrganizer && location.pathname.startsWith("/organizer/");
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
@@ -111,30 +133,48 @@ function Application() {
       </a>
       <header className="site-header">
         <Link className="brand" to="/">
+          <BrandMark />
           BiletFlow
         </Link>
         <nav className="site-nav" aria-label="BiletFlow">
-          <Link to="/events">{eventCopy[locale].events}</Link>
-          {hasRole(user, ["organizer"]) && (
-            <Link to="/organizer/events">{eventCopy[locale].organizer}</Link>
-          )}
+          <NavLink to="/events">{eventCopy[locale].events}</NavLink>
           {user ? (
             <>
-              <Link to="/account">{t.account}</Link>
-              <Link to="/account/orders">
-                {commerceNavigation[locale].orders}
-              </Link>
-              <Link to="/account/tickets">
+              <NavLink to="/account/tickets">
                 {commerceNavigation[locale].tickets}
-              </Link>
-              {hasRole(user, ["organizer"]) ? (
-                <>
-                  <Link to="/organizer/profile">{t.organizer}</Link>
-                  <Link to="/organizer/payouts">
-                    {paymentCopy[locale].finances}
-                  </Link>
-                </>
-              ) : null}
+              </NavLink>
+              <NavLink to="/account/orders">
+                {commerceNavigation[locale].orders}
+              </NavLink>
+            </>
+          ) : null}
+          {isOrganizer && (
+            <NavLink to="/organizer/events">
+              {eventCopy[locale].organizer}
+            </NavLink>
+          )}
+        </nav>
+        <div className="account-nav">
+          <label className="language-control">
+            <span>{messages[locale].language}</span>
+            <select
+              value={locale}
+              onChange={(event) => {
+                if (isLocale(event.target.value)) setLocale(event.target.value);
+              }}
+            >
+              {locales.map((code) => (
+                <option key={code} value={code}>
+                  {localeLabels[code]}
+                </option>
+              ))}
+            </select>
+          </label>
+          {user ? (
+            <>
+              <NavLink to="/account" end className="account-secondary">
+                {t.account}
+              </NavLink>
               <button
                 className="secondary"
                 disabled={loggingOut}
@@ -152,36 +192,28 @@ function Application() {
             </>
           ) : (
             <>
-              <Link
+              <NavLink
                 to={`/login?returnTo=${encodeURIComponent(safeReturnTo(location.pathname + location.search))}`}
               >
                 {t.login}
+              </NavLink>
+              <Link className="action-link" to="/register">
+                {t.register}
               </Link>
-              <Link to="/register">{t.register}</Link>
             </>
           )}
-        </nav>
-        <label className="language-control">
-          {messages[locale].language}
-          <select
-            value={locale}
-            onChange={(event) => {
-              if (isLocale(event.target.value)) setLocale(event.target.value);
-            }}
-          >
-            {locales.map((code) => (
-              <option key={code} value={code}>
-                {localeLabels[code]}
-              </option>
-            ))}
-          </select>
-        </label>
+        </div>
       </header>
       <main id="main" className="page" tabIndex={-1}>
         {config.useMocks ? (
           <p className="environment-notice">{t.mockNotice}</p>
         ) : null}
         {logoutError ? <Status>{t.logoutFailed}</Status> : null}
+        <div className={showWorkspace ? "workspace" : undefined}>
+          {showWorkspace ? (
+            <OrganizerNav locale={locale} pathname={location.pathname} />
+          ) : null}
+          <div className={showWorkspace ? "workspace-main" : undefined}>
         <PageErrorBoundary
           key={`${location.key}:${user?.id ?? "public"}`}
           locale={locale}
@@ -427,8 +459,94 @@ function Application() {
             />
           </Routes>
         </PageErrorBoundary>
+          </div>
+        </div>
       </main>
     </>
+  );
+}
+
+function OrganizerNav({
+  locale,
+  pathname,
+}: {
+  locale: Locale;
+  pathname: string;
+}) {
+  const ev = eventCopy[locale];
+  const pay = paymentCopy[locale];
+  const eventId = /^\/organizer\/events\/([^/]+)\/.+/.exec(pathname)?.[1];
+  const scoped = eventId && eventId !== "new" ? eventId : null;
+  const base = scoped ? `/organizer/events/${scoped}` : "";
+  const general = [
+    {
+      to: "/organizer/events",
+      label: ev.organizer,
+      icon: <GridIcon />,
+      end: true,
+    },
+    { to: "/organizer/events/new", label: ev.create, icon: <PlusIcon /> },
+    { to: "/organizer/payouts", label: pay.finances, icon: <WalletIcon /> },
+    {
+      to: "/organizer/payout-accounts",
+      label: pay.accounts,
+      icon: <BankIcon />,
+    },
+    {
+      to: "/organizer/profile",
+      label: authCopy[locale].organizer,
+      icon: <UserIcon />,
+    },
+  ];
+  const eventLinks = scoped
+    ? [
+        { to: `${base}/edit`, label: ev.edit, icon: <EditIcon /> },
+        { to: `${base}/preview`, label: ev.preview, icon: <EyeIcon /> },
+        {
+          to: `${base}/orders`,
+          label: operationsCopy[locale].title,
+          icon: <ReceiptIcon />,
+        },
+        { to: `${base}/activation`, label: pay.activation, icon: <BoltIcon /> },
+        { to: `${base}/financials`, label: pay.finances, icon: <ChartIcon /> },
+        {
+          to: `${base}/staff`,
+          label: staffCopy[locale].link,
+          icon: <UsersIcon />,
+        },
+        {
+          to: `${base}/seating`,
+          label: seatingCopy[locale].setup,
+          icon: <SeatIcon />,
+        },
+      ]
+    : [];
+  const groups = [
+    { id: "nav-organizer", label: authCopy[locale].organizerRole, links: general },
+    ...(eventLinks.length
+      ? [{ id: "nav-event", label: ev.details, links: eventLinks }]
+      : []),
+  ];
+  return (
+    <nav className="workspace-nav" aria-label={authCopy[locale].organizerRole}>
+      {groups.map((group) => (
+        <section key={group.id}>
+          <p className="nav-label" id={group.id}>
+            {group.label}
+          </p>
+          <ul aria-labelledby={group.id}>
+            {group.links.map((link) => (
+              <li key={link.to}>
+                <NavLink to={link.to} end={"end" in link && link.end === true}>
+                  {link.icon}
+                  {link.label}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </nav>
   );
 }
 

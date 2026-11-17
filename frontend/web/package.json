@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@biletflow/shared": "*",
+    "@fontsource-variable/inter": "^5.2.5",
     "@tanstack/react-query": "^5.0.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",

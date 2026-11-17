@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { ApiError } from "@biletflow/shared";
+import { ApiError, intlLocales } from "@biletflow/shared";
+import type { Locale } from "@biletflow/shared";
+import type { Event } from "./model";
 import { InputError } from "./model";
 import type { EventCopy } from "./copy";
 
@@ -141,3 +143,63 @@ function useImageVisibility(src: string) {
   const [failed, setFailed] = useState<string | null>(null);
   return [failed === src, () => setFailed(src)] as const;
 }
+
+
+const kazakhMonths = [
+  "Қаң",
+  "Ақп",
+  "Нау",
+  "Сәу",
+  "Мам",
+  "Мау",
+  "Шіл",
+  "Там",
+  "Қыр",
+  "Қаз",
+  "Қар",
+  "Жел",
+];
+
+/** Generated cover for events without imagery: the event's own date, large. */
+export function CoverArt({ event, locale }: { event: Event; locale: Locale }) {
+  const date = new Date(event.starts_at);
+  const valid = !Number.isNaN(date.getTime());
+  const part = (options: Intl.DateTimeFormatOptions) => {
+    try {
+      return new Intl.DateTimeFormat(intlLocales[locale], {
+        timeZone: event.timezone,
+        ...options,
+      });
+    } catch {
+      return new Intl.DateTimeFormat(intlLocales[locale], options);
+    }
+  };
+  let month = valid ? part({ month: "short" }).format(date) : "";
+  // Some engines ship no Kazakh month names and print "M01".
+  if (/^M\d+$/.test(month)) {
+    const index = Number(part({ month: "numeric" }).format(date)) - 1;
+    month = kazakhMonths[index] ?? month;
+  }
+  const time = valid
+    ? part({ hour: "2-digit", minute: "2-digit", hour12: false }).format(date)
+    : "";
+  return (
+    <div className="cover-art" aria-hidden="true">
+      {valid && (
+        <span className="cover-date">
+          <strong>{part({ day: "numeric" }).format(date)}</strong>
+          <span>
+            {month.replace(".", "")} · {time}
+          </span>
+        </span>
+      )}
+      <svg viewBox="0 0 120 80" fill="none">
+        <path
+          d="M6 14a6 6 0 0 1 6-6h96a6 6 0 0 1 6 6v12a12 12 0 0 0 0 28v12a6 6 0 0 1-6 6H12a6 6 0 0 1-6-6V54a12 12 0 0 0 0-28Z"
+          fill="currentColor"
+        />
+      </svg>
+    </div>
+  );
+}
+

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { ApiError } from "@biletflow/shared";
 import type { CommerceCopy } from "./copy";
+import { toneFor } from "../tone";
 export function CommerceError({
   error,
   t,
@@ -52,6 +53,7 @@ export function CommerceStatus({
   t: CommerceCopy;
 }) {
   return (
-    <span className="status-badge">{t.states[value] ?? t.unknownStatus}</span>
+    <span className="status-badge" data-tone={toneFor(value)}>
+      {t.states[value] ?? t.unknownStatus}</span>
   );
 }

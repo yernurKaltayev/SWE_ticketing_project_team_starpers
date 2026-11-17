@@ -1,7 +1,7 @@
 .payment-panel {
   margin-block: 2rem;
   padding-block: 0.5rem 1.5rem;
-  border-block: 1px solid #d7dfd8;
+  border-block: 1px solid var(--color-line);
 }
 .activation-steps {
   list-style: none;
@@ -10,7 +10,7 @@
 }
 .activation-steps li {
   padding-block: 1rem;
-  border-bottom: 1px solid #d7dfd8;
+  border-bottom: 1px solid var(--color-line);
 }
 .activation-step-heading {
   display: flex;
@@ -32,7 +32,7 @@
 }
 .payout-accounts > li {
   padding-block: 1.25rem;
-  border-bottom: 1px solid #d7dfd8;
+  border-bottom: 1px solid var(--color-line);
   overflow-wrap: anywhere;
 }
 .payment-panel dd,
@@ -44,4 +44,37 @@
 }
 .payout-history {
   min-width: 42rem;
+}
+
+/* White UI surfaces (Figma O4) */
+.payment-panel {
+  padding: clamp(1.15rem, 2.5vw, 1.5rem);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
+.payment-panel > h2:first-child {
+  margin-top: 0;
+}
+.activation-steps,
+.payout-accounts {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  padding: 0 1.25rem;
+}
+.activation-steps li:last-child,
+.payout-accounts > li:last-child {
+  border-bottom: 0;
+}
+.activation-step-heading strong,
+.activation-step-heading h2,
+.activation-step-heading h3 {
+  margin: 0;
+}
+.payment-form {
+  padding: clamp(1.15rem, 2.5vw, 1.5rem);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
 }
