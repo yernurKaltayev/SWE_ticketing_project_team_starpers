@@ -1,3 +1,4 @@
+import { promoCopy } from "../promotions/copy";
 import { operationsCopy } from "../operations/copy";
 import { staffCopy } from "../staff/copy";
 import { seatingCopy } from "../seating/copy";
@@ -130,6 +131,13 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
         {t.back}
       </Link>
       <h1>{event ? t.edit : t.create}</h1>
+      {event && (
+        <p>
+          <Link to={`/organizer/events/${event.id}/promotions`}>
+            {promoCopy[locale].title}
+          </Link>
+        </p>
+      )}
       {event && (
         <p>
           <Link to={`/organizer/events/${event.id}/orders`}>

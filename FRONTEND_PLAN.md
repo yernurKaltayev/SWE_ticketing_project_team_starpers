@@ -282,6 +282,8 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F8 — Promotions and campaign QR [B]
 
+**18 November frontend implementation:** campaigns, canonical Campaign QR download, linked promo validation/removal, F3 checkout integration and attribution report UI are implemented against P16/P13. Master and the separate white UI variant are checked. Live HTTPS/physical scan and browser acceptance remain open; current API edit/nonpublic constraints are recorded in [F8_CHECKLIST.md](frontend/docs/F8_CHECKLIST.md).
+
 **Frontend lead:** Dias — sole owner of promotion UI/validation and its public interface; F3 consumes that interface within checkout.
 
 **Backend dependencies:** Dima (backend), with Yernur (backend) for reporting; P16/P13.

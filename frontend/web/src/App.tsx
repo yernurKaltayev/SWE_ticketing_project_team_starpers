@@ -47,6 +47,8 @@ import {
   WalletIcon,
 } from "./icons";
 
+const Campaigns = lazy(() => import("./promotions/Campaigns"));
+
 const Operations = lazy(() => import("./operations/Workspace"));
 
 const SeatPage = lazy(() =>
@@ -227,6 +229,16 @@ function Application() {
           }
         >
           <Routes>
+            <Route
+              path="/organizer/events/:eventId/promotions"
+              element={
+                <RequireSession locale={locale} roles={["organizer"]}>
+                  <Suspense fallback={<Status>{t.loading}</Status>}>
+                    <Campaigns key={user?.id} locale={locale} />
+                  </Suspense>
+                </RequireSession>
+              }
+            />
             {[
               "/organizer/events/:eventId/orders",
               "/organizer/events/:eventId/orders/:orderId",

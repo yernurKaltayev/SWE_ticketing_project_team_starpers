@@ -1,0 +1,68 @@
+.promotions {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+}
+.promotions > *,
+.campaign-card,
+.promo-entry {
+  min-width: 0;
+}
+.campaign-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+  gap: 1rem;
+}
+.campaign-card,
+.campaign-form,
+.promo-entry {
+  background: var(--color-surface, var(--color-paper, #fff));
+  border: 1px solid var(--color-line, #cdd9d3);
+  border-radius: var(--radius-card, 12px);
+  padding: 1.25rem;
+}
+.campaign-card h2 {
+  margin-top: 0;
+}
+.promo-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.promo-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+.promo-check input {
+  width: auto;
+}
+.promo-code {
+  letter-spacing: 0.08em;
+  overflow-wrap: anywhere;
+}
+.promo-entry {
+  margin-block: 1rem;
+}
+.promo-entry .controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.promo-entry input {
+  min-width: 0;
+  max-width: 100%;
+}
+.promotions .controls {
+  flex-wrap: wrap;
+}
+.promotions p,
+.promotions dd {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 680px) {
+  .promo-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

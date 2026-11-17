@@ -1,3 +1,4 @@
+import { promotionHandlers } from "./promotions";
 import { operationHandlers } from "./operations";
 import { http, HttpResponse } from "msw";
 import type { components } from "@biletflow/shared/api";
@@ -84,6 +85,7 @@ function failure() {
   return null;
 }
 export const handlers = [
+  ...promotionHandlers,
   ...staffHandlers,
   ...operationHandlers,
   ...seatingHandlers,
