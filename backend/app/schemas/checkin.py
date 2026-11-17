@@ -19,6 +19,13 @@ class VerifyOut(BaseModel):
     message: str
 
 
+class ManualCheckInIn(BaseModel):
+    """Admit a ticket found by attendee search, after staff checked the person in front of them."""
+
+    event_id: UUID
+    ticket_id: UUID
+
+
 class UndoCheckInIn(BaseModel):
     reason: str = Field(min_length=1, max_length=500)
 

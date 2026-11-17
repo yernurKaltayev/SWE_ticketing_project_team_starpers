@@ -6,6 +6,7 @@ import { eventHandlers } from "./events";
 import { authHandlers } from "./auth";
 import { orderHandlers } from "./orders";
 import { paymentHandlers } from "./payments";
+import { staffHandlers } from "./staff";
 
 export const scenarios = [
   "success",
@@ -83,6 +84,7 @@ function failure() {
   return null;
 }
 export const handlers = [
+  ...staffHandlers,
   ...operationHandlers,
   ...seatingHandlers,
   ...paymentHandlers,

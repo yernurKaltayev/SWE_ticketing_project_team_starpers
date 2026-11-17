@@ -339,11 +339,44 @@ paths:
         '422':
           $ref: '#/components/responses/Error'
   /events/{event_id}/staff:
+    get:
+      tags:
+      - users
+      summary: List an event's staff with name, email and role
+      description: 'Owner: P1 (F7). Access: event owner, platform admin, or staff (manager).'
+      operationId: get_events_event_id_staff
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StaffMemberOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
     post:
       tags:
       - users
       summary: Assign a user to an event's staff
-      description: 'Owner: P1. Access: event owner, platform admin, or staff (manager).'
+      description: 'Owner: P1. Access: event owner, platform admin, or staff (manager).
+        Identify the user by exactly one of user_id or email.'
       operationId: post_events_event_id_staff
       parameters:
       - name: event_id
@@ -1955,6 +1988,29 @@ paths:
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
+  /me/staff-events:
+    get:
+      tags:
+      - users
+      summary: Events the signed-in user owns or is assigned to as staff (Event Admin app)
+      description: 'Owner: P1 (F7). Access: any signed-in user; returns only their own
+        owned or assigned events, drafts excluded. Platform admins get no implicit entries.'
+      operationId: get_me_staff_events
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StaffEventOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
   /me/tickets:
     get:
       tags:
@@ -2007,6 +2063,38 @@ paths:
         '401':
           $ref: '#/components/responses/Error'
         '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /checkin/manual:
+    post:
+      tags:
+      - checkin
+      summary: Check in a ticket chosen from attendee search (same rules as a QR scan)
+      description: 'Owner: P15 (F7). Access: event owner, platform admin, or staff (checkin).
+        Always 200 with a VerifyOut result: an unknown ticket is invalid and a ticket for
+        another event is wrong_event.'
+      operationId: post_checkin_manual
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualCheckInIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
@@ -3612,6 +3700,17 @@ components:
         ticket_status:
           title: Ticket Status
           type: string
+        ticket_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Ticket Id
+        ticket_number:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ticket Number
       required:
       - id
       - order_id
@@ -5584,12 +5683,36 @@ components:
       - settings
       title: SettingsUpdate
       type: object
+    ManualCheckInIn:
+      properties:
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        ticket_id:
+          format: uuid
+          title: Ticket Id
+          type: string
+      required:
+      - event_id
+      - ticket_id
+      title: ManualCheckInIn
+      type: object
     StaffAssignIn:
+      description: Exactly one of user_id or email is required.
       properties:
         user_id:
-          format: uuid
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
           title: User Id
-          type: string
+        email:
+          anyOf:
+          - format: email
+            type: string
+          - type: 'null'
+          title: Email
         role:
           enum:
           - manager
@@ -5598,9 +5721,89 @@ components:
           title: Role
           type: string
       required:
-      - user_id
       - role
       title: StaffAssignIn
+      type: object
+    StaffEventOut:
+      properties:
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
+        title:
+          title: Title
+          type: string
+        starts_at:
+          format: date-time
+          title: Starts At
+          type: string
+        ends_at:
+          format: date-time
+          title: Ends At
+          type: string
+        timezone:
+          title: Timezone
+          type: string
+        status:
+          title: Status
+          type: string
+        venue_name:
+          title: Venue Name
+          type: string
+        venue_city:
+          title: Venue City
+          type: string
+        role:
+          enum:
+          - owner
+          - manager
+          - checkin
+          - support
+          title: Role
+          type: string
+        can_check_in:
+          title: Can Check In
+          type: boolean
+      required:
+      - event_id
+      - title
+      - starts_at
+      - ends_at
+      - timezone
+      - status
+      - venue_name
+      - venue_city
+      - role
+      - can_check_in
+      title: StaffEventOut
+      type: object
+    StaffMemberOut:
+      properties:
+        user_id:
+          format: uuid
+          title: User Id
+          type: string
+        email:
+          format: email
+          title: Email
+          type: string
+        full_name:
+          title: Full Name
+          type: string
+        role:
+          title: Role
+          type: string
+        assigned_at:
+          format: date-time
+          title: Assigned At
+          type: string
+      required:
+      - user_id
+      - email
+      - full_name
+      - role
+      - assigned_at
+      title: StaffMemberOut
       type: object
     StaffAssignmentOut:
       properties:

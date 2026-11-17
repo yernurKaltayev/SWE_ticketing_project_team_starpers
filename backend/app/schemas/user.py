@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import AfterValidator, BaseModel, EmailStr
+from pydantic import AfterValidator, BaseModel, EmailStr, model_validator
 
 from app.schemas.common import Name, OrmModel, Phone
 
@@ -48,8 +48,17 @@ class OrganizerProfileOut(OrmModel):
 
 
 class StaffAssignIn(BaseModel):
-    user_id: UUID
+    """Identify the staff member by account ID or by the email they signed up with (F7)."""
+
+    user_id: UUID | None = None
+    email: EmailStr | None = None
     role: Literal["manager", "checkin", "support"]
+
+    @model_validator(mode="after")
+    def _exactly_one_identifier(self) -> "StaffAssignIn":
+        if (self.user_id is None) == (self.email is None):
+            raise ValueError("Provide exactly one of user_id or email.")
+        return self
 
 
 class StaffAssignmentOut(OrmModel):
@@ -57,3 +66,28 @@ class StaffAssignmentOut(OrmModel):
     event_id: UUID
     user_id: UUID
     role: str
+
+
+class StaffMemberOut(BaseModel):
+    """One row of an event's staff list, with enough identity to recognise the person."""
+
+    user_id: UUID
+    email: EmailStr
+    full_name: str
+    role: str
+    assigned_at: datetime
+
+
+class StaffEventOut(BaseModel):
+    """An event the signed-in user may work on: owned, or assigned through staff (F7 app)."""
+
+    event_id: UUID
+    title: str
+    starts_at: datetime
+    ends_at: datetime
+    timezone: str
+    status: str
+    venue_name: str
+    venue_city: str
+    role: Literal["owner", "manager", "checkin", "support"]
+    can_check_in: bool

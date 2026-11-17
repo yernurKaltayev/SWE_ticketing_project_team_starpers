@@ -214,11 +214,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List an event's staff with name, email and role
+         * @description Owner: P1 (F7). Access: event owner, platform admin, or staff (manager).
+         */
+        get: operations["get_events_event_id_staff"];
         put?: never;
         /**
          * Assign a user to an event's staff
-         * @description Owner: P1. Access: event owner, platform admin, or staff (manager).
+         * @description Owner: P1. Access: event owner, platform admin, or staff (manager). Identify the user by exactly one of user_id or email.
          */
         post: operations["post_events_event_id_staff"];
         delete?: never;
@@ -1111,6 +1115,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/staff-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Events the signed-in user owns or is assigned to as staff (Event Admin app)
+         * @description Owner: P1 (F7). Access: any signed-in user; returns only their own owned or assigned events, drafts excluded. Platform admins get no implicit entries.
+         */
+        get: operations["get_me_staff_events"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/tickets": {
         parameters: {
             query?: never;
@@ -1145,6 +1169,26 @@ export interface paths {
          * @description Owner: P15. Access: event owner, platform admin, or staff (checkin). Always 200 with a result: accepted, already_used, refunded, invalid (forged, unknown or cancelled), wrong_event (no ticket details), not_a_ticket (Campaign QR or other).
          */
         post: operations["post_checkin_verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/checkin/manual": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check in a ticket chosen from attendee search (same rules as a QR scan)
+         * @description Owner: P15 (F7). Access: event owner, platform admin, or staff (checkin). Always 200 with a VerifyOut result: an unknown ticket is invalid and a ticket for another event is wrong_event.
+         */
+        post: operations["post_checkin_manual"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1961,6 +2005,10 @@ export interface components {
             ticket_type: string;
             /** Ticket Status */
             ticket_status: string;
+            /** Ticket Id */
+            ticket_id?: string | null;
+            /** Ticket Number */
+            ticket_number?: string | null;
         };
         /** AuditEntryOut */
         AuditEntryOut: {
@@ -3074,18 +3122,90 @@ export interface components {
                 [key: string]: unknown;
             };
         };
-        /** StaffAssignIn */
+        /** ManualCheckInIn */
+        ManualCheckInIn: {
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+        };
+        /**
+         * StaffAssignIn
+         * @description Exactly one of user_id or email is required.
+         */
         StaffAssignIn: {
+            /** User Id */
+            user_id?: string | null;
+            /** Email */
+            email?: string | null;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "manager" | "checkin" | "support";
+        };
+        /** StaffEventOut */
+        StaffEventOut: {
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
+            /** Title */
+            title: string;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            /** Timezone */
+            timezone: string;
+            /** Status */
+            status: string;
+            /** Venue Name */
+            venue_name: string;
+            /** Venue City */
+            venue_city: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "owner" | "manager" | "checkin" | "support";
+            /** Can Check In */
+            can_check_in: boolean;
+        };
+        /** StaffMemberOut */
+        StaffMemberOut: {
             /**
              * User Id
              * Format: uuid
              */
             user_id: string;
             /**
-             * Role
-             * @enum {string}
+             * Email
+             * Format: email
              */
-            role: "manager" | "checkin" | "support";
+            email: string;
+            /** Full Name */
+            full_name: string;
+            /** Role */
+            role: string;
+            /**
+             * Assigned At
+             * Format: date-time
+             */
+            assigned_at: string;
         };
         /** StaffAssignmentOut */
         StaffAssignmentOut: {
@@ -4058,6 +4178,32 @@ export interface operations {
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    get_events_event_id_staff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffMemberOut"][];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
     };
@@ -5418,6 +5564,28 @@ export interface operations {
             422: components["responses"]["Error"];
         };
     };
+    get_me_staff_events: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffEventOut"][];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
     get_me_tickets: {
         parameters: {
             query?: {
@@ -5468,6 +5636,34 @@ export interface operations {
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    post_checkin_manual: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ManualCheckInIn"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerifyOut"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
     };

@@ -1,4 +1,5 @@
 import { operationsCopy } from "../operations/copy";
+import { staffCopy } from "../staff/copy";
 import { seatingCopy } from "../seating/copy";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -128,6 +129,10 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
         <p>
           <Link to={`/organizer/events/${event.id}/orders`}>
             {operationsCopy[locale].title}
+          </Link>
+          {" · "}
+          <Link to={`/organizer/events/${event.id}/staff`}>
+            {staffCopy[locale].link}
           </Link>
           {" · "}
           <span className="status-badge">

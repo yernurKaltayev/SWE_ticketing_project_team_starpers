@@ -13,7 +13,7 @@ const en = {
   signedIn: "Signed in",
   verified: "Email verified",
   unverified: "Email not verified",
-  next: "Assigned events and admission tools will be available in the check-in module.",
+  next: "Your assigned events are on the home screen.",
   invalidInput: "Enter a valid email and your password.",
   invalidCredentials:
     "The email or password is incorrect. Check them and try again.",
@@ -50,7 +50,7 @@ export const authCopy: Record<Locale, AuthCopy> = {
     signedIn: "Жүйеге кірдіңіз",
     verified: "Электрондық пошта расталған",
     unverified: "Электрондық пошта расталмаған",
-    next: "Тағайындалған іс-шаралар мен кіруді тексеру құралдары тіркеу модулінде қолжетімді болады.",
+    next: "Сізге тағайындалған іс-шаралар басты экранда.",
     invalidInput: "Дұрыс электрондық пошта мен құпиясөзді енгізіңіз.",
     invalidCredentials:
       "Электрондық пошта немесе құпиясөз қате. Тексеріп, қайталап көріңіз.",
@@ -82,7 +82,7 @@ export const authCopy: Record<Locale, AuthCopy> = {
     signedIn: "Вход выполнен",
     verified: "Почта подтверждена",
     unverified: "Почта не подтверждена",
-    next: "Назначенные мероприятия и инструменты проверки входа появятся в модуле регистрации посетителей.",
+    next: "Назначенные вам мероприятия — на главном экране.",
     invalidInput: "Введите корректную почту и пароль.",
     invalidCredentials:
       "Неверная почта или пароль. Проверьте их и попробуйте снова.",
