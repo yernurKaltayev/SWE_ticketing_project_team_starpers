@@ -8,6 +8,7 @@ import type { Locale } from "@biletflow/shared";
 import { Field, Status } from "../auth/ui";
 import { useSession } from "../auth/session";
 import { eventCopy } from "./copy";
+import { toneFor } from "../tone";
 import { useEventRequest, useResource } from "./data";
 import {
   eventBody,
@@ -19,6 +20,7 @@ import {
 } from "./model";
 import type { Event, Page, Ticket, Venue } from "./model";
 import { EventError, Image, SelectField, TextArea } from "./ui";
+import { ArrowLeftIcon } from "../icons";
 import { parseEvent, parseVenues, parseTicketTypes } from "./contracts";
 
 export function EventEditor({ locale }: { locale: Locale }) {
@@ -123,7 +125,10 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
   }
   return (
     <section>
-      <Link to="/organizer/events">{t.back}</Link>
+      <Link className="back-link" to="/organizer/events">
+        <ArrowLeftIcon size={16} />
+        {t.back}
+      </Link>
       <h1>{event ? t.edit : t.create}</h1>
       {event && (
         <p>
@@ -135,7 +140,10 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
             {staffCopy[locale].link}
           </Link>
           {" · "}
-          <span className="status-badge">
+          <span
+            className="status-badge"
+            data-tone={toneFor(event.status)}
+          >
             {t[event.status as "draft"] ?? event.status}
           </span>
         </p>
@@ -159,6 +167,7 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
       )}
       {event?.seating_mode === "assigned" && <Status>{t.assignedHint}</Status>}
       <form
+        className="panel editor-form"
         key={revision}
         onChange={() => {
           setDirty(true);
@@ -532,6 +541,7 @@ function TicketEditor({
       {saved && <Status>{t.saved}</Status>}
       {selected !== undefined && (
         <form
+          className="panel editor-form"
           key={selected?.id ?? "new"}
           onSubmit={(e) => {
             e.preventDefault();
@@ -660,6 +670,7 @@ function RefundEditor({
       <EventError error={error} t={t} />
       {saved && <Status>{t.policySaved}</Status>}
       <form
+        className="panel editor-form"
         onSubmit={(e) => {
           e.preventDefault();
           if (locked || pending) return;

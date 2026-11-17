@@ -7,9 +7,18 @@ import { useResource } from "./data";
 import { eventCopy } from "./copy";
 import { salesState } from "./model";
 import type { Availability, Event, Venue } from "./model";
-import { EventError, Image } from "./ui";
+import { CoverArt, EventError, Image } from "./ui";
 import { commerceNavigation } from "../checkout/navigation";
 import { parseEvent, parsePublicAvailability, parseVenue } from "./contracts";
+import {
+  ArrowLeftIcon,
+  CalendarIcon,
+  ClockIcon,
+  PinIcon,
+  SeatIcon,
+  TicketIcon,
+} from "../icons";
+import { toneFor } from "../tone";
 
 export function EventDetail({
   locale,
@@ -30,7 +39,11 @@ export function EventDetail({
   );
   return (
     <section>
-      <Link to={preview ? `/organizer/events/${eventId}/edit` : "/events"}>
+      <Link
+        className="back-link"
+        to={preview ? `/organizer/events/${eventId}/edit` : "/events"}
+      >
+        <ArrowLeftIcon size={16} />
         {preview ? t.edit : t.back}
       </Link>
       <EventError error={error} t={t} retry={reload} />
@@ -64,76 +77,143 @@ function EventContent({
     `/api/v1/events/${encodeURIComponent(event.id)}/availability`,
     parsePublicAvailability,
   );
+  const registration = [
+    event.registration_opens_at,
+    event.registration_closes_at,
+  ].filter(Boolean);
   return (
     <>
       {preview && <Status>{t.previewHint}</Status>}
-      <p className="event-category">{event.category}</p>
-      <h1>{event.title}</h1>
-      <p>
-        <span className="status-badge">
-          {t[event.status as "draft"] ?? event.status}
-        </span>
-      </p>
-      <p>
-        {formatEventDateTime(event.starts_at, event.timezone, locale)} —{" "}
-        {formatEventDateTime(event.ends_at, event.timezone, locale)}
-      </p>
-      <EventError error={venue.error} t={t} retry={venue.reload} />
-      {venue.data && (
-        <p>
-          {venue.data.name} · {venue.data.address} · {venue.data.city}
+      <header className="detail-header">
+        <h1>{event.title}</h1>
+        <p className="meta-line">
+          {event.category && (
+            <span className="event-category">{event.category}</span>
+          )}
+          <span
+            className="status-badge"
+            data-tone={toneFor(event.status)}
+          >
+            {t[event.status as "draft"] ?? event.status}
+          </span>
         </p>
-      )}
-      <div className="event-grid">
-        {event.images.map((src) => (
-          <Image key={src} src={src} title={event.title} />
-        ))}
+      </header>
+      <div className="detail-layout">
+        <div className="detail-main">
+          {event.images.length === 0 && (
+            <div className="event-cover detail-cover">
+              <CoverArt event={event} locale={locale} />
+            </div>
+          )}
+          <div className="event-grid">
+            {event.images.map((src) => (
+              <Image key={src} src={src} title={event.title} />
+            ))}
+          </div>
+          <div className="panel">
+            <dl className="facts">
+              <div>
+                <span className="fact-icon">
+                  <CalendarIcon />
+                </span>
+                <dt>
+                  {t.starts_at} — {t.ends_at}
+                </dt>
+                <dd>
+                  {formatEventDateTime(event.starts_at, event.timezone, locale)}{" "}
+                  —{" "}
+                  {formatEventDateTime(event.ends_at, event.timezone, locale)}
+                </dd>
+              </div>
+              {venue.data && (
+                <div>
+                  <span className="fact-icon">
+                    <PinIcon />
+                  </span>
+                  <dt>{t.venue_id}</dt>
+                  <dd>
+                    {venue.data.name} · {venue.data.address} ·{" "}
+                    {venue.data.city}
+                  </dd>
+                </div>
+              )}
+              {registration.length > 0 && (
+                <div>
+                  <span className="fact-icon">
+                    <ClockIcon />
+                  </span>
+                  <dt>
+                    {t.registration_opens_at} / {t.registration_closes_at}
+                  </dt>
+                  {registration.map((date) => (
+                    <dd key={date}>
+                      {formatEventDateTime(date!, event.timezone, locale)}
+                    </dd>
+                  ))}
+                </div>
+              )}
+            </dl>
+            <EventError error={venue.error} t={t} retry={venue.reload} />
+          </div>
+          {event.description && (
+            <div className="panel">
+              <h2>{t.description}</h2>
+              <p className="event-description">{event.description}</p>
+            </div>
+          )}
+          <div className="panel">
+            <h2>{t.refund}</h2>
+            <p>{t.policyGap}</p>
+          </div>
+        </div>
+        <aside className="detail-aside">
+          <div className="panel ticket-panel">
+            <h2>{t.tickets}</h2>
+            <EventError error={tickets.error} t={t} retry={tickets.reload} />
+            {!tickets.data && !tickets.error && <Status>{t.loading}</Status>}
+            {tickets.data?.length === 0 && <p>{t.ticketEmpty}</p>}
+            <ul className="ticket-list">
+              {tickets.data?.map((ticket) => (
+                <li key={ticket.ticket_type_id}>
+                  <strong>{ticket.name}</strong>
+                  <span className="price">
+                    {ticket.price_amount === 0
+                      ? t.free
+                      : formatMoney(ticket.price_amount, locale)}
+                  </span>
+                  <span className="availability">
+                    {t.available}: {ticket.available}
+                  </span>
+                  <span
+                    className="status-badge"
+                    data-tone={toneFor(salesState(event, ticket))}
+                  >
+                    {t[salesState(event, ticket)]}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            {!preview && event.status === "published" && (
+              <Link
+                className="action-link"
+                to={`/events/${event.id}/checkout`}
+              >
+                <TicketIcon />
+                {commerceNavigation[locale].register}
+              </Link>
+            )}
+          </div>
+          {event.seating_mode === "assigned" && !preview && (
+            <Link
+              className="action-link ghost"
+              to={`/events/${event.id}/seats`}
+            >
+              <SeatIcon />
+              {seatingCopy[locale].title}
+            </Link>
+          )}
+        </aside>
       </div>
-      <p className="event-description">{event.description}</p>
-      <h2>
-        {t.registration_opens_at} / {t.registration_closes_at}
-      </h2>
-      {[event.registration_opens_at, event.registration_closes_at]
-        .filter(Boolean)
-        .map((date) => (
-          <p key={date}>{formatEventDateTime(date!, event.timezone, locale)}</p>
-        ))}
-      {event.seating_mode === "assigned" && !preview && (
-        <p>
-          <Link to={`/events/${event.id}/seats`}>
-            {seatingCopy[locale].title}
-          </Link>
-        </p>
-      )}
-      <h2>{t.tickets}</h2>
-      <EventError error={tickets.error} t={t} retry={tickets.reload} />
-      {!tickets.data && !tickets.error && <Status>{t.loading}</Status>}
-      {tickets.data?.length === 0 && <p>{t.ticketEmpty}</p>}
-      <ul className="ticket-list">
-        {tickets.data?.map((ticket) => (
-          <li key={ticket.ticket_type_id}>
-            <strong>{ticket.name}</strong>
-            <span>
-              {ticket.price_amount === 0
-                ? t.free
-                : formatMoney(ticket.price_amount, locale)}
-            </span>
-            <span>
-              {t.available}: {ticket.available}
-            </span>
-            <span className="status-badge">{t[salesState(event, ticket)]}</span>
-          </li>
-        ))}
-      </ul>
-      {!preview && event.status === "published" && (
-        <p>
-          <Link className="action-link" to={`/events/${event.id}/checkout`}>
-            {commerceNavigation[locale].register}
-          </Link>
-        </p>
-      )}
-      <h2>{t.refund}</h2>
-      <p>{t.policyGap}</p>
     </>
   );
 }

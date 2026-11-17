@@ -8,7 +8,7 @@
 }
 .seating fieldset {
   min-width: 0;
-  border: 1px solid #aaa;
+  border: 1px solid var(--color-line);
   padding: 0.75rem;
 }
 .seat-list {
@@ -22,7 +22,7 @@
   white-space: normal;
 }
 .seat-list button[aria-pressed="true"] {
-  outline: 3px solid #245c45;
+  outline: 3px solid var(--color-primary);
 }
 .seat-map-scroll {
   overflow: auto;
@@ -33,20 +33,52 @@
 }
 .seat-dot {
   fill: #fff;
-  stroke: #245c45;
+  stroke: var(--color-primary);
   stroke-width: 2;
 }
 .seat-dot.held {
-  fill: #edce89;
+  fill: #f5d58c;
 }
 .seat-dot.sold {
-  fill: #bbb;
+  fill: #dfe4ec;
   stroke-dasharray: 3;
 }
 .seat-dot.selected {
-  fill: #91c9ad;
+  fill: var(--color-primary);
+  stroke: var(--color-primary-press);
   stroke-width: 4;
 }
 .seat-map-scroll [role="button"][aria-disabled="false"] { cursor: pointer; }
-.seat-map-scroll [role="button"]:focus-visible .seat-dot { stroke: #111; stroke-width: 5; }
+.seat-map-scroll [role="button"]:focus-visible .seat-dot { stroke: var(--color-ink); stroke-width: 5; }
 .seating-handoff { max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* White UI surfaces */
+.seating fieldset {
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 1rem 1.1rem;
+}
+.seating legend {
+  padding: 0 0.4rem;
+}
+.seat-map-scroll {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  padding: 0.75rem;
+}
+.seat-list button {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-color: var(--color-line-strong);
+  box-shadow: none;
+}
+.seat-list button:hover {
+  background: var(--color-primary-soft);
+}
+.seat-list button[aria-pressed="true"] {
+  outline: none;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}

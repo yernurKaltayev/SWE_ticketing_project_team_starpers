@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { ApiError } from "@biletflow/shared";
 import type { OperationsCopy } from "./copy";
+import { toneFor } from "../tone";
 export function OperationError({
   error,
   t,
@@ -34,7 +35,7 @@ export function OperationError({
 }
 export function State({ value, t }: { value: string; t: OperationsCopy }) {
   return (
-    <span className="status-badge">
+    <span className="status-badge" data-tone={toneFor(value)}>
       {t.state[value as keyof typeof t.state] ?? t.state.unknown}
     </span>
   );

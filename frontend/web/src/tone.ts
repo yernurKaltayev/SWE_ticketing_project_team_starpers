@@ -1,0 +1,38 @@
+/** Maps server/UI status values onto the white-UI badge tones. */
+const tones: Record<string, "success" | "warning" | "danger" | "neutral"> = {
+  paid: "success",
+  free_confirmed: "success",
+  valid: "success",
+  published: "success",
+  active: "success",
+  succeeded: "success",
+  completed: "success",
+  verified: "success",
+  accepted: "success",
+  onSale: "success",
+  on_sale: "success",
+  available: "success",
+  pending: "warning",
+  scheduled: "warning",
+  processing: "warning",
+  incomplete: "warning",
+  notOpen: "warning",
+  unverified: "warning",
+  partially_refunded: "warning",
+  failed: "danger",
+  cancelled: "danger",
+  refunded: "danger",
+  expired: "danger",
+  suspended: "danger",
+  rejected: "danger",
+  soldOut: "danger",
+  sold_out: "danger",
+  draft: "neutral",
+  checked_in: "neutral",
+  ended: "neutral",
+  closed: "neutral",
+  unavailable: "neutral",
+};
+export function toneFor(value: string | null | undefined) {
+  return value ? tones[value] : undefined;
+}
