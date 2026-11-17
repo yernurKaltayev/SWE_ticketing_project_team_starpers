@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { mockCurrentUser } from "./auth";
+import { mockPromoRelease } from "./promotions";
 import { mockManagedEvent, mockReleaseCheckout } from "./events";
 import { mockOperationsOrder, mockOperationsOrders } from "./orders";
 import { csvCell } from "../operations/model";
@@ -28,6 +29,7 @@ function cancel(id: string, refund: boolean) {
   const row = mockOperationsOrder(id)!;
   if (["cancelled", "refunded"].includes(row.value.status)) return;
   mockReleaseCheckout(row.eventId, row.value.items);
+  if (!refund) mockPromoRelease(row.value.id);
   row.value.status = refund ? "refunded" : "cancelled";
   row.value.tickets.forEach((t) => {
     t.status = refund ? "refunded" : "cancelled";

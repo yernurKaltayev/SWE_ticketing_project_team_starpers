@@ -8,6 +8,12 @@ import {
 import type { Order, OrderBody, Ticket } from "../checkout/model";
 import { mockTicketPng, mockTicketPdf } from "./ticket-assets";
 
+import {
+  mockPromoClaim,
+  mockPromoRelease,
+  resetPromotionMocks,
+} from "./promotions";
+
 type OrderFixture = {
   owner: string;
   value: Order;
@@ -42,7 +48,10 @@ export function mockSettleOrder(id: string, success: boolean) {
   if (!row || !held || row.value.status !== "pending") return;
   row.value.status = success ? "paid" : "failed";
   if (success) row.value.tickets = held.tickets;
-  else mockReleaseCheckout(held.eventId, row.value.items);
+  else {
+    mockReleaseCheckout(held.eventId, row.value.items);
+    mockPromoRelease(id);
+  }
   awaiting.delete(id);
 }
 const headers = {
@@ -50,6 +59,7 @@ const headers = {
   "Cache-Control": "private, no-store",
 };
 export function resetOrderMocks() {
+  resetPromotionMocks();
   orders.clear();
   attempts.clear();
   awaiting.clear();
@@ -169,14 +179,26 @@ export const orderHandlers = [
         });
       }
     }
-    mockConfirmCheckout(body.event_id, body.items);
     value.subtotal = value.items.reduce((sum, item) => {
       const type = context.tickets.find((t) => t.id === item.ticket_type_id)!;
       item.unit_price = type.price_amount;
       item.line_total = item.unit_price * item.quantity;
       return sum + item.line_total;
     }, 0);
-    value.total = value.subtotal;
+    if (body.promo_code) {
+      const quote = mockPromoClaim(
+        body.event_id,
+        body.promo_code,
+        body.items.flatMap((i) =>
+          Array<string>(i.quantity).fill(i.ticket_type_id),
+        ),
+        value,
+      );
+      if (!quote.valid) return error(422, quote.reason!);
+      value.discount_amount = quote.discount_amount;
+    }
+    value.total = value.subtotal - value.discount_amount;
+    mockConfirmCheckout(body.event_id, body.items);
     if (value.total > 0) {
       value.status = "pending";
       value.is_simulated = true;

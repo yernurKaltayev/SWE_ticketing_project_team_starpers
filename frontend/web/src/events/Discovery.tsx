@@ -1,3 +1,4 @@
+import { promoCopy } from "../promotions/copy";
 import { operationsCopy } from "../operations/copy";
 import { Link, useSearchParams } from "react-router-dom";
 import { formatEventDateTime } from "@biletflow/shared";
@@ -193,6 +194,9 @@ export function EventList({
                       </span>
                     </div>
                     <nav className="controls">
+                      <Link to={`/organizer/events/${event.id}/promotions`}>
+                        {promoCopy[locale].title}
+                      </Link>
                       <Link
                         to={`/organizer/events/${encodeURIComponent(event.id)}/orders`}
                       >

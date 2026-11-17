@@ -168,3 +168,7 @@ Order search/export uses a complete authorized client list up to 10,000 orders b
 ## F7 Event Admin app and check-in
 
 The Expo app lists the events the signed-in account owns or is assigned to, then offers camera QR scanning, attendee search with confirmed manual check-in, live counts and undo with a reason. Every admission decision comes from the server; connection failures show **RESULT UNKNOWN** and nothing is admitted or queued offline. Organizers assign check-in, support or manager staff by account email at `/organizer/events/:eventId/staff`. Launch steps, the demo flow and the remaining phone acceptance are in the [F7 checklist](docs/F7_CHECKLIST.md).
+
+### F8 promotions
+
+My events → event → Promotions provides campaigns, Campaign QR and reports. Linked codes are validated for selected tickets at checkout; order totals remain authoritative. See [F8 checklist](docs/F8_CHECKLIST.md) for setup, contract constraints, both design bases and remaining live/browser acceptance.

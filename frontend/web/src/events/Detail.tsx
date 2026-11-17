@@ -1,5 +1,7 @@
+import { PromotionBanner } from "../promotions/Banner";
+import { checkoutLink } from "../promotions/model";
 import { seatingCopy } from "../seating/copy";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
 import { formatEventDateTime, formatMoney } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { Status } from "../auth/ui";
@@ -69,6 +71,7 @@ function EventContent({
   preview: boolean;
 }) {
   const t = eventCopy[locale];
+  const location = useLocation();
   const venue = useResource<Venue>(
     `/api/v1/venues/${encodeURIComponent(event.venue_id)}`,
     parseVenue,
@@ -83,6 +86,7 @@ function EventContent({
   ].filter(Boolean);
   return (
     <>
+      <PromotionBanner locale={locale} />
       {preview && <Status>{t.previewHint}</Status>}
       <header className="detail-header">
         <h1>{event.title}</h1>
@@ -196,7 +200,7 @@ function EventContent({
             {!preview && event.status === "published" && (
               <Link
                 className="action-link"
-                to={`/events/${event.id}/checkout`}
+                to={checkoutLink(event.id, location.search)}
               >
                 <TicketIcon />
                 {commerceNavigation[locale].register}
@@ -214,6 +218,7 @@ function EventContent({
           )}
         </aside>
       </div>
+
     </>
   );
 }

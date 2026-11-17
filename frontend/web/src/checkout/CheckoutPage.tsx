@@ -1,3 +1,7 @@
+import { PromoEntry } from "../promotions/PromoEntry";
+import { usePromotion } from "../promotions/usePromotion";
+import { validatePromo, selectedCart } from "../promotions/model";
+import { promoCopy, reasonText } from "../promotions/copy";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ApiError, formatEventDateTime, formatMoney } from "@biletflow/shared";
@@ -117,6 +121,8 @@ function CheckoutForm({
     initial?.attendees ?? [],
   );
   const [review, setReview] = useState<OrderBody | null>(initial ?? null);
+  const [reviewDiscount, setReviewDiscount] = useState<number | null>(null);
+  const [reviewSubtotal, setReviewSubtotal] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [fields, setFields] = useState<Record<string, string>>({});
@@ -136,6 +142,13 @@ function CheckoutForm({
   const recovery = coordinator.recovery(event.id);
   const frozen = coordinator.draft(event.id);
   const choices = availability.choices;
+  const promotion = usePromotion(
+    event.id,
+    choices,
+    quantities,
+    controller.request,
+  );
+  const pt = promoCopy[locale];
   const paidActive = event.paid_sales_status === "active";
   const canChoose = (c: (typeof choices)[number]) =>
     c.free || (paidActive && !!c.price);
@@ -197,6 +210,7 @@ function CheckoutForm({
             "inventory_unavailable",
             "Availability changed.",
           );
+        const promoCode = body.promo_code;
         body = makeOrderBody(
           event.id,
           selected.filter((c) => c !== undefined),
@@ -206,6 +220,42 @@ function CheckoutForm({
           body.attendees,
           latestEvent.paid_sales_status === "active",
         );
+        if (promoCode) {
+          const ids = body.items.flatMap((i) =>
+            Array<string>(i.quantity).fill(i.ticket_type_id),
+          );
+          const quote = await validatePromo(
+            controller.request,
+            event.id,
+            promoCode,
+            ids,
+          );
+          if (!quote.valid)
+            throw new ApiError(
+              422,
+              quote.reason ?? "promo_not_found",
+              "Promotion rejected.",
+            );
+          const currentCart = selectedCart(
+            latest.choices,
+            Object.fromEntries(
+              body.items.map((i) => [i.ticket_type_id, i.quantity]),
+            ),
+          );
+          if (
+            !currentCart ||
+            currentCart.subtotal !== reviewSubtotal ||
+            quote.discount_amount !== reviewDiscount
+          ) {
+            setReview(null);
+            throw new ApiError(
+              409,
+              "promo_changed",
+              "Review the updated promotion.",
+            );
+          }
+          body = { ...body, promo_code: promoCode };
+        }
       }
       const order = await coordinator.submit(body);
       if (active.current)
@@ -233,7 +283,16 @@ function CheckoutForm({
             {t.view}
           </Link>
         </p>
-        <CommerceError error={error} t={t} />
+        {error instanceof ApiError &&
+        (error.code.startsWith("promo_") || error.code === "promo_changed") ? (
+          <p role="alert">
+            {error.code === "promo_changed"
+              ? pt.changed
+              : reasonText(error.code, pt)}
+          </p>
+        ) : (
+          <CommerceError error={error} t={t} />
+        )}
         <button
           disabled={busy}
           className="secondary"
@@ -280,7 +339,16 @@ function CheckoutForm({
 
   return (
     <div className="checkout-form">
-      <CommerceError error={error} t={t} />
+      {error instanceof ApiError &&
+      (error.code.startsWith("promo_") || error.code === "promo_changed") ? (
+        <p role="alert">
+          {error.code === "promo_changed"
+            ? pt.changed
+            : reasonText(error.code, pt)}
+        </p>
+      ) : (
+        <CommerceError error={error} t={t} />
+      )}
       {recovery && (
         <div className="notice" role="status">
           <p>{t.unknown}</p>
@@ -323,7 +391,32 @@ function CheckoutForm({
               </li>
             ))}
           </ol>
-          <p className="checkout-total">
+          {review.promo_code && (
+            <>
+              <p>
+                {pt.applied}: <strong>{review.promo_code}</strong>
+              </p>
+              {reviewDiscount !== null && (
+                <>
+                  <p>
+                    {pt.preview}: {formatMoney(reviewDiscount, locale)}
+                  </p>
+                  <p>
+                    {pt.due}:{" "}
+                    {formatMoney(
+                      Math.max(
+                        0,
+                        (reviewSubtotal ?? estimated) - reviewDiscount,
+                      ),
+                      locale,
+                    )}
+                  </p>
+                </>
+              )}
+              <p>{pt.previewHint}</p>
+            </>
+          )}
+          <p className="checkout-total" hidden={!!review.promo_code}>
             {selectedPaid ? p.estimate : t.total}:{" "}
             {formatMoney(estimated, locale)}
           </p>
@@ -378,15 +471,26 @@ function CheckoutForm({
                   "selection_invalid",
                   "Invalid attendee details.",
                 );
-              setReview(
-                makeOrderBody(
-                  event.id,
-                  availability.choices,
-                  quantities,
-                  attendees,
-                  paidActive,
-                ),
+              if (promotion.blocked)
+                throw new ApiError(
+                  422,
+                  "promo_not_applicable",
+                  "Validate or remove the promotion.",
+                );
+              setReviewSubtotal(estimated);
+              setReviewDiscount(
+                promotion.result?.valid
+                  ? promotion.result.discount_amount
+                  : null,
               );
+              const orderBody = makeOrderBody(
+                event.id,
+                availability.choices,
+                quantities,
+                attendees,
+                paidActive,
+              );
+              setReview({ ...orderBody, promo_code: promotion.code || null });
             } catch (caught) {
               setError(caught);
             }
@@ -483,8 +587,16 @@ function CheckoutForm({
               </div>
             </>
           )}
+          <PromoEntry
+            key={promotion.code}
+            promotion={promotion}
+            locale={locale}
+            disabled={busy || !!recovery}
+          />
           <div className="controls">
-            <button disabled={!count || count > 100}>{t.review}</button>
+            <button disabled={!count || count > 100 || promotion.blocked}>
+              {t.review}
+            </button>
           </div>
         </form>
       )}
