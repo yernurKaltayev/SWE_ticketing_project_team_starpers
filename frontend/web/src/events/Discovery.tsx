@@ -10,6 +10,7 @@ import type { Event, Page } from "./model";
 import { EventError, Image } from "./ui";
 import { commerceNavigation } from "../checkout/navigation";
 import { paymentCopy } from "../payments/copy";
+import { staffCopy } from "../staff/copy";
 import { parseEvents } from "./contracts";
 
 export function EventList({
@@ -175,6 +176,11 @@ export function EventList({
                         to={`/organizer/events/${encodeURIComponent(event.id)}/financials`}
                       >
                         {paymentCopy[locale].finances}
+                      </Link>
+                      <Link
+                        to={`/organizer/events/${encodeURIComponent(event.id)}/staff`}
+                      >
+                        {staffCopy[locale].link}
                       </Link>
                     </nav>
                   </>

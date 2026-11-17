@@ -334,3 +334,11 @@ export function mockCurrentUser(request: Request): User | Response {
   const result = current(request);
   return result instanceof Response ? result : result.user;
 }
+
+/** Look up a fixture account by email (case-insensitive), as the staff API does. */
+export function mockUserByEmail(email: string): User | undefined {
+  const wanted = email.trim().toLowerCase();
+  for (const entry of accounts.values())
+    if (entry.user.email.toLowerCase() === wanted) return entry.user;
+  return undefined;
+}

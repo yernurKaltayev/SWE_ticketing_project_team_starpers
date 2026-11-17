@@ -76,3 +76,6 @@ class AttendeeOut(BaseModel):
     email: EmailStr
     ticket_type: str
     ticket_status: str
+    # Null while the order is pending and no ticket exists yet. Used by the check-in app (F7).
+    ticket_id: UUID | None = None
+    ticket_number: str | None = None

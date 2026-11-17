@@ -1,6 +1,7 @@
+import { useSyncExternalStore } from "react";
 import * as SecureStore from "expo-secure-store";
 import { createApiClient, createSession } from "@biletflow/shared";
-import type { ApiClient, Session } from "@biletflow/shared";
+import type { ApiClient, Session, SessionSnapshot } from "@biletflow/shared";
 import { createNativeTokenStore } from "./token-store";
 
 export const tokenStore = createNativeTokenStore(SecureStore);
@@ -36,4 +37,18 @@ export async function probeSecureStorage(): Promise<boolean> {
   } finally {
     await SecureStore.deleteItemAsync(key);
   }
+}
+
+const noSession: SessionSnapshot = {
+  status: "signedOut",
+  user: null,
+  reason: null,
+};
+const subscribe = (listener: () => void) =>
+  session?.subscribe(listener) ?? (() => undefined);
+const getSnapshot = () => session?.getSnapshot() ?? noSession;
+
+/** Current session state; re-renders on sign-in, sign-out, refresh and expiry. */
+export function useSessionSnapshot(): SessionSnapshot {
+  return useSyncExternalStore(subscribe, getSnapshot);
 }

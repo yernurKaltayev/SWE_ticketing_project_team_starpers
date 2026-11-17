@@ -164,3 +164,7 @@ Owner: **Yernur Slyamshaikhov**. Keep the existing local environment files and s
 Dias owns `/organizer/events/:eventId/orders` (Orders, Attendees and Refunds), with detail routes under `/orders/:orderId`. Open it from My events or the event editor. CSV exports, free cancellation/full-refund confirmations, event-wide impact review and conservative lost-response recovery use the existing P2/P5/P7 APIs. See [F6 checklist](docs/F6_CHECKLIST.md) for contracts, mock demo, Windows commands and remaining live acceptance.
 
 Order search/export uses a complete authorized client list up to 10,000 orders because P5 has no server order-search/export endpoint. Attendee search/export runs on the server. Do not clear recovery storage to bypass an unresolved operation.
+
+## F7 Event Admin app and check-in
+
+The Expo app lists the events the signed-in account owns or is assigned to, then offers camera QR scanning, attendee search with confirmed manual check-in, live counts and undo with a reason. Every admission decision comes from the server; connection failures show **RESULT UNKNOWN** and nothing is admitted or queued offline. Organizers assign check-in, support or manager staff by account email at `/organizer/events/:eventId/staff`. Launch steps, the demo flow and the remaining phone acceptance are in the [F7 checklist](docs/F7_CHECKLIST.md).

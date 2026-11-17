@@ -438,7 +438,7 @@ async def _attendees_query(
     roles = (StaffRole.support,) if csv_export else (StaffRole.support, StaffRole.checkin)
     await check_event_access(db, user, event_id, *roles)
     stmt = (
-        select(Attendee, TicketType.name, Ticket.status)
+        select(Attendee, TicketType.name, Ticket.status, Ticket.id, Ticket.ticket_number)
         .join(Order, Order.id == Attendee.order_id)
         .join(OrderItem, OrderItem.id == Attendee.order_item_id)
         .join(TicketType, TicketType.id == OrderItem.ticket_type_id)
@@ -466,9 +466,9 @@ async def _attendees_query(
 
 
 def _attendee_out(
-    row: tuple[Attendee, str, TicketStatus | None],
+    row: tuple[Attendee, str, TicketStatus | None, uuid.UUID | None, str | None],
 ) -> AttendeeOut:
-    attendee, type_name, ticket_status = row
+    attendee, type_name, ticket_status, ticket_id, ticket_number = row
     return AttendeeOut(
         id=attendee.id,
         order_id=attendee.order_id,
@@ -476,6 +476,8 @@ def _attendee_out(
         email=attendee.email,
         ticket_type=type_name,
         ticket_status=ticket_status.value if ticket_status else "pending",
+        ticket_id=ticket_id,
+        ticket_number=ticket_number,
     )
 
 

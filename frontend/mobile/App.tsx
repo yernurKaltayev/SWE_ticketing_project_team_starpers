@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import {
   Button,
   KeyboardAvoidingView,
@@ -14,6 +15,7 @@ import {
   DarkTheme,
   DefaultTheme,
   NavigationContainer,
+  createNavigationContainerRef,
   useTheme,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -22,73 +24,137 @@ import { StatusBar } from "expo-status-bar";
 import { ApiError, localeLabels, locales, messages } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import type { components } from "@biletflow/shared/api";
-import { api, apiOrigin as origin, probeSecureStorage } from "./src/session";
+import {
+  api,
+  apiOrigin as origin,
+  probeSecureStorage,
+  useSessionSnapshot,
+} from "./src/session";
 import SessionPanel from "./src/SessionPanel";
+import { CheckInScreen } from "./src/checkin/CheckInScreen";
+import { EventsScreen } from "./src/checkin/EventsScreen";
+import { checkInCopy } from "./src/checkin/copy";
 
-type Screens = { Home: undefined; Connection: undefined };
+type Screens = {
+  Home: undefined;
+  CheckIn: { eventId: string; title: string };
+  Settings: undefined;
+  Connection: undefined;
+};
 const Stack = createNativeStackNavigator<Screens>();
+const navigation = createNavigationContainerRef<Screens>();
 
 export default function App() {
   const [locale, setLocale] = useState<Locale>("kk");
   const theme = useColorScheme() === "dark" ? DarkTheme : DefaultTheme;
   const t = messages[locale];
+  const c = checkInCopy[locale];
+  const snapshot = useSessionSnapshot();
+  const signedIn = snapshot.user !== null;
+
+  // Sign-out or session expiry anywhere returns to the sign-in screen; nothing event-specific
+  // stays on screen for the next person holding the phone.
+  useEffect(() => {
+    if (!signedIn && navigation.isReady() && navigation.getCurrentRoute()?.name !== "Home")
+      navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+  }, [signedIn]);
+
+  const languageButtons = (
+    <>
+      <Text style={[styles.body, { color: theme.colors.text }]}>{t.language}</Text>
+      {locales.map((code) => (
+        <View key={code} style={styles.button}>
+          <Button
+            title={localeLabels[code]}
+            accessibilityLabel={localeLabels[code]}
+            onPress={() => setLocale(code)}
+            disabled={locale === code}
+          />
+        </View>
+      ))}
+    </>
+  );
+
   return (
     <SafeAreaProvider>
-      <NavigationContainer theme={theme}>
+      <NavigationContainer theme={theme} ref={navigation}>
         <StatusBar style="auto" />
         <Stack.Navigator>
           <Stack.Screen
             name="Home"
-            options={{ title: "BiletFlow Event Admin" }}
+            options={({ navigation: nav }) => ({
+              title: "BiletFlow Event Admin",
+              headerRight: signedIn
+                ? () => (
+                    <Button title={c.settings} onPress={() => nav.navigate("Settings")} />
+                  )
+                : undefined,
+            })}
           >
-            {(props: NativeStackScreenProps<Screens, "Home">) => (
-              <SafeAreaView
-                edges={["bottom", "left", "right"]}
-                style={[
-                  styles.fill,
-                  { backgroundColor: theme.colors.background },
-                ]}
-              >
-                <KeyboardAvoidingView
-                  style={styles.fill}
-                  behavior={Platform.OS === "ios" ? "padding" : undefined}
+            {(props: NativeStackScreenProps<Screens, "Home">) =>
+              signedIn ? (
+                <SafeAreaView
+                  edges={["bottom", "left", "right"]}
+                  style={[styles.fill, { backgroundColor: theme.colors.background }]}
                 >
-                  <ScrollView
-                    contentContainerStyle={styles.content}
-                    keyboardShouldPersistTaps="handled"
+                  <EventsScreen
+                    key={snapshot.user?.id}
+                    locale={locale}
+                    onOpen={(event) =>
+                      props.navigation.navigate("CheckIn", {
+                        eventId: event.event_id,
+                        title: event.title,
+                      })
+                    }
+                  />
+                </SafeAreaView>
+              ) : (
+                <Page background={theme.colors.background}>
+                  <SessionPanel locale={locale} />
+                  <Text
+                    accessibilityRole="header"
+                    style={[styles.title, { color: theme.colors.text }]}
                   >
-                    <SessionPanel locale={locale} />
-                    <Text
-                      accessibilityRole="header"
-                      style={[styles.title, { color: theme.colors.text }]}
-                    >
-                      {t.foundationTitle}
-                    </Text>
-                    <Text style={[styles.body, { color: theme.colors.text }]}>
-                      {t.foundationDescription}
-                    </Text>
-                    <Text style={[styles.body, { color: theme.colors.text }]}>
-                      {t.language}
-                    </Text>
-                    {locales.map((code) => (
-                      <View key={code} style={styles.button}>
-                        <Button
-                          title={localeLabels[code]}
-                          accessibilityLabel={localeLabels[code]}
-                          onPress={() => setLocale(code)}
-                          disabled={locale === code}
-                        />
-                      </View>
-                    ))}
-                    <View style={styles.button}>
-                      <Button
-                        title={t.checkApi}
-                        onPress={() => props.navigation.navigate("Connection")}
-                      />
-                    </View>
-                  </ScrollView>
-                </KeyboardAvoidingView>
-              </SafeAreaView>
+                    {t.foundationTitle}
+                  </Text>
+                  <Text style={[styles.body, { color: theme.colors.text }]}>
+                    {t.foundationDescription}
+                  </Text>
+                  {languageButtons}
+                  <View style={styles.button}>
+                    <Button
+                      title={t.checkApi}
+                      onPress={() => props.navigation.navigate("Connection")}
+                    />
+                  </View>
+                </Page>
+              )
+            }
+          </Stack.Screen>
+          <Stack.Screen
+            name="CheckIn"
+            options={({ route }) => ({ title: route.params.title })}
+          >
+            {(props: NativeStackScreenProps<Screens, "CheckIn">) => (
+              <CheckInScreen
+                key={`${snapshot.user?.id}:${props.route.params.eventId}`}
+                eventId={props.route.params.eventId}
+                locale={locale}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="Settings" options={{ title: c.settings }}>
+            {(props: NativeStackScreenProps<Screens, "Settings">) => (
+              <Page background={theme.colors.background}>
+                <SessionPanel locale={locale} />
+                {languageButtons}
+                <View style={styles.button}>
+                  <Button
+                    title={c.connection}
+                    onPress={() => props.navigation.navigate("Connection")}
+                  />
+                </View>
+              </Page>
             )}
           </Stack.Screen>
           <Stack.Screen name="Connection" options={{ title: t.apiStatus }}>
@@ -97,6 +163,24 @@ export default function App() {
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
+  );
+}
+
+function Page({ background, children }: { background: string; children: ReactNode }) {
+  return (
+    <SafeAreaView
+      edges={["bottom", "left", "right"]}
+      style={[styles.fill, { backgroundColor: background }]}
+    >
+      <KeyboardAvoidingView
+        style={styles.fill}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          {children}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

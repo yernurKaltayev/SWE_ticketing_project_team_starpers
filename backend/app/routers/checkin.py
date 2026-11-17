@@ -12,7 +12,13 @@ from fastapi import APIRouter, Depends
 from app.core.deps import CurrentUser, DbSession, require_event_access
 from app.models.event import Event
 from app.models.user import StaffRole
-from app.schemas.checkin import CheckInStatsOut, UndoCheckInIn, VerifyIn, VerifyOut
+from app.schemas.checkin import (
+    CheckInStatsOut,
+    ManualCheckInIn,
+    UndoCheckInIn,
+    VerifyIn,
+    VerifyOut,
+)
 from app.schemas.ticket import TicketOut
 from app.services import checkin_service
 
@@ -25,6 +31,15 @@ CheckInEvent = Annotated[Event, Depends(require_event_access(StaffRole.checkin))
 async def verify(data: VerifyIn, user: CurrentUser, db: DbSession) -> VerifyOut:
     try:
         return await checkin_service.verify_and_check_in(db, user, data)
+    except Exception:
+        await db.rollback()
+        raise
+
+
+@router.post("/checkin/manual", response_model=VerifyOut)
+async def manual(data: ManualCheckInIn, user: CurrentUser, db: DbSession) -> VerifyOut:
+    try:
+        return await checkin_service.manual_check_in(db, user, data)
     except Exception:
         await db.rollback()
         raise

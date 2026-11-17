@@ -13,6 +13,8 @@ from app.schemas.user import (
     OrganizerProfileUpdate,
     StaffAssignIn,
     StaffAssignmentOut,
+    StaffEventOut,
+    StaffMemberOut,
     UserOut,
     UserUpdate,
 )
@@ -35,6 +37,11 @@ async def update_me(data: UserUpdate, user: CurrentUser, db: DbSession) -> User:
     return await user_service.update_user(db, user, data)
 
 
+@router.get("/me/staff-events", response_model=list[StaffEventOut])
+async def my_staff_events(user: CurrentUser, db: DbSession) -> list[StaffEventOut]:
+    return await user_service.list_staff_events(db, user)
+
+
 @router.get("/organizers/me", response_model=OrganizerProfileOut)
 async def get_my_organizer_profile(user: Organizer, db: DbSession) -> OrganizerProfile:
     return await user_service.get_organizer_profile(db, user)
@@ -45,6 +52,11 @@ async def update_my_organizer_profile(
     data: OrganizerProfileUpdate, user: Organizer, db: DbSession
 ) -> OrganizerProfile:
     return await user_service.update_organizer_profile(db, user, data)
+
+
+@router.get("/events/{event_id}/staff", response_model=list[StaffMemberOut])
+async def list_staff(event: ManagedEvent, db: DbSession) -> list[StaffMemberOut]:
+    return await user_service.list_staff(db, event)
 
 
 @router.post(

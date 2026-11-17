@@ -29,7 +29,7 @@ from app.models.checkin import CheckInRecord, CheckInResult
 from app.models.ticket import Ticket, TicketStatus
 from app.models.ticket_type import TicketType
 from app.models.user import StaffRole, User
-from app.schemas.checkin import CheckInStatsOut, VerifyIn, VerifyOut
+from app.schemas.checkin import CheckInStatsOut, ManualCheckInIn, VerifyIn, VerifyOut
 from app.schemas.ticket import TicketOut
 from app.services.audit_service import audit
 from app.services.ticket_qr import PREFIX, decode_qr_payload
@@ -73,10 +73,31 @@ async def verify_and_check_in(
     ticket_id = decode_qr_payload(payload)
     if ticket_id is None:
         return _result("invalid")
+    return await _admit(db, user, data.event_id, ticket_id, now, method="qr")
+
+
+async def manual_check_in(
+    db: AsyncSession, user: User, data: ManualCheckInIn, now: datetime | None = None
+) -> VerifyOut:
+    """Admit a ticket chosen from attendee search. Same rules and atomicity as a QR scan."""
+    now = now or datetime.now(UTC)
+    await check_event_access(db, user, data.event_id, StaffRole.checkin)
+    return await _admit(db, user, data.event_id, data.ticket_id, now, method="manual")
+
+
+async def _admit(
+    db: AsyncSession,
+    user: User,
+    event_id: uuid.UUID,
+    ticket_id: uuid.UUID,
+    now: datetime,
+    *,
+    method: str,
+) -> VerifyOut:
     ticket = await db.get(Ticket, ticket_id)
     if ticket is None:
         return _result("invalid")
-    if ticket.event_id != data.event_id:
+    if ticket.event_id != event_id:
         # No ticket details for another event's ticket: staff of this event may not see them.
         return _result("wrong_event")
 
@@ -115,6 +136,7 @@ async def verify_and_check_in(
         event_id=ticket.event_id,
         actor=user,
         description=f"Checked in ticket {ticket.ticket_number}",
+        metadata={"method": method},
     )
     await db.commit()
     return _result("accepted", await _ticket_out(db, ticket))

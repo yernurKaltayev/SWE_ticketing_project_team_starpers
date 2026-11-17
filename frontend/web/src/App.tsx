@@ -48,6 +48,8 @@ const Payouts = lazy(() =>
   import("./payments/Organizer").then((m) => ({ default: m.PayoutsPage })),
 );
 
+const Staff = lazy(() => import("./staff/StaffPage"));
+
 const Checkout = lazy(() => import("./checkout/CheckoutPage"));
 const Orders = lazy(() => import("./checkout/Orders"));
 const OrderDetail = lazy(() =>
@@ -248,6 +250,7 @@ function Application() {
                 path: "/organizer/events/:eventId/financials",
                 Component: Financials,
               },
+              { path: "/organizer/events/:eventId/staff", Component: Staff },
               { path: "/organizer/payout-accounts", Component: Accounts },
               { path: "/organizer/payouts", Component: Payouts },
             ].map(({ path, Component }) => (
