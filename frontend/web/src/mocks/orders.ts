@@ -16,6 +16,7 @@ import {
 } from "./promotions";
 
 type OrderFixture = {
+  createdAt:string;
   owner: string;
   value: Order;
   eventId: string;
@@ -217,6 +218,7 @@ export const orderHandlers = [
       value.tickets = [];
     }
     orders.set(id, {
+      createdAt:new Date().toISOString(),
       owner: user.id,
       value,
       eventId: body.event_id,
@@ -317,3 +319,5 @@ export function mockSupportTicket(id: string) {
   }
   return undefined;
 }
+
+export function mockAllOrders(){return [...orders.values()];}

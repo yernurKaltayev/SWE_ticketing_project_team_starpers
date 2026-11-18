@@ -312,6 +312,8 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F10 — Analytics, history, and platform administration [C]
 
+**18 November frontend implementation:** analytics/current attendance, lifecycle archive, retained timeline/configuration duplication and the P11 admin workspace are implemented against existing P11/P12/P13/P16 contracts. See `frontend/docs/F10_CHECKLIST.md` for verification and reporting scopes. Browser/device and real seeded API authorization/reconciliation acceptance remain pending; this does not mark the full Done-when condition complete.
+
 **Frontend lead:** Dias — sole owner of organizer analytics/history and platform administration.
 
 **Backend dependencies:** Yernur (backend); P11/P12/P13.

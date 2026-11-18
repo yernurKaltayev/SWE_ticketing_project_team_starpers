@@ -1,3 +1,4 @@
+import { ReportEvent } from "../insights/ReportEvent";
 import { SupportLink } from "../support/ui";
 import { PromotionBanner } from "../promotions/Banner";
 import { checkoutLink } from "../promotions/model";
@@ -88,6 +89,9 @@ function EventContent({
   return (
     <>
       <PromotionBanner locale={locale} />
+      {!preview && event.status === "published" && event.visibility !== "private" && (
+        <ReportEvent id={event.id} locale={locale} />
+      )}
       {!preview && (
         <p>
           <SupportLink locale={locale} context={{ event_id: event.id }} />

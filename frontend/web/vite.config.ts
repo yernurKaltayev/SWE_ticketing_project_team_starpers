@@ -13,6 +13,10 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       strictPort: true,
+      // Playwright writes downloads/traces here; Windows may lock temporary files.
+      watch: {
+        ignored: ["**/output/**", "**/test-results/**", "**/playwright-report/**"],
+      },
       proxy: {
         "/c/": { target, changeOrigin: true },
         "/api": { target, changeOrigin: true },

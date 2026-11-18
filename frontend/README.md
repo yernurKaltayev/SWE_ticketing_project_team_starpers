@@ -14,7 +14,7 @@ Dias's delivery lane is **F2 → F6 lists alongside F3 → F8 plus F6 cancellati
 
 Backend endpoints are required for real integration and acceptance; agreed contracts and clearly labeled mocks allow earlier UI development. Record **contract agreed → UI with mocks → API integrated → acceptance verified** separately. Pending backend/device/review evidence stays pending; it does not require all independent frontend work to stop or become a passed check. The plan contains the full F-to-P dependency table.
 
-**Design approval:** current web/mobile code implements functionality with restrained technical styling. The 43 Figma screens, their structure, gold university logo, burgundy palette and DM Sans remain exploratory. Do not implement them until Yernur Slyamshaikhov explicitly approves the design for implementation and requests the design pass.
+**Design:** the white web UI is merged through PR #29; F10 reuses its existing tokens and controls. The earlier gold-logo/burgundy/DM Sans concept remains separate from the current implementation.
 
 ## Requirements
 
@@ -176,3 +176,18 @@ My events → event → Promotions provides campaigns, Campaign QR and reports. 
 ### F9 notifications and support
 
 Signed-in users can open Notifications and Support from the header. Event/order/ticket Support links attach context; event owners and assigned support/managers handle attendee cases, while platform admins handle organizer cases. Replies and statuses update by visible REST polling. See [F9 checklist](docs/F9_CHECKLIST.md) for Windows setup, demo accounts, draft/unknown-write recovery and remaining live API/email/browser acceptance.
+
+## F10 — Analytics, lifecycle/history and platform administration
+
+Dias's F10 client is based on master `9a5f14e` (F9 merged via PR #31) and reuses
+the current white UI. My events now groups all owned events by lifecycle and
+retains past operations links. Event analytics/history use canonical P13/P12;
+platform admins have search/details, moderation/suspension, operational
+monitoring, validated fee/hold settings and authenticated CSV exports under
+`/admin`. No backend or shared session/checkout implementation is replaced.
+
+See [F10_CHECKLIST.md](docs/F10_CHECKLIST.md) for financial/date definitions,
+actual API limits, Windows demo and browser commands, verification evidence and
+pending live acceptance. Lifetime campaign details and date-only CSV scope are
+explicit. Frontend tests passing does not establish the plan's real API
+reconciliation/authorization acceptance.

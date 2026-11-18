@@ -1,3 +1,4 @@
+import { label as insightLabel } from "./insights/copy";
 import { EmailOrderLink, EmailTicketsLink } from "./support/EmailLinks";
 import { NotificationLink } from "./support/NotificationLink";
 import { supportCopy } from "./support/copy";
@@ -49,6 +50,11 @@ import {
   UsersIcon,
   WalletIcon,
 } from "./icons";
+
+const EventAnalytics = lazy(() => import("./insights/Analytics"));
+const EventHistory = lazy(() => import("./insights/History"));
+const EventArchive = lazy(() => import("./insights/Archive"));
+const AdminWorkspace = lazy(() => import("./insights/Admin"));
 
 const SupportCases = lazy(() => import("./support/Cases"));
 const NewSupportCase = lazy(() => import("./support/NewCase"));
@@ -160,6 +166,9 @@ function Application() {
               </NavLink>
             </>
           ) : null}
+          {hasRole(user, ["platform_admin"]) && (
+            <NavLink to="/admin/users">{insightLabel(locale, "admin")}</NavLink>
+          )}
           {isOrganizer && (
             <NavLink to="/organizer/events">
               {eventCopy[locale].organizer}
@@ -239,6 +248,27 @@ function Application() {
           }
         >
           <Routes>
+            {[
+              { path: "/organizer/events/:eventId/analytics", Page: EventAnalytics },
+              { path: "/organizer/events/:eventId/history", Page: EventHistory },
+            ].map(({ path, Page }) => (
+              <Route key={path} path={path} element={
+                <RequireSession locale={locale}>
+                  <Suspense fallback={<Status>{t.loading}</Status>}>
+                    <Page key={user?.id} locale={locale} />
+                  </Suspense>
+                </RequireSession>
+              } />
+            ))}
+            {["/admin", "/admin/:section"].map((path) => (
+              <Route key={path} path={path} element={
+                <RequireSession locale={locale} roles={["platform_admin"]}>
+                  <Suspense fallback={<Status>{t.loading}</Status>}>
+                    <AdminWorkspace key={user?.id} locale={locale} />
+                  </Suspense>
+                </RequireSession>
+              } />
+            ))}
             <Route path="/orders/:orderId" element={<EmailOrderLink />} />
             <Route path="/tickets" element={<EmailTicketsLink />} />
             {[
@@ -413,7 +443,9 @@ function Application() {
               path="/organizer/events"
               element={
                 <RequireSession locale={locale} roles={["organizer"]}>
-                  <EventList key={user?.id} locale={locale} organizer />
+                  <Suspense fallback={<Status>{t.loading}</Status>}>
+                    <EventArchive key={user?.id} locale={locale} />
+                  </Suspense>
                 </RequireSession>
               }
             />
@@ -543,6 +575,8 @@ function OrganizerNav({
   const eventLinks = scoped
     ? [
         { to: `${base}/edit`, label: ev.edit, icon: <EditIcon /> },
+        { to: `${base}/analytics`, label: insightLabel(locale, "analytics"), icon: <ChartIcon /> },
+        { to: `${base}/history`, label: insightLabel(locale, "history"), icon: <ReceiptIcon /> },
         { to: `${base}/preview`, label: ev.preview, icon: <EyeIcon /> },
         {
           to: `${base}/orders`,
