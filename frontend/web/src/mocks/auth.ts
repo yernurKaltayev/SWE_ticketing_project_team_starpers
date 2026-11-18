@@ -65,6 +65,7 @@ export function resetAuthMocks() {
   for (const entry of [
     account("organizer@example.com", "organizer"),
     account("attendee@example.com", "attendee"),
+    account("support@example.com", "attendee"),
     account("admin@example.com", "platform_admin"),
     account("unverified@example.com", "attendee", false),
     account("suspended@example.com", "attendee", true, true),
@@ -340,5 +341,12 @@ export function mockUserByEmail(email: string): User | undefined {
   const wanted = email.trim().toLowerCase();
   for (const entry of accounts.values())
     if (entry.user.email.toLowerCase() === wanted) return entry.user;
+  return undefined;
+}
+
+/** Identity lookup for support assignment fixtures. */
+export function mockUserById(id: string) {
+  for (const entry of accounts.values())
+    if (entry.user.id === id) return entry.user;
   return undefined;
 }

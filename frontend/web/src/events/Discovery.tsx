@@ -1,3 +1,4 @@
+import { supportCopy } from "../support/copy";
 import { promoCopy } from "../promotions/copy";
 import { operationsCopy } from "../operations/copy";
 import { Link, useSearchParams } from "react-router-dom";
@@ -14,12 +15,7 @@ import { commerceNavigation } from "../checkout/navigation";
 import { paymentCopy } from "../payments/copy";
 import { staffCopy } from "../staff/copy";
 import { parseEvents } from "./contracts";
-import {
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  PlusIcon,
-  SearchIcon,
-} from "../icons";
+import { ArrowLeftIcon, ArrowRightIcon, PlusIcon, SearchIcon } from "../icons";
 
 export function EventList({
   locale,
@@ -194,6 +190,11 @@ export function EventList({
                       </span>
                     </div>
                     <nav className="controls">
+                      <Link
+                        to={`/support?role=handler&event_id=${encodeURIComponent(event.id)}`}
+                      >
+                        {supportCopy[locale].inbox}
+                      </Link>
                       <Link to={`/organizer/events/${event.id}/promotions`}>
                         {promoCopy[locale].title}
                       </Link>

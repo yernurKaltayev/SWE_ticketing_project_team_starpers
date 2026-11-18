@@ -1,3 +1,4 @@
+import { SupportLink } from "../support/ui";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { formatMoney } from "@biletflow/shared";
@@ -146,6 +147,9 @@ function OrderContent({
       {order && (
         <>
           <p className="commerce-identifier">{order.order_number}</p>
+          <p>
+            <SupportLink locale={locale} context={{ order_id: order.id }} />
+          </p>
           <CommerceStatus value={order.status} t={t} />
           {order.is_simulated && <p className="notice">{t.simulated}</p>}
           <OrderTotals order={order} locale={locale} />

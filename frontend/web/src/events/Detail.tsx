@@ -1,3 +1,4 @@
+import { SupportLink } from "../support/ui";
 import { PromotionBanner } from "../promotions/Banner";
 import { checkoutLink } from "../promotions/model";
 import { seatingCopy } from "../seating/copy";
@@ -87,6 +88,11 @@ function EventContent({
   return (
     <>
       <PromotionBanner locale={locale} />
+      {!preview && (
+        <p>
+          <SupportLink locale={locale} context={{ event_id: event.id }} />
+        </p>
+      )}
       {preview && <Status>{t.previewHint}</Status>}
       <header className="detail-header">
         <h1>{event.title}</h1>
@@ -94,10 +100,7 @@ function EventContent({
           {event.category && (
             <span className="event-category">{event.category}</span>
           )}
-          <span
-            className="status-badge"
-            data-tone={toneFor(event.status)}
-          >
+          <span className="status-badge" data-tone={toneFor(event.status)}>
             {t[event.status as "draft"] ?? event.status}
           </span>
         </p>
@@ -125,8 +128,7 @@ function EventContent({
                 </dt>
                 <dd>
                   {formatEventDateTime(event.starts_at, event.timezone, locale)}{" "}
-                  —{" "}
-                  {formatEventDateTime(event.ends_at, event.timezone, locale)}
+                  — {formatEventDateTime(event.ends_at, event.timezone, locale)}
                 </dd>
               </div>
               {venue.data && (
@@ -136,8 +138,7 @@ function EventContent({
                   </span>
                   <dt>{t.venue_id}</dt>
                   <dd>
-                    {venue.data.name} · {venue.data.address} ·{" "}
-                    {venue.data.city}
+                    {venue.data.name} · {venue.data.address} · {venue.data.city}
                   </dd>
                 </div>
               )}
@@ -218,7 +219,6 @@ function EventContent({
           )}
         </aside>
       </div>
-
     </>
   );
 }

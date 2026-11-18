@@ -66,3 +66,8 @@ export const staffHandlers = [
     },
   ),
 ];
+
+/** Shared read boundary for P10 fixture permissions; does not grant live access. */
+export function mockStaffMembers(eventId: string) {
+  return staff.get(eventId) ?? [];
+}

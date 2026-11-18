@@ -296,6 +296,8 @@ These modules describe the frontend scope. **A**, **B** and **C** indicate imple
 
 ### F9 — Notifications and support cases [C]
 
+**18 November frontend implementation:** notifications/unread/read actions, contextual support inbox/forms/threads, server-confirmed handler controls, assignment/status, in-memory drafts and bounded visible polling are implemented against P9/P10 on merged F8/white UI. Frontend checks pass; live API/email and browser acceptance remain open. See [F9_CHECKLIST.md](frontend/docs/F9_CHECKLIST.md).
+
 **Frontend lead:** Dias — sole owner, including this module's use of shared permission/navigation helpers.
 
 **Backend dependencies:** Yernur (backend); P9/P10.
