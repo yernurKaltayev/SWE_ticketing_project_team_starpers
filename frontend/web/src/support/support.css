@@ -1,0 +1,124 @@
+.support-page {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.support-page > * {
+  min-width: 0;
+}
+.support-card,
+.support-context,
+.support-compose,
+.support-thread {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-line, #e7ecf3);
+  border-radius: var(--radius-card, 12px);
+  padding: 1.25rem;
+  min-width: 0;
+}
+.support-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+.support-card h2 {
+  margin-top: 0;
+}
+.support-filters,
+.support-metadata {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  flex-wrap: wrap;
+}
+.support-filters > div {
+  flex: 1;
+  min-width: min(100%, 12rem);
+}
+.support-page textarea {
+  width: 100%;
+  min-height: 9rem;
+  resize: vertical;
+  border: 1px solid var(--color-line, #ccc);
+  border-radius: var(--radius-control, 10px);
+  padding: 0.75rem;
+  font: inherit;
+}
+.support-page label {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+.support-message {
+  border-bottom: 1px solid var(--color-line, #ddd);
+  padding-block: 1rem;
+}
+.support-message header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+.support-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.support-page p,
+.support-page dd,
+.support-page a,
+.support-page h1,
+.support-page h2 {
+  overflow-wrap: anywhere;
+}
+.support-page dd {
+  margin-left: 0;
+}
+.support-page .controls {
+  flex-wrap: wrap;
+}
+.support-unread {
+  border-left: 4px solid var(--color-primary, #455ce9);
+}
+.notification-link {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+.support-count {
+  background: var(--color-primary, #455ce9);
+  color: #fff;
+  border-radius: 1rem;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.8rem;
+}
+.support-page fieldset {
+  min-width: 0;
+}
+.support-page .support-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.support-check input {
+  width: auto;
+}
+@media (max-width: 680px) {
+  .support-card,
+  .support-compose,
+  .support-context,
+  .support-thread {
+    padding: 1rem;
+  }
+  .support-metadata > * {
+    max-width: 100%;
+  }
+  .support-page .controls button {
+    max-width: 100%;
+    white-space: normal;
+  }
+}
+
+.site-header .site-nav {
+  overflow-x: auto;
+  scrollbar-width: none;
+}

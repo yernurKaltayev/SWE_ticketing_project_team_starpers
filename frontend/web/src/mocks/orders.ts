@@ -1,3 +1,4 @@
+import { mockNotify } from "./support";
 import { http, HttpResponse } from "msw";
 import { mockCurrentUser } from "./auth";
 import {
@@ -52,6 +53,16 @@ export function mockSettleOrder(id: string, success: boolean) {
     mockReleaseCheckout(held.eventId, row.value.items);
     mockPromoRelease(id);
   }
+  mockNotify(row.owner, success ? "purchase_confirmation" : "payment_failed", {
+    order_id: id,
+    event_id: row.eventId,
+  });
+  if (success)
+    mockNotify(row.owner, "ticket_delivery", {
+      order_id: id,
+      event_id: row.eventId,
+      ticket_ids: row.value.tickets.map((t) => t.id),
+    });
   awaiting.delete(id);
 }
 const headers = {
@@ -224,6 +235,17 @@ export const orderHandlers = [
         )!.name,
       })),
     });
+    if (value.status === "free_confirmed") {
+      mockNotify(user.id, "purchase_confirmation", {
+        order_id: id,
+        event_id: body.event_id,
+      });
+      mockNotify(user.id, "ticket_delivery", {
+        order_id: id,
+        event_id: body.event_id,
+        ticket_ids: value.tickets.map((t) => t.id),
+      });
+    }
     attempts.set(scoped, { body: JSON.stringify(body), id });
     return HttpResponse.json(value, { status: 201, headers });
   }),
@@ -286,3 +308,12 @@ export const orderHandlers = [
         });
   }),
 ];
+
+/** Attached ticket context for support development fixtures. */
+export function mockSupportTicket(id: string) {
+  for (const row of orders.values()) {
+    const index = row.value.tickets.findIndex((t) => t.id === id);
+    if (index >= 0) return { row, attendeeEmail: row.attendees[index]!.email };
+  }
+  return undefined;
+}

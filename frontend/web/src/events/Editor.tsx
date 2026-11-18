@@ -1,3 +1,5 @@
+import { supportCopy } from "../support/copy";
+import { SupportLink } from "../support/ui";
 import { promoCopy } from "../promotions/copy";
 import { operationsCopy } from "../operations/copy";
 import { staffCopy } from "../staff/copy";
@@ -132,6 +134,16 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
       </Link>
       <h1>{event ? t.edit : t.create}</h1>
       {event && (
+        <nav className="controls">
+          <SupportLink locale={locale} context={{ event_id: event.id }} />
+          <Link
+            to={`/support?role=handler&event_id=${encodeURIComponent(event.id)}`}
+          >
+            {supportCopy[locale].inbox}
+          </Link>
+        </nav>
+      )}
+      {event && (
         <p>
           <Link to={`/organizer/events/${event.id}/promotions`}>
             {promoCopy[locale].title}
@@ -148,10 +160,7 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
             {staffCopy[locale].link}
           </Link>
           {" · "}
-          <span
-            className="status-badge"
-            data-tone={toneFor(event.status)}
-          >
+          <span className="status-badge" data-tone={toneFor(event.status)}>
             {t[event.status as "draft"] ?? event.status}
           </span>
         </p>

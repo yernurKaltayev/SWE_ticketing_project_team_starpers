@@ -1,3 +1,4 @@
+import { SupportLink } from "../support/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -209,6 +210,12 @@ function TicketContent({
         <div className="checkout-layout ticket-detail">
           <div>
             <p className="commerce-identifier">{ticket.ticket_number}</p>
+            <p>
+              <SupportLink
+                locale={locale}
+                context={{ ticket_id: ticket.id, event_id: ticket.event_id }}
+              />
+            </p>
             <CommerceStatus value={ticket.status} t={t} />
             <CommerceError
               error={event.error}

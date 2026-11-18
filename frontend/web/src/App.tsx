@@ -1,3 +1,6 @@
+import { EmailOrderLink, EmailTicketsLink } from "./support/EmailLinks";
+import { NotificationLink } from "./support/NotificationLink";
+import { supportCopy } from "./support/copy";
 import { lazy, Suspense, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import {
@@ -46,6 +49,11 @@ import {
   UsersIcon,
   WalletIcon,
 } from "./icons";
+
+const SupportCases = lazy(() => import("./support/Cases"));
+const NewSupportCase = lazy(() => import("./support/NewCase"));
+const SupportThread = lazy(() => import("./support/Thread"));
+const Notifications = lazy(() => import("./support/Notifications"));
 
 const Campaigns = lazy(() => import("./promotions/Campaigns"));
 
@@ -142,6 +150,8 @@ function Application() {
           <NavLink to="/events">{eventCopy[locale].events}</NavLink>
           {user ? (
             <>
+              <NotificationLink locale={locale} />
+              <NavLink to="/support">{supportCopy[locale].title}</NavLink>
               <NavLink to="/account/tickets">
                 {commerceNavigation[locale].tickets}
               </NavLink>
@@ -229,6 +239,26 @@ function Application() {
           }
         >
           <Routes>
+            <Route path="/orders/:orderId" element={<EmailOrderLink />} />
+            <Route path="/tickets" element={<EmailTicketsLink />} />
+            {[
+              { path: "/account/notifications", Page: Notifications },
+              { path: "/support", Page: SupportCases },
+              { path: "/support/new", Page: NewSupportCase },
+              { path: "/support/cases/:caseId", Page: SupportThread },
+            ].map(({ path, Page }) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <RequireSession locale={locale}>
+                    <Suspense fallback={<Status>{t.loading}</Status>}>
+                      <Page key={user?.id} locale={locale} />
+                    </Suspense>
+                  </RequireSession>
+                }
+              />
+            ))}
             <Route
               path="/organizer/events/:eventId/promotions"
               element={

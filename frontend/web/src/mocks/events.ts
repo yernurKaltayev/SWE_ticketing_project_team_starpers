@@ -368,3 +368,8 @@ export const eventHandlers = [
     return HttpResponse.json(r.value);
   }),
 ];
+
+/** Shared owner boundary for support fixtures. */
+export function mockOwnsEvent(email: string, eventId: string) {
+  return events.get(eventId)?.owner === email;
+}

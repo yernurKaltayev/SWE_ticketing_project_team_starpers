@@ -172,3 +172,7 @@ The Expo app lists the events the signed-in account owns or is assigned to, then
 ### F8 promotions
 
 My events → event → Promotions provides campaigns, Campaign QR and reports. Linked codes are validated for selected tickets at checkout; order totals remain authoritative. See [F8 checklist](docs/F8_CHECKLIST.md) for setup, contract constraints, both design bases and remaining live/browser acceptance.
+
+### F9 notifications and support
+
+Signed-in users can open Notifications and Support from the header. Event/order/ticket Support links attach context; event owners and assigned support/managers handle attendee cases, while platform admins handle organizer cases. Replies and statuses update by visible REST polling. See [F9 checklist](docs/F9_CHECKLIST.md) for Windows setup, demo accounts, draft/unknown-write recovery and remaining live API/email/browser acceptance.
