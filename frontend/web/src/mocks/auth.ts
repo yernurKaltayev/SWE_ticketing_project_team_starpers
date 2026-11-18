@@ -350,3 +350,7 @@ export function mockUserById(id: string) {
     if (entry.user.id === id) return entry.user;
   return undefined;
 }
+
+/** Administration fixture boundaries (never used by production code). */
+export function mockAllUsers(){return [...accounts.values()];}
+export function mockSuspendUser(id:string,suspended:boolean){const row=[...accounts.values()].find(r=>r.user.id===id);if(row){row.suspended=suspended;if(suspended)revokeRefresh(row.user.email);}}

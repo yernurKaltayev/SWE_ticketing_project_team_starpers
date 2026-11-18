@@ -1,3 +1,5 @@
+import { mockStaffMembers } from "./staff";
+import {mockAudit} from "./insights";
 import { http, HttpResponse } from "msw";
 import { mockCurrentUser } from "./auth";
 import type {
@@ -113,7 +115,9 @@ const fail = (status: number, code: string) =>
 function access(request: Request, record?: Record) {
   const user = mockCurrentUser(request);
   if (user instanceof Response) return user;
-  if (user.role !== "organizer" || (record && record.owner !== user.email))
+  if (record
+    ? user.role !== "platform_admin" && record.owner !== user.email && !mockStaffMembers(record.value.id).some(m => m.user_id === user.id && m.role === "manager")
+    : user.role !== "organizer")
     return fail(403, "forbidden");
   return user;
 }
@@ -127,7 +131,8 @@ function canView(request: Request, record: Record) {
   return (
     (record.value.status === "published" &&
       record.value.visibility === "public") ||
-    !(access(request, record) instanceof Response)
+    !(access(request, record) instanceof Response) ||
+    (() => { const user = mockCurrentUser(request); return !(user instanceof Response) && mockStaffMembers(record.value.id).some(m => m.user_id === user.id); })()
   );
 }
 function page<T>(items: T[], request: Request): Page<T> {
@@ -221,6 +226,7 @@ export const eventHandlers = [
     };
     events.set(id, { value, owner: user.email });
     tickets.set(id, []);
+    mockAudit(id,"event_created","event",id,"Event created",user);
     return HttpResponse.json(value, { status: 201 });
   }),
   http.patch("*/api/v1/events/:id", async ({ request, params }) => {
@@ -240,6 +246,7 @@ export const eventHandlers = [
     )
       return fail(422, "validation_error");
     r.value = value;
+    mockAudit(value.id,"event_updated","event",value.id,"Event updated",user);
     return HttpResponse.json(value);
   }),
   http.post("*/api/v1/events/:id/:action", ({ request, params }) => {
@@ -271,6 +278,7 @@ export const eventHandlers = [
           checked_in: 0,
         })),
       );
+      mockAudit(value.id,"event_duplicated","event",value.id,"Duplicated event configuration",user);
       return HttpResponse.json(value, { status: 201 });
     }
     if (kind === "cancel") {
@@ -373,3 +381,6 @@ export const eventHandlers = [
 export function mockOwnsEvent(email: string, eventId: string) {
   return events.get(eventId)?.owner === email;
 }
+
+export function mockAllEvents(){return [...events.values()];}
+export function mockSetEventState(id:string,patch:Partial<Event>){const row=events.get(id);if(row)Object.assign(row.value,patch);}

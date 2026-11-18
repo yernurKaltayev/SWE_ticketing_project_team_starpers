@@ -198,3 +198,5 @@ function attendees(request: Request, eventId: string, csv: boolean) {
     );
   return HttpResponse.json(page(rows, request));
 }
+
+export function mockAllRefunds(){return refunds;}

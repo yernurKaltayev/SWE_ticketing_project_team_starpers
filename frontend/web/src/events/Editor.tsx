@@ -1,3 +1,5 @@
+import { DuplicateEvent } from "../insights/DuplicateEvent";
+import { EventLinks } from "../insights/ui";
 import { supportCopy } from "../support/copy";
 import { SupportLink } from "../support/ui";
 import { promoCopy } from "../promotions/copy";
@@ -101,7 +103,7 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
     actionButton.current?.focus();
   }
   async function mutate(
-    kind: "publish" | "unpublish" | "duplicate" | "cancel",
+    kind: "publish" | "unpublish" | "cancel",
   ) {
     if (!event || pending || dirty) return;
     setPending(true);
@@ -111,13 +113,10 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
       const result = parseEvent(
         await request(`/api/v1/events/${event.id}/${kind}`, { method: "POST" }),
       );
-      if (kind === "duplicate") navigate(`/organizer/events/${result.id}/edit`);
-      else {
-        setEvent(result);
-        setRevision((n) => n + 1);
-        setAction(null);
-        setSaved(true);
-      }
+      setEvent(result);
+      setRevision((n) => n + 1);
+      setAction(null);
+      setSaved(true);
     } catch (e) {
       setAction(null);
       setError(e);
@@ -133,6 +132,7 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
         {t.back}
       </Link>
       <h1>{event ? t.edit : t.create}</h1>
+      {event && <EventLinks id={event.id} locale={locale} />}
       {event && (
         <nav className="controls">
           <SupportLink locale={locale} context={{ event_id: event.id }} />
@@ -369,13 +369,12 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
                 {t.cancel}
               </button>
             )}
-            <button
-              className="secondary"
+            <DuplicateEvent
+              id={event.id}
+              title={event.title}
+              locale={locale}
               disabled={pending || dirty}
-              onClick={() => void mutate("duplicate")}
-            >
-              {t.duplicate}
-            </button>
+            />
           </div>
           {!user?.email_verified_at && <p>{t.verified}</p>}
           <dialog

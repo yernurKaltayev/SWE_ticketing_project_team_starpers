@@ -227,3 +227,5 @@ export const promotionHandlers = [
     );
   }),
 ];
+
+export function mockRedemptionRows(){return [...redemptions.values()];}

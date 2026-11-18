@@ -1,3 +1,4 @@
+import {insightHandlers} from "./insights";
 import { supportHandlers } from "./support";
 import { promotionHandlers } from "./promotions";
 import { operationHandlers } from "./operations";
@@ -86,6 +87,7 @@ function failure() {
   return null;
 }
 export const handlers = [
+  ...insightHandlers,
   ...supportHandlers,
   ...promotionHandlers,
   ...staffHandlers,

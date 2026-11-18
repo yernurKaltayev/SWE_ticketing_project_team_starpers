@@ -251,3 +251,7 @@ export const paymentHandlers = [
       : response({ items: [], total: 0, offset, limit: 20 });
   }),
 ];
+
+export function mockPaymentRows(){return [...payments.values()];}
+export function mockActivationRows(){return [...activations.values()];}
+export function mockSetActivation(id:string,status:Activation["status"]){const value=activation(id);value.status=status;}
