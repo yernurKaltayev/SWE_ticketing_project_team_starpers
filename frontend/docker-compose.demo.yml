@@ -1,0 +1,22 @@
+# F11 demo stack: the backend Compose project plus the production web build.
+# From the repository root:
+#   docker compose -f frontend/docker-compose.demo.yml up -d --build --wait
+#   docker compose -f frontend/docker-compose.demo.yml exec api python -m scripts.seed
+# Open http://localhost:5173. Stop the Vite dev server first; both use port 5173,
+# which is also the backend's default WEB_BASE_URL for email/calendar links.
+# See frontend/docs/DEMO_RUNBOOK.md.
+name: biletflow
+
+include:
+  - path: ../backend/docker-compose.yml
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    ports:
+      - "${WEB_PORT:-5173}:80"
+    depends_on:
+      api:
+        condition: service_healthy

@@ -191,3 +191,16 @@ actual API limits, Windows demo and browser commands, verification evidence and
 pending live acceptance. Lifetime campaign details and date-only CSV scope are
 explicit. Frontend tests passing does not establish the plan's real API
 reconciliation/authorization acceptance.
+
+## F11 — Calendar and final delivery
+
+Owner: **Yernur Slyamshaikhov**. Public event pages, confirmed orders and ticket detail offer **Add to calendar**: the canonical P14 `.ics` file plus Google Calendar and Outlook.com templates, with no calendar access requested. Cancelled events offer only the updated `.ics`.
+
+Run the production build with the real API, including deep-link refresh through nginx, from the repository root:
+
+```powershell
+docker compose -f frontend/docker-compose.demo.yml up -d --build --wait
+docker compose -f frontend/docker-compose.demo.yml exec api python -m scripts.seed
+```
+
+Then open http://localhost:5173. See [DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md) for the clean reset, phone launch and demo script. See [F11_CHECKLIST.md](docs/F11_CHECKLIST.md) for verification evidence and the cross-application findings returned to their owners. Browser smoke checks: `npm run test:e2e --workspace @biletflow/web -- e2e/delivery.spec.ts`.

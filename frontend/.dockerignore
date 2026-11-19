@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/.expo
+**/.env
+**/.env.*
+!**/.env.example
+web/output
+web/test-results
+web/playwright-report
+mobile/*
+!mobile/package.json
+docs
+*.log
+test-results.txt

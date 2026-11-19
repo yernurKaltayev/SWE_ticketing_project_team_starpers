@@ -1,3 +1,4 @@
+import { CalendarActions } from "../calendar/CalendarActions";
 import { SupportLink } from "../support/ui";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -8,12 +9,15 @@ import { commerceCopy } from "./copy";
 import type { CommerceCopy } from "./copy";
 import { CommerceError, CommerceStatus } from "./ui";
 import {
+  eventPath,
   orderPath,
+  parseEvent,
   parseOrder,
   parseOrders,
   useCommerceQuery,
   usePagination,
 } from "./data";
+import { parseVenue } from "./model";
 import type { Order } from "./model";
 import { PaymentPanel } from "../payments/PaymentPanel";
 import { paymentCopy } from "../payments/copy";
@@ -154,6 +158,10 @@ function OrderContent({
           {order.is_simulated && <p className="notice">{t.simulated}</p>}
           <OrderTotals order={order} locale={locale} />
           {confirmed && <p className="notice">{t.emailNote}</p>}
+          {/* P5 OrderOut has no event_id; every ticket of an order shares one event. */}
+          {confirmed && order.tickets[0] && (
+            <OrderCalendar eventId={order.tickets[0].event_id} locale={locale} />
+          )}
           {preparing && <Status>{t.preparing}</Status>}
           {order.status === "pending" && (
             <Status>{paymentCopy[locale].pending}</Status>
@@ -208,6 +216,25 @@ function OrderContent({
       )}
     </section>
   );
+}
+
+/** F11: confirmed orders offer the event's calendar options. */
+function OrderCalendar({
+  eventId,
+  locale,
+}: {
+  eventId: string;
+  locale: Locale;
+}) {
+  const event = useCommerceQuery(eventPath(eventId), parseEvent);
+  const venue = useCommerceQuery(
+    `/api/v1/venues/${encodeURIComponent(event.data?.venue_id ?? "")}`,
+    parseVenue,
+    !!event.data,
+  );
+  return event.data && !event.isError ? (
+    <CalendarActions event={event.data} venue={venue.data} locale={locale} />
+  ) : null;
 }
 
 function OrderTotals({ order, locale }: { order: Order; locale: Locale }) {

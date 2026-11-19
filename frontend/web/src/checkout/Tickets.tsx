@@ -1,3 +1,4 @@
+import { CalendarActions } from "../calendar/CalendarActions";
 import { SupportLink } from "../support/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -285,6 +286,13 @@ function TicketContent({
                 </button>
                 <p className="field-hint print-hint">{t.print}</p>
               </>
+            )}
+            {event.data && (
+              <CalendarActions
+                event={event.data}
+                venue={venue.data}
+                locale={locale}
+              />
             )}
             <div className="controls">
               <button

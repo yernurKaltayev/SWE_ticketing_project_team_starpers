@@ -1,3 +1,4 @@
+import { CalendarActions } from "../calendar/CalendarActions";
 import { ReportEvent } from "../insights/ReportEvent";
 import { SupportLink } from "../support/ui";
 import { PromotionBanner } from "../promotions/Banner";
@@ -220,6 +221,9 @@ function EventContent({
               <SeatIcon />
               {seatingCopy[locale].title}
             </Link>
+          )}
+          {!preview && (
+            <CalendarActions event={event} venue={venue.data} locale={locale} />
           )}
         </aside>
       </div>
