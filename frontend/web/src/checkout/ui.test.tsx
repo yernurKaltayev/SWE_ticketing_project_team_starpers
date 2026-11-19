@@ -100,8 +100,15 @@ it("registers a free ticket, shows authoritative totals, and retrieves the prote
   );
   await screen.findByRole("heading", { name: "Registration confirmed" });
   expect(screen.getByText(/keep your order number/i)).toBeDefined();
+  // F11: a confirmed order and its tickets offer the event's calendar options.
+  expect(
+    await screen.findByRole("region", { name: "Add to calendar" }),
+  ).toBeDefined();
   await userEvent.click(screen.getByRole("link", { name: "MOCK-TICKET-1-1" }));
   await screen.findByRole("heading", { name: "Admission QR code" });
+  expect(
+    await screen.findByRole("region", { name: "Add to calendar" }),
+  ).toBeDefined();
   await waitFor(() =>
     expect(screen.getByRole("img").getAttribute("src")).toBe(
       "blob:fixture-ticket",

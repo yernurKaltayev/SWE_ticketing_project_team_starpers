@@ -1,0 +1,37 @@
+/* F11 calendar options. Reuses the white UI's buttons, links and feedback styles. */
+.calendar-actions {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
+.calendar-actions h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+.calendar-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+.calendar-buttons > * {
+  min-height: 44px;
+}
+.calendar-actions .notice {
+  margin-top: 0;
+}
+@media (max-width: 480px) {
+  .calendar-buttons > * {
+    flex: 1 1 100%;
+  }
+}
+@media print {
+  .calendar-actions {
+    display: none;
+  }
+}
