@@ -144,6 +144,29 @@ export const LogoutIcon = (p: P) => (
   </Icon>
 );
 
+export const BellIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15Z" />
+    <path d="M10 20.5a2.2 2.2 0 0 0 4 0" />
+  </Icon>
+);
+export const GlobeIcon = (p: P) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M3.5 12h17M12 3.5c2.4 2.6 3.5 5.4 3.5 8.5s-1.1 5.9-3.5 8.5c-2.4-2.6-3.5-5.4-3.5-8.5s1.1-5.9 3.5-8.5Z" />
+  </Icon>
+);
+export const ChevronDownIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="m6.5 9.5 5.5 5.5 5.5-5.5" />
+  </Icon>
+);
+export const CloseIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />
+  </Icon>
+);
+
 /** BiletFlow mark: lowercase "b" in a rounded tile (Figma shared component). */
 export function BrandMark({ className = "brand-mark" }: { className?: string }) {
   return (

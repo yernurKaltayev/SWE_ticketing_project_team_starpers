@@ -167,7 +167,7 @@
 }
 .checkout-context {
   position: sticky;
-  top: calc(var(--header-h) + 1.25rem);
+  top: calc(var(--header-offset) + 1.25rem);
 }
 .ticket-detail > div {
   position: static;

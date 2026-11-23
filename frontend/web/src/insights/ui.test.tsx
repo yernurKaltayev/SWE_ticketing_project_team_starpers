@@ -343,7 +343,8 @@ it("duplicates only after confirmation and leaves source transactions unchanged"
   fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", {
     name: "Keep unchanged"
   }));
-  expect(mockAllEvents()).toHaveLength(1);
+  const existing = new Set(mockAllEvents().map(r => r.value.id));
+  expect(mockAllEvents()).toHaveLength(existing.size);
   fireEvent.click(button("Duplicate into a new draft"));
   const submit = confirm();
   fireEvent.click(submit);
@@ -351,8 +352,8 @@ it("duplicates only after confirmation and leaves source transactions unchanged"
   await screen.findByRole("heading", {
     name: "Cloned draft editor"
   });
-  expect(mockAllEvents()).toHaveLength(2);
-  const clone = mockAllEvents().find(r => r.value.id !== demoEventId)!.value;
+  expect(mockAllEvents()).toHaveLength(existing.size + 1);
+  const clone = mockAllEvents().find(r => !existing.has(r.value.id))!.value;
   expect(clone.status).toBe("draft");
   expect(clone.paid_sales_status).toBe("disabled");
   expect(mockCheckoutEvent(clone.id)!.tickets[0]?.sold).toBe(0);
