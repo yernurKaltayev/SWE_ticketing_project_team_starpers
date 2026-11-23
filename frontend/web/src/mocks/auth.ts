@@ -20,6 +20,8 @@ const headers = { "X-Request-ID": "f1-mock-request" };
 const accounts = new Map<string, Account>();
 const accessTokens = new Map<string, string>();
 const refreshTokens = new Map<string, RefreshCredential>();
+// Stands in for the HttpOnly refresh cookie of the real API (web cookie sessions).
+let cookieRefresh: string | null = null;
 const verificationTokens = new Map<string, string>();
 const resetTokens = new Map<string, string>();
 
@@ -60,6 +62,7 @@ export function resetAuthMocks() {
   accounts.clear();
   accessTokens.clear();
   refreshTokens.clear();
+  cookieRefresh = null;
   verificationTokens.clear();
   resetTokens.clear();
   for (const entry of [
@@ -102,15 +105,23 @@ function invalid(field: string) {
 function message(value: string) {
   return HttpResponse.json({ message: value }, { headers });
 }
-function tokens(email: string) {
+function tokens(email: string, inCookie = false) {
   const access_token = `mock-access-${crypto.randomUUID()}`;
   const refresh_token = `mock-refresh-${crypto.randomUUID()}`;
   accessTokens.set(access_token, email);
   refreshTokens.set(refresh_token, { email, spent: false });
+  if (inCookie) cookieRefresh = refresh_token;
   return HttpResponse.json(
-    { access_token, refresh_token, token_type: "bearer" },
+    {
+      access_token,
+      refresh_token: inCookie ? null : refresh_token,
+      token_type: "bearer",
+    },
     { headers },
   );
+}
+function cookieTransport(request: Request) {
+  return request.headers.get("X-Auth-Transport") === "cookie";
 }
 function revokeRefresh(email: string) {
   for (const credential of refreshTokens.values()) {
@@ -196,7 +207,7 @@ export const authHandlers = [
       return error(401, "invalid_credentials");
     if (entry.suspended) return error(403, "account_suspended");
     if (!entry.user.email_verified_at) return error(403, "email_not_verified");
-    return tokens(data.email.toLowerCase());
+    return tokens(data.email.toLowerCase(), cookieTransport(request));
   }),
   http.post("*/api/v1/auth/verify-email", async ({ request }) => {
     const data = await body(request);
@@ -222,8 +233,9 @@ export const authHandlers = [
   }),
   http.post("*/api/v1/auth/refresh", async ({ request }) => {
     const data = await body(request);
+    const fromCookie = typeof data.refresh_token !== "string";
     const credential = refreshTokens.get(
-      typeof data.refresh_token === "string" ? data.refresh_token : "",
+      fromCookie ? (cookieRefresh ?? "") : (data.refresh_token as string),
     );
     if (!credential) return error(401, "invalid_refresh_token");
     if (credential.spent) {
@@ -234,9 +246,16 @@ export const authHandlers = [
     if (!entry) return error(401, "invalid_refresh_token");
     if (entry.suspended) return error(403, "account_suspended");
     credential.spent = true;
-    return tokens(credential.email);
+    return tokens(credential.email, fromCookie);
   }),
   http.post("*/api/v1/auth/logout", async ({ request }) => {
+    if (!request.headers.get("Authorization")) {
+      // Cookie sign-out: the cookie alone is the proof, as in the real API.
+      const credential = refreshTokens.get(cookieRefresh ?? "");
+      if (credential) credential.spent = true;
+      cookieRefresh = null;
+      return new HttpResponse(null, { status: 204, headers });
+    }
     const entry = current(request);
     if (entry instanceof Response) return entry;
     const data = await body(request);

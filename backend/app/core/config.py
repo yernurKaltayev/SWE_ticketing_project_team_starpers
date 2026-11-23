@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_ttl_minutes: int = 30
     refresh_token_ttl_days: int = 14
+    # Web sessions keep the refresh token in an HttpOnly cookie. Browsers accept Secure cookies
+    # over plain HTTP only on localhost: set this to false to demo over http://<LAN address>.
+    auth_cookie_secure: bool = True
     # Signs ticket QR payloads (P8). Separate from the JWT key so either can rotate alone.
     ticket_signing_secret: Secret
     email_verify_token_ttl_hours: int = 24

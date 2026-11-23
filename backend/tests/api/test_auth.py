@@ -421,6 +421,117 @@ async def test_an_expired_access_token_is_rejected(client, db):
     assert response.json()["code"] == "invalid_token"
 
 
+# Web sessions: the refresh token lives in an HttpOnly cookie, never in the JSON body
+
+COOKIE_LOGIN = {"X-Auth-Transport": "cookie"}
+
+
+def set_cookies(response) -> dict[str, str]:
+    """Each Set-Cookie header by cookie name, with its attributes kept as written."""
+    return {header.split("=", 1)[0]: header for header in response.headers.get_list("set-cookie")}
+
+
+def refresh_cookie_value(response) -> str:
+    header = set_cookies(response)["biletflow_refresh"]
+    return header.split(";", 1)[0].split("=", 1)[1]
+
+
+def with_cookie(token: str) -> dict[str, str]:
+    return {"Cookie": f"biletflow_refresh={token}"}
+
+
+async def cookie_signed_in(client, db) -> tuple[User, str, dict]:
+    user = await verified_user(db)
+    response = await client.post(
+        f"{PREFIX}/auth/login",
+        json={"email": user.email, "password": PASSWORD},
+        headers=COOKIE_LOGIN,
+    )
+    assert response.status_code == 200
+    return user, refresh_cookie_value(response), response.json()
+
+
+async def test_cookie_login_puts_the_refresh_token_in_an_httponly_cookie(client, db):
+    user = await verified_user(db)
+
+    response = await client.post(
+        f"{PREFIX}/auth/login",
+        json={"email": user.email, "password": PASSWORD},
+        headers=COOKIE_LOGIN,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["refresh_token"] is None
+    assert body["access_token"]
+    cookies = set_cookies(response)
+    refresh_cookie = cookies["biletflow_refresh"].lower()
+    for attribute in ("httponly", "secure", "samesite=strict", "path=/api/v1/auth"):
+        assert attribute in refresh_cookie
+    ttl_seconds = get_settings().refresh_token_ttl_days * 86400
+    assert f"max-age={ttl_seconds}" in refresh_cookie
+    # Readable by the page, so it can tell whether a session exists without calling the API.
+    marker = cookies["biletflow_session"].lower()
+    assert "httponly" not in marker
+    assert "path=/;" in marker or marker.endswith("path=/")
+
+
+async def test_login_without_the_cookie_header_is_unchanged(client, db):
+    user = await verified_user(db)
+
+    response = await login(client, user.email)
+
+    assert response.json()["refresh_token"]
+    assert response.headers.get_list("set-cookie") == []
+
+
+async def test_refresh_from_the_cookie_rotates_it(client, db):
+    _, cookie, _ = await cookie_signed_in(client, db)
+
+    response = await client.post(f"{PREFIX}/auth/refresh", headers=with_cookie(cookie))
+
+    assert response.status_code == 200
+    assert response.json()["refresh_token"] is None
+    rotated = refresh_cookie_value(response)
+    assert rotated != cookie
+    me = await client.get(
+        f"{PREFIX}/me", headers={"Authorization": f"Bearer {response.json()['access_token']}"}
+    )
+    assert me.status_code == 200
+    reused = await client.post(f"{PREFIX}/auth/refresh", headers=with_cookie(cookie))
+    assert reused.status_code == 401
+
+
+async def test_refresh_without_a_body_or_cookie_is_rejected(client):
+    response = await client.post(f"{PREFIX}/auth/refresh")
+
+    assert response.status_code == 401
+    assert response.json()["code"] == "invalid_refresh_token"
+
+
+async def test_a_rejected_refresh_cookie_is_cleared(client):
+    response = await client.post(f"{PREFIX}/auth/refresh", headers=with_cookie("nonsense"))
+
+    assert response.status_code == 401
+    cookies = set_cookies(response)
+    assert "max-age=0" in cookies["biletflow_refresh"].lower()
+    assert "max-age=0" in cookies["biletflow_session"].lower()
+
+
+async def test_cookie_logout_revokes_and_clears_without_an_access_token(client, db):
+    # The access token may already have expired when someone signs out.
+    _, cookie, _ = await cookie_signed_in(client, db)
+
+    response = await client.post(f"{PREFIX}/auth/logout", headers=with_cookie(cookie))
+
+    assert response.status_code == 204
+    cookies = set_cookies(response)
+    assert "max-age=0" in cookies["biletflow_refresh"].lower()
+    assert "max-age=0" in cookies["biletflow_session"].lower()
+    after = await client.post(f"{PREFIX}/auth/refresh", headers=with_cookie(cookie))
+    assert after.status_code == 401
+
+
 # Password reset
 
 

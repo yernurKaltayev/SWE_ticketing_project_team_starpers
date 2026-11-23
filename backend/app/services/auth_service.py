@@ -28,7 +28,7 @@ from app.services.email_verification import consume_email_token, issue_email_tok
 _TIMING_HASH = hash_password(secrets.token_urlsafe(32))
 
 
-def _invalid_refresh_token() -> UnauthorizedError:
+def invalid_refresh_token() -> UnauthorizedError:
     return UnauthorizedError(
         "The refresh token is invalid or expired.", code="invalid_refresh_token"
     )
@@ -140,7 +140,7 @@ async def refresh(db: AsyncSession, refresh_token: str) -> TokenOut:
         if reused_by is not None:
             await _revoke_all_refresh_tokens(db, reused_by)
             await db.commit()
-        raise _invalid_refresh_token()
+        raise invalid_refresh_token()
 
     user = await db.get_one(User, user_id)
     if user.is_suspended:
@@ -158,6 +158,20 @@ async def logout(db: AsyncSession, user: User, refresh_token: str) -> None:
         .where(
             RefreshToken.token_hash == hash_token(refresh_token),
             RefreshToken.user_id == user.id,
+            RefreshToken.revoked_at.is_(None),
+        )
+        .values(revoked_at=utcnow())
+    )
+    await db.commit()
+
+
+async def revoke_refresh_token(db: AsyncSession, refresh_token: str) -> None:
+    """Sign out with only the refresh token: holding it is the proof. Used for web cookie
+    sessions, whose access token may already have expired. Unknown tokens are ignored."""
+    await db.execute(
+        update(RefreshToken)
+        .where(
+            RefreshToken.token_hash == hash_token(refresh_token),
             RefreshToken.revoked_at.is_(None),
         )
         .values(revoked_at=utcnow())
