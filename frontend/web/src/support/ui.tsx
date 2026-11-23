@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ApiError, intlLocales } from "@biletflow/shared";
+import { ApiError, formatDateTime } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { supportCopy } from "./copy";
 import type { SupportCopy } from "./copy";
@@ -75,10 +75,7 @@ export function Timestamp({
 }) {
   return (
     <time dateTime={value}>
-      {new Intl.DateTimeFormat(intlLocales[locale], {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(value))}
+      {formatDateTime(value, locale, { time: true })}
     </time>
   );
 }
