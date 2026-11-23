@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ApiError, intlLocales } from "@biletflow/shared";
+import { ApiError, formatDateTime } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { useSession } from "../auth/session";
 import { Field, Status } from "../auth/ui";
@@ -169,9 +169,7 @@ function StaffContent({ eventId, locale }: { eventId: string; locale: Locale }) 
                   <td>{member.email}</td>
                   <td>{t.shortRoles[member.role] ?? member.role}</td>
                   <td>
-                    {new Intl.DateTimeFormat(intlLocales[locale], { dateStyle: "medium" }).format(
-                      new Date(member.assigned_at),
-                    )}
+                    {formatDateTime(member.assigned_at, locale)}
                   </td>
                   <td>
                     {confirming?.user_id === member.user_id ? (

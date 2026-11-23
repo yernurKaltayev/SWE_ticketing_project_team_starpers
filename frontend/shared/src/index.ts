@@ -13,7 +13,8 @@ export type {
   SessionOptions,
   SessionSnapshot,
 } from "./session";
-export { formatMoney, formatEventDateTime } from "./format";
+export { formatDateTime, formatMoney, formatEventDateTime } from "./format";
+export type { DateTimeOptions } from "./format";
 export {
   locales,
   localeLabels,

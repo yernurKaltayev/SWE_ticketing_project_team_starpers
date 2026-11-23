@@ -199,6 +199,8 @@ select,
 .operations select,
 .seating input,
 .seating select,
+/* An <input> without a type attribute is a text field too. */
+input:not([type]),
 input[type="search"],
 input[type="text"],
 input[type="email"],
