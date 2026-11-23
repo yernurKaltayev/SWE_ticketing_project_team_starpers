@@ -96,6 +96,9 @@ const en = {
   verified: "Verify your email before publishing.",
   statusError: "The event status has changed. Reload and review it.",
   hasOrders: "This event has orders. Use the cancellation and refund workflow.",
+  helpTitle: "Need help?",
+  helpHint: "Questions about tickets, payment or the event itself.",
+  helpSupport: "Contact support",
   refund: "Refund policy",
   policyGap:
     "The current API does not return the saved refund policy. Confirm the organizer’s terms before registering.",
@@ -213,6 +216,9 @@ const ru: Copy = {
   verified: "Подтвердите email перед публикацией.",
   statusError: "Статус изменился. Обновите данные.",
   hasOrders: "Есть заказы. Используйте отмену с возвратом.",
+  helpTitle: "Нужна помощь?",
+  helpHint: "Вопросы о билетах, оплате или самом событии.",
+  helpSupport: "Написать в поддержку",
   refund: "Правила возврата",
   policyGap:
     "Текущий API не возвращает сохранённые правила возврата. Уточните условия у организатора до регистрации.",
@@ -330,6 +336,9 @@ const kk: Copy = {
   verified: "Жарияламас бұрын email-ді растаңыз.",
   statusError: "Күй өзгерді. Деректерді жаңартыңыз.",
   hasOrders: "Тапсырыстар бар. Бас тарту және қайтару үдерісін қолданыңыз.",
+  helpTitle: "Көмек керек пе?",
+  helpHint: "Билеттер, төлем немесе іс-шараның өзі туралы сұрақтар.",
+  helpSupport: "Қолдауға жазу",
   refund: "Қайтару ережелері",
   policyGap:
     "Қазіргі API сақталған қайтару ережелерін бермейді. Тіркелмес бұрын ұйымдастырушыдан шарттарды нақтылаңыз.",
