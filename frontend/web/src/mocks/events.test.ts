@@ -112,6 +112,7 @@ it("does not leak private/draft events to another organizer or attendee", async 
     password: mockPassword,
     full_name: "Other organizer",
     role: "organizer",
+    phone: "+7 701 234 56 78",
   });
   await call("/auth/verify-email", undefined, "POST", {
     token: "mock-verify-second%40example.com",

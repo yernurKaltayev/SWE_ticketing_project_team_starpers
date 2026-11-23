@@ -3030,6 +3030,11 @@ export interface components {
              * @enum {string}
              */
             role: "attendee" | "organizer";
+            /**
+             * Phone
+             * @description Kazakhstan number (+7 6xx or +7 7xx). Spaces, brackets, dashes and an 8/7 prefix are accepted and stored as +77012345678; anything else is 422. Not verified. Organizers' profiles start with it as their contact phone.
+             */
+            phone: string;
         };
         /** ResendVerificationIn */
         ResendVerificationIn: {
@@ -3490,7 +3495,10 @@ export interface components {
         UserUpdate: {
             /** Full Name */
             full_name?: string;
-            /** Phone */
+            /**
+             * Phone
+             * @description Kazakhstan number, normalized like RegisterIn.phone; null clears it.
+             */
             phone?: string | null;
         };
         /** VenueCreate */

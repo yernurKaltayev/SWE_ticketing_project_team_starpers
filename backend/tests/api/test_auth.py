@@ -12,6 +12,7 @@ from tests.factories import auth_header, make_user, unique
 
 PREFIX = "/api/v1"
 PASSWORD = "correct-horse-battery"
+PHONE = "+7 701 234 56 78"
 
 
 @pytest.fixture(autouse=True)
@@ -38,7 +39,13 @@ def new_email() -> str:
 async def register(client, email: str, role: str = "attendee"):
     return await client.post(
         f"{PREFIX}/auth/register",
-        json={"email": email, "password": PASSWORD, "full_name": "Aida", "role": role},
+        json={
+            "email": email,
+            "password": PASSWORD,
+            "full_name": "Aida",
+            "role": role,
+            "phone": PHONE,
+        },
     )
 
 
@@ -120,12 +127,55 @@ async def test_duplicate_email_is_a_conflict_whatever_the_case(client):
         {"password": "x" * 129},
         {"email": "not-an-email"},
         {"full_name": "   "},
+        {"phone": ""},
+        {"phone": "12345"},
+        {"phone": "+7 901 234 56 78"},  # a Russian mobile, not a Kazakhstan number
+        {"phone": "+7 701 234 56 78 9"},
     ],
 )
 async def test_register_rejects_invalid_input(client, change):
-    body = {"email": new_email(), "password": PASSWORD, "full_name": "Aida", "role": "attendee"}
+    body = {
+        "email": new_email(),
+        "password": PASSWORD,
+        "full_name": "Aida",
+        "role": "attendee",
+        "phone": PHONE,
+    }
     response = await client.post(f"{PREFIX}/auth/register", json=body | change)
     assert response.status_code == 422
+
+
+async def test_register_needs_a_phone(client):
+    body = {"email": new_email(), "password": PASSWORD, "full_name": "Aida", "role": "attendee"}
+    response = await client.post(f"{PREFIX}/auth/register", json=body)
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "typed", ["+7 701 234 56 78", "+7 (701) 234-56-78", "87012345678", "77012345678", "7012345678"]
+)
+async def test_register_stores_the_phone_in_one_format(client, db, typed):
+    email = new_email()
+    response = await client.post(
+        f"{PREFIX}/auth/register",
+        json={
+            "email": email,
+            "password": PASSWORD,
+            "full_name": "Aida",
+            "role": "attendee",
+            "phone": typed,
+        },
+    )
+    assert response.status_code == 201
+    assert response.json()["phone"] == "+77012345678"
+
+
+async def test_an_organizer_profile_starts_with_the_registered_phone(client, db):
+    organizer = (await register(client, new_email(), "organizer")).json()
+    profile = await db.scalar(
+        select(OrganizerProfile).where(OrganizerProfile.user_id == organizer["id"])
+    )
+    assert profile.contact_phone == "+77012345678"
 
 
 # Verify email

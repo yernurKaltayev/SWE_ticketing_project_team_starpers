@@ -5591,11 +5591,19 @@ components:
           - organizer
           title: Role
           type: string
+        phone:
+          maxLength: 32
+          title: Phone
+          type: string
+          description: Kazakhstan number (+7 6xx or +7 7xx). Spaces, brackets, dashes and an
+            8/7 prefix are accepted and stored as +77012345678; anything else is 422. Not
+            verified. Organizers' profiles start with it as their contact phone.
       required:
       - email
       - password
       - full_name
       - role
+      - phone
       title: RegisterIn
       type: object
     ResendVerificationIn:
@@ -6251,6 +6259,7 @@ components:
             type: string
           - type: 'null'
           title: Phone
+          description: Kazakhstan number, normalized like RegisterIn.phone; null clears it.
       title: UserUpdate
       type: object
     VenueCreate:
