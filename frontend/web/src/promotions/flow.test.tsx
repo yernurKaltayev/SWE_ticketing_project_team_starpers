@@ -14,7 +14,6 @@ import {
   render,
   screen,
   waitFor,
-  within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -405,9 +404,8 @@ it.each(["ru", "kk"] as const)(
     const { owner } = await setup();
     app(owner, `/organizer/events/${demoEventId}/promotions`, locale);
     await screen.findByRole("heading", { name: "Student campaign" });
-    expect(
-      within(screen.getByRole("navigation")).getAllByRole("button"),
-    ).toHaveLength(2);
+    // One page of campaigns: no pager is rendered.
+    expect(screen.queryByRole("navigation")).toBeNull();
   },
 );
 
@@ -434,10 +432,12 @@ it("keeps code and share context through real sign-in navigation", async () => {
 it("carries the event page's promo context into its registration link", async () => {
   const { buyer, campaign } = await setup();
   app(buyer, `/events/${demoEventId}?promo=${campaign.code}&share=demo-share`);
-  const link = await screen.findByRole("link", { name: "Registration" });
-  expect(link.getAttribute("href")).toBe(
-    `/events/${demoEventId}/checkout?promo=${campaign.code}&share=demo-share`,
-  );
+  // The ticket panel and the phone CTA both carry the same context.
+  const links = await screen.findAllByRole("link", { name: "Registration" });
+  for (const link of links)
+    expect(link.getAttribute("href")).toBe(
+      `/events/${demoEventId}/checkout?promo=${campaign.code}&share=demo-share`,
+    );
 });
 it("discards a stale validation when ticket quantity changes", async () => {
   const { buyer, campaign } = await setup();

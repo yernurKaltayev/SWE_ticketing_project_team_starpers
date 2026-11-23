@@ -222,7 +222,12 @@ function Workspace({ eventId, locale }: { eventId: string; locale: Locale }) {
               </article>
             ))}
           </div>
-          {!list.data!.items.length && <p>{t.empty}</p>}
+          {!list.data!.items.length && editing === undefined && (
+            <div className="empty-state" role="status">
+              <p>{t.empty}</p>
+            </div>
+          )}
+          {(offset > 0 || list.data!.total > 20) && (
           <nav className="controls" aria-label={t.title}>
             <button
               disabled={!offset || pending}
@@ -241,6 +246,7 @@ function Workspace({ eventId, locale }: { eventId: string; locale: Locale }) {
               {t.next}
             </button>
           </nav>
+          )}
         </>
       )}
     </section>

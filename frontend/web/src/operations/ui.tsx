@@ -51,6 +51,7 @@ export function Pager({
   change: (n: number) => void;
   t: OperationsCopy;
 }) {
+  if (offset === 0 && total <= 20) return null;
   return (
     <nav className="controls" aria-label={`${t.previous} / ${t.next}`}>
       <span>

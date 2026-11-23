@@ -191,10 +191,16 @@ describe("discovery helpers", () => {
     expect(offerSummary([])).toBeNull();
     expect(offerSummary([row(0, 50)])).toEqual({
       minPrice: 0,
+      minPaidPrice: null,
       priceVaries: false,
       allFree: true,
       soldOut: false,
       remaining: 50,
+    });
+    // Free and paid mixed: cards say "Free · from <cheapest paid>".
+    expect(offerSummary([row(0, 5), row(300_000, 5)])).toMatchObject({
+      minPrice: 0,
+      minPaidPrice: 300_000,
     });
     // The cheapest type is sold out, so the lowest price still on offer wins.
     expect(offerSummary([row(100_000, 0), row(250_000, 4)])).toMatchObject({

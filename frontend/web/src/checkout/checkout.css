@@ -172,10 +172,12 @@
 .ticket-detail > div {
   position: static;
 }
-.checkout-layout {
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.85fr);
-}
 @media (min-width: 681px) {
+  /* Desktop only: below 681px the single column from the block above must win, or the
+     form and the ticket QR are squeezed into a 130px column on phones. */
+  .checkout-layout {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.85fr);
+  }
   .checkout-layout > .checkout-form {
     order: -1;
   }
@@ -188,7 +190,7 @@
   padding: 1rem 1.1rem 0.25rem;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-control);
-  background: #fbfcfe;
+  background: var(--color-raised);
 }
 .attendee-fieldset legend {
   padding: 0 0.4rem;
@@ -270,5 +272,43 @@
 @media (max-width: 680px) {
   .checkout-context {
     position: static;
+  }
+}
+
+/* Account lists: the title link covers the whole row, so the row is one target. */
+.commerce-list li {
+  position: relative;
+}
+.commerce-list .row-link {
+  font-weight: 650;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.commerce-list .row-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.commerce-list li:hover .row-link {
+  color: var(--color-primary);
+}
+.commerce-list li:has(.row-link:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-radius: var(--radius-control);
+}
+.commerce-list .row-link:focus-visible {
+  outline: none;
+}
+
+/* Phones: the entry QR comes first and fills the width, so staff can scan it. */
+@media (max-width: 680px) {
+  .ticket-detail > .ticket-qr {
+    order: -1;
+    text-align: center;
+  }
+  .ticket-qr img {
+    width: min(100%, 280px);
+    margin-inline: auto;
   }
 }

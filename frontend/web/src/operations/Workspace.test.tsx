@@ -523,7 +523,7 @@ it.each(["kk", "ru"] as const)(
     ).toBeTruthy();
     expect(
       screen.getByRole("button", {
-        name: locale === "kk" ? "Іс-шараны болдырмау" : "Отменить событие",
+        name: locale === "kk" ? "Іс-шараны болдырмау" : "Отменить мероприятие",
       }),
     ).toBeTruthy();
   },

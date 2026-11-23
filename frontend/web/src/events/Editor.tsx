@@ -1,18 +1,13 @@
 import { DuplicateEvent } from "../insights/DuplicateEvent";
-import { EventLinks } from "../insights/ui";
-import { supportCopy } from "../support/copy";
 import { SupportLink } from "../support/ui";
-import { promoCopy } from "../promotions/copy";
-import { operationsCopy } from "../operations/copy";
-import { staffCopy } from "../staff/copy";
-import { seatingCopy } from "../seating/copy";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { formatMoney } from "@biletflow/shared";
+import { formatPrice } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { Field, Status } from "../auth/ui";
 import { useSession } from "../auth/session";
 import { eventCopy } from "./copy";
+import { categoryLabel, knownCategories } from "./categories";
 import { toneFor } from "../tone";
 import { useEventRequest, useResource } from "./data";
 import {
@@ -144,40 +139,16 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
         <ArrowLeftIcon size={16} />
         {t.back}
       </Link>
-      <h1>{event ? t.edit : t.create}</h1>
-      {event && <EventLinks id={event.id} locale={locale} />}
-      {event && (
-        <nav className="controls">
-          <SupportLink locale={locale} context={{ event_id: event.id }} />
-          <Link
-            to={`/support?role=handler&event_id=${encodeURIComponent(event.id)}`}
-          >
-            {supportCopy[locale].inbox}
-          </Link>
-        </nav>
-      )}
-      {event && (
-        <p>
-          <Link to={`/organizer/events/${event.id}/promotions`}>
-            {promoCopy[locale].title}
-          </Link>
-        </p>
-      )}
-      {event && (
-        <p>
-          <Link to={`/organizer/events/${event.id}/orders`}>
-            {operationsCopy[locale].title}
-          </Link>
-          {" · "}
-          <Link to={`/organizer/events/${event.id}/staff`}>
-            {staffCopy[locale].link}
-          </Link>
-          {" · "}
+      {/* Orders, staff, promotions, seating and support for this event are in
+          the sidebar; only the title and state belong here. */}
+      <div className="title-row">
+        <h1>{event ? t.edit : t.create}</h1>
+        {event && (
           <span className="status-badge" data-tone={toneFor(event.status)}>
             {t[event.status as "draft"] ?? event.status}
           </span>
-        </p>
-      )}
+        )}
+      </div>
       <EventError error={error} t={t} />
       {saved && <Status>{t.saved}</Status>}
       <EventError
@@ -188,13 +159,6 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
         }}
       />
       <p id="zone-hint">{t.zoneHint}</p>
-      {event && (
-        <p>
-          <Link to={`/organizer/events/${event.id}/seating`}>
-            {seatingCopy[locale].setup}
-          </Link>
-        </p>
-      )}
       {event?.seating_mode === "assigned" && <Status>{t.assignedHint}</Status>}
       <form
         className="panel editor-form"
@@ -290,8 +254,16 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
               name="category"
               label={t.category}
               defaultValue={event?.category}
+              list="category-options"
               required
             />
+            <datalist id="category-options">
+              {knownCategories.map((key) => (
+                <option key={key} value={key}>
+                  {categoryLabel(key, locale)}
+                </option>
+              ))}
+            </datalist>
             <Field
               id="venue_id"
               name="venue_name"
@@ -425,15 +397,6 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
                 {event.status === "published" ? t.unpublish : t.publish}
               </button>
             )}
-            {event.status !== "cancelled" && (
-              <button
-                className="secondary"
-                disabled={pending || dirty}
-                onClick={() => navigate(`/organizer/events/${event.id}/orders`)}
-              >
-                {t.cancel}
-              </button>
-            )}
             <DuplicateEvent
               id={event.id}
               title={event.title}
@@ -494,6 +457,23 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
               <Image key={src} src={src} title={event.title} />
             ))}
           </div>
+          <p className="quiet-help">
+            <SupportLink locale={locale} context={{ event_id: event.id }} />
+          </p>
+          {event.status !== "cancelled" && (
+            // Kept apart from publish/duplicate so a slip cannot cancel an event.
+            <section className="danger-zone" aria-labelledby="danger-title">
+              <h2 id="danger-title">{t.dangerZone}</h2>
+              <p>{t.cancelHint}</p>
+              <button
+                className="danger"
+                disabled={pending || dirty}
+                onClick={() => navigate(`/organizer/events/${event.id}/orders`)}
+              >
+                {t.cancel}
+              </button>
+            </section>
+          )}
         </>
       )}
     </section>
@@ -525,47 +505,39 @@ function TicketEditor({
       <EventError error={tickets.error} t={t} retry={tickets.reload} />
       {!tickets.data && !tickets.error && <Status>{t.loading}</Status>}
       {tickets.data?.items.length === 0 && <p>{t.ticketEmpty}</p>}
+      {/* Four columns fit a laptop without sideways scrolling; reserved, refunded
+          and checked-in counts live on the analytics page. */}
+      {!!tickets.data?.items.length && (
       <div className="table-scroll">
-        <table>
-          <caption>{t.tickets}</caption>
+        <table className="ticket-table">
+          <caption className="visually-hidden">{t.tickets}</caption>
           <thead>
             <tr>
-              {[
-                "name",
-                "price",
-                "quantity_total",
-                "available",
-                "reserved",
-                "sold",
-                "refunded",
-                "checked_in",
-                "is_hidden",
-              ].map((key) => (
-                <th scope="col" key={key}>
-                  {t[key as keyof typeof t]}
-                </th>
-              ))}
-              <th scope="col">{t.editTicket}</th>
+              <th scope="col">{t.ticketColumn}</th>
+              <th scope="col">{t.priceColumn}</th>
+              <th scope="col">{t.sold}</th>
+              <th scope="col">{t.available}</th>
+              <th scope="col">
+                <span className="visually-hidden">{t.editTicket}</span>
+              </th>
             </tr>
           </thead>
           <tbody>
-            {tickets.data?.items.map((ticket) => (
+            {tickets.data.items.map((ticket) => (
               <tr key={ticket.id}>
-                <th scope="row">{ticket.name}</th>
-                <td>{formatMoney(ticket.price_amount ?? 0, locale)}</td>
-                <td>{ticket.quantity_total}</td>
-                {(
-                  [
-                    "available",
-                    "reserved",
-                    "sold",
-                    "refunded",
-                    "checked_in",
-                  ] as const
-                ).map((key) => (
-                  <td key={key}>{ticket[key]}</td>
-                ))}
-                <td>{ticket.is_hidden ? "✓" : "—"}</td>
+                <th scope="row">
+                  {ticket.name}
+                  {ticket.is_hidden && (
+                    <span className="status-badge" data-tone="neutral">
+                      {t.hiddenBadge}
+                    </span>
+                  )}
+                </th>
+                <td>{formatPrice(ticket.price_amount ?? 0, locale)}</td>
+                <td>
+                  {ticket.sold} / {ticket.quantity_total}
+                </td>
+                <td>{ticket.available}</td>
                 <td>
                   <button
                     className="secondary"
@@ -584,7 +556,8 @@ function TicketEditor({
           </tbody>
         </table>
       </div>
-      {tickets.data && (
+      )}
+      {tickets.data && (offset > 0 || tickets.data.total > tickets.data.limit) && (
         <div className="controls">
           <button
             className="secondary"
@@ -747,7 +720,9 @@ function RefundEditor({
   return (
     <section>
       <h2>{t.refund}</h2>
-      <p>{t.policyGap}</p>
+      {!event.refund_policy && !saved && (
+        <p className="field-hint">{t.policyEmpty}</p>
+      )}
       <EventError error={error} t={t} />
       {saved && <Status>{t.policySaved}</Status>}
       <form
@@ -783,11 +758,20 @@ function RefundEditor({
         }}
       >
         <fieldset disabled={locked || pending}>
-          <TextArea name="summary" label={t.summary} required />
+          <TextArea
+            name="summary"
+            label={t.summary}
+            value={event.refund_policy?.summary}
+            required
+          />
           <Field
             name="refundable_until"
             label={t.refundable_until}
             type="datetime-local"
+            defaultValue={zonedInput(
+              event.refund_policy?.refundable_until ?? undefined,
+              event.timezone,
+            )}
           />
           <button>{pending ? t.working : t.savePolicy}</button>
         </fieldset>

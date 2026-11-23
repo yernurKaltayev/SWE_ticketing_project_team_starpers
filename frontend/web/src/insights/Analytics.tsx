@@ -10,7 +10,7 @@ import { parseCampaign, parseReport } from "../promotions/model";
 import { analyticsQuery, parseAnalytics } from "./model";
 import { useOwnedEvents } from "./data";
 import { label } from "./copy";
-import { DateFields, EventLinks, Failure } from "./ui";
+import { DateFields, Failure } from "./ui";
 export default function Analytics({
   locale
 }: {
@@ -64,7 +64,6 @@ function Content({
     <h2>
       {event.data.title}
     </h2>
-    <EventLinks id={id} locale={locale} />
   </>}
   <p className="notice">
     {t("demo")}

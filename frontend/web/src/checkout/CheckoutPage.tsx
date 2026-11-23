@@ -4,7 +4,7 @@ import { validatePromo, selectedCart } from "../promotions/model";
 import { promoCopy, reasonText } from "../promotions/copy";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ApiError, formatEventDateTime, formatMoney } from "@biletflow/shared";
+import { ApiError, formatEventDateTime, formatPrice } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { useSession } from "../auth/session";
 import { Field, Status } from "../auth/ui";
@@ -75,7 +75,9 @@ export default function CheckoutPage({ locale }: { locale: Locale }) {
               }}
             />
             <p className="field-hint">{t.snapshot}</p>
-            <p className="notice">{t.policy}</p>
+            {event.data.refund_policy?.summary && (
+              <p className="notice">{event.data.refund_policy.summary}</p>
+            )}
           </aside>
           <CheckoutForm
             key={`${user.id}:${eventId}`}
@@ -112,13 +114,30 @@ function CheckoutForm({
     [controller],
   );
   const [initial] = useState(() => coordinator.draft(event.id));
+  // With a single ticket type on sale, start at one ticket instead of zero so
+  // the main action is ready; several types still start empty.
+  const [single] = useState(() => {
+    const open = availability.choices.filter(
+      (c) =>
+        c.open &&
+        c.available > 0 &&
+        (c.free || (event.paid_sales_status === "active" && !!c.price)),
+    );
+    return !initial && open.length === 1 ? open[0].id : null;
+  });
   const [quantities, setQuantities] = useState<Record<string, number>>(() =>
-    Object.fromEntries(
-      initial?.items.map((i) => [i.ticket_type_id, i.quantity]) ?? [],
-    ),
+    single
+      ? { [single]: 1 }
+      : Object.fromEntries(
+          initial?.items.map((i) => [i.ticket_type_id, i.quantity]) ?? [],
+        ),
   );
   const [attendees, setAttendees] = useState<Attendee[]>(
-    initial?.attendees ?? [],
+    () =>
+      initial?.attendees ??
+      (single
+        ? [{ full_name: user?.full_name ?? "", email: user?.email ?? "" }]
+        : []),
   );
   const [review, setReview] = useState<OrderBody | null>(initial ?? null);
   const [reviewDiscount, setReviewDiscount] = useState<number | null>(null);
@@ -375,7 +394,7 @@ function CheckoutForm({
                     return c?.free
                       ? t.free
                       : c?.price
-                        ? formatMoney(c.price, locale)
+                        ? formatPrice(c.price, locale)
                         : p.authoritative;
                   })()}
                 </span>
@@ -399,11 +418,11 @@ function CheckoutForm({
               {reviewDiscount !== null && (
                 <>
                   <p>
-                    {pt.preview}: {formatMoney(reviewDiscount, locale)}
+                    {pt.preview}: {formatPrice(reviewDiscount, locale)}
                   </p>
                   <p>
                     {pt.due}:{" "}
-                    {formatMoney(
+                    {formatPrice(
                       Math.max(
                         0,
                         (reviewSubtotal ?? estimated) - reviewDiscount,
@@ -418,7 +437,7 @@ function CheckoutForm({
           )}
           <p className="checkout-total" hidden={!!review.promo_code}>
             {selectedPaid ? p.estimate : t.total}:{" "}
-            {formatMoney(estimated, locale)}
+            {formatPrice(estimated, locale)}
           </p>
           <p>{selectedPaid ? p.authoritative : t.freeHint}</p>
           <p>{t.reviewHint}</p>
@@ -510,7 +529,7 @@ function CheckoutForm({
                     {c.free
                       ? t.free
                       : c.price
-                        ? formatMoney(c.price, locale)
+                        ? formatPrice(c.price, locale)
                         : p.authoritative}{" "}
                     · {t.limit}: {Math.min(c.available, c.limit)}
                   </p>

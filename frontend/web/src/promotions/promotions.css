@@ -66,3 +66,22 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Folded "Have a promo code?" row: a quiet text toggle, not a second primary action. */
+.promo-toggle {
+  margin-block: 1rem;
+}
+.promo-toggle > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.promo-toggle > summary:hover {
+  color: var(--color-primary-hover);
+}
+.promo-toggle[open] > summary {
+  margin-bottom: 0.5rem;
+}

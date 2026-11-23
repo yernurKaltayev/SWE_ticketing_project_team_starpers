@@ -90,6 +90,7 @@ export function Pager({
   change: (n: number) => void;
   t: SupportCopy;
 }) {
+  if (offset === 0 && total <= 20) return null;
   return (
     <nav className="controls" aria-label={`${t.previous} / ${t.next}`}>
       <button

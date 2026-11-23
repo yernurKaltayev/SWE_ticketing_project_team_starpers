@@ -6,7 +6,8 @@ import type { Locale } from "@biletflow/shared";
 import { lifecycle, lifecycles } from "./model";
 import { useOwnedEvents } from "./data";
 import { label } from "./copy";
-import { EventLinks, Failure, Pager } from "./ui";
+import { eventCopy } from "../events/copy";
+import { Failure, Pager } from "./ui";
 export default function Archive({
   locale
 }: {
@@ -38,7 +39,7 @@ export default function Archive({
   return <section className="insights">
   <header className="event-heading">
     <h1>
-      {t("archive")}
+      {eventCopy[locale].organizer}
     </h1>
     <Link className="action-link" to="/organizer/events/new">
       {t("newDraft")}
@@ -83,7 +84,12 @@ export default function Archive({
       <p>
         {t(e.status)}
       </p>
-      <EventLinks id={e.id} locale={locale} />
+      {/* Past events keep the records an organizer still needs after the date. */}
+      <nav className="controls" aria-label={e.title}>
+        {([["orders", "orders"], ["refunds", "orders?view=refunds"], ["history", "history"], ["checkin", "analytics#attendance"]] as const).map(([name, path]) => <Link key={name} to={`/organizer/events/${encodeURIComponent(e.id)}/${path}`}>
+            {t(name)}
+          </Link>)}
+      </nav>
       <DuplicateEvent id={e.id} title={e.title} locale={locale} />
     </article>)}
   </section> : null;

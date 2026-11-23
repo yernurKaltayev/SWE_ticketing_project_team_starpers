@@ -2,7 +2,7 @@ import { CalendarActions } from "../calendar/CalendarActions";
 import { SupportLink } from "../support/ui";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { formatMoney } from "@biletflow/shared";
+import { formatMoney, formatPrice } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { Status } from "../auth/ui";
 import { commerceCopy } from "./copy";
@@ -16,6 +16,7 @@ import {
   parseOrders,
   useCommerceQuery,
   usePagination,
+  useTicketEvents,
 } from "./data";
 import { parseVenue } from "./model";
 import type { Order } from "./model";
@@ -34,6 +35,8 @@ export function Pagination({
   change: (n: number) => void;
   t: CommerceCopy;
 }) {
+  // One page of results needs no pager.
+  if (offset === 0 && total <= 20) return null;
   return (
     <nav className="controls" aria-label={t.previous + " / " + t.next}>
       <button
@@ -60,6 +63,15 @@ export default function Orders({ locale }: { locale: Locale }) {
     `/api/v1/me/orders?limit=20&offset=${pagination.offset}`,
     parseOrders,
   );
+  // OrderOut has no event_id; an order's tickets carry it (pending or failed
+  // orders have none yet and fall back to the order number alone).
+  const eventOf = (order: Order) => order.tickets[0]?.event_id;
+  const events = useTicketEvents(
+    query.isError
+      ? []
+      : (query.data?.items.map(eventOf).filter((id): id is string => !!id) ??
+          []),
+  );
   return (
     <section>
       <div className="commerce-heading">
@@ -81,11 +93,19 @@ export default function Orders({ locale }: { locale: Locale }) {
             {query.data.items.map((order) => (
               <li key={order.id}>
                 <div>
-                  <Link to={`/account/orders/${encodeURIComponent(order.id)}`}>
-                    {order.order_number}
+                  <Link
+                    className="row-link"
+                    to={`/account/orders/${encodeURIComponent(order.id)}`}
+                  >
+                    {(eventOf(order) &&
+                      events.get(eventOf(order)!)?.data?.title) ||
+                      order.order_number}
                   </Link>
                   <p>
-                    {t.tickets}: {order.tickets.length}
+                    <span className="commerce-identifier">
+                      {order.order_number}
+                    </span>{" "}
+                    · {t.tickets}: {order.tickets.length}
                   </p>
                   {order.is_simulated && (
                     <span className="status-badge">{t.simulated}</span>
@@ -93,7 +113,7 @@ export default function Orders({ locale }: { locale: Locale }) {
                 </div>
                 <CommerceStatus value={order.status} t={t} />
                 <strong>
-                  {formatMoney(order.total, locale, order.currency)}
+                  {formatPrice(order.total, locale, order.currency)}
                 </strong>
               </li>
             ))}

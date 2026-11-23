@@ -2,6 +2,7 @@ import { label as insightLabel } from "./insights/copy";
 import { EmailOrderLink, EmailTicketsLink } from "./support/EmailLinks";
 import { NotificationLink } from "./support/NotificationLink";
 import { supportCopy } from "./support/copy";
+import { promoCopy } from "./promotions/copy";
 import { lazy, Suspense, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import {
@@ -38,6 +39,7 @@ import { staffCopy } from "./staff/copy";
 import { seatingCopy } from "./seating/copy";
 import {
   BankIcon,
+  BellIcon,
   BoltIcon,
   BrandMark,
   ChartIcon,
@@ -47,6 +49,7 @@ import {
   PlusIcon,
   ReceiptIcon,
   SeatIcon,
+  TicketIcon,
   UserIcon,
   UsersIcon,
   WalletIcon,
@@ -137,8 +140,20 @@ function Application() {
     saveLocale(locale);
   }, [locale]);
   useEffect(() => {
-    document.title = "BiletFlow";
     document.getElementById("main")?.focus();
+    // Each page names itself with its <h1>; pages load data first, so follow
+    // the heading as it appears or changes instead of setting it once.
+    const main = document.getElementById("main");
+    const sync = () => {
+      const heading = main?.querySelector("h1")?.textContent?.trim();
+      const title = heading ? `${heading} · BiletFlow` : "BiletFlow";
+      if (document.title !== title) document.title = title;
+    };
+    sync();
+    if (!main || typeof MutationObserver === "undefined") return;
+    const observer = new MutationObserver(sync);
+    observer.observe(main, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
   }, [location.pathname]);
   return (
     <>
@@ -160,7 +175,7 @@ function Application() {
             <NavLink to="/support">{supportCopy[locale].title}</NavLink>
           ) : null}
           {hasRole(user, ["platform_admin"]) && (
-            <NavLink to="/admin/users">{insightLabel(locale, "admin")}</NavLink>
+            <NavLink to="/admin">{insightLabel(locale, "admin")}</NavLink>
           )}
         </nav>
         <div className="account-nav">
@@ -582,6 +597,16 @@ function OrganizerNav({
           to: `${base}/orders`,
           label: operationsCopy[locale].title,
           icon: <ReceiptIcon />,
+        },
+        {
+          to: `${base}/promotions`,
+          label: promoCopy[locale].title,
+          icon: <TicketIcon />,
+        },
+        {
+          to: `/support?role=handler&event_id=${encodeURIComponent(scoped)}`,
+          label: supportCopy[locale].title,
+          icon: <BellIcon />,
         },
         { to: `${base}/activation`, label: pay.activation, icon: <BoltIcon /> },
         { to: `${base}/financials`, label: pay.finances, icon: <ChartIcon /> },

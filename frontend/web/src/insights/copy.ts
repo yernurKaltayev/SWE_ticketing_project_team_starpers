@@ -2,7 +2,7 @@ import type { Locale } from "@biletflow/shared";
 const words: Record<string, [string, string, string]> = {
   analytics: ["Analytics", "Аналитика", "Талдау"],
   history: ["Activity history", "История действий", "Әрекеттер тарихы"],
-  archive: ["Events by lifecycle", "События по периоду", "Кезеңдер бойынша іс-шаралар"],
+  archive: ["Events by lifecycle", "Мероприятия по этапам", "Кезеңдер бойынша іс-шаралар"],
   admin: ["Platform administration", "Администрирование платформы", "Платформаны басқару"],
   upcoming: ["Upcoming", "Предстоящие", "Алдағы"],
   active: ["Active", "Активные", "Белсенді"],

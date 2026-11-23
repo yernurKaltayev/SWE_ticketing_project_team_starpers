@@ -7,7 +7,7 @@ import { parseEvent } from "../events/contracts";
 import { useLiveQuery } from "../support/data";
 import { dateQuery, parseHistory, categories } from "./model";
 import { label } from "./copy";
-import { DateFields, EventLinks, Failure, Pager } from "./ui";
+import { DateFields, Failure, Pager } from "./ui";
 export default function History({
   locale
 }: {
@@ -62,7 +62,6 @@ export default function History({
     <h2>
       {event.data.title}
     </h2>
-    <EventLinks id={eventId} locale={locale} />
   </>}
   <p>
     {t("newest")}

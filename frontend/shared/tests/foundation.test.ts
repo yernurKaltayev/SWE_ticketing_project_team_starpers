@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryTokenStore } from "../src/token-store";
-import { formatDateTime, formatEventDateTime, formatMoney } from "../src/format";
+import {
+  formatDateTime,
+  formatEventDateTime,
+  formatMoney,
+  formatPrice,
+} from "../src/format";
 import { isLocale, locales, messages } from "../src/locales";
 
 describe("non-persistent token storage", () => {
@@ -44,6 +49,14 @@ describe("canonical KZT formatting", () => {
     }
   });
 
+  it("drops zero tiyn from buyer prices but keeps real ones", () => {
+    for (const locale of locales) {
+      expect(formatPrice(500000, locale)).not.toMatch(/[.,]00(?!\d)/);
+      expect(formatPrice(500000, locale).replace(/\s/g, "")).toMatch(/5[.,]?000/);
+      expect(formatPrice(12345, locale)).toMatch(/123[.,]45/);
+    }
+  });
+
   it("preserves the last tiyn even at the safe-integer limit", () => {
     const rendered = formatMoney(Number.MAX_SAFE_INTEGER, "en").replace(
       /[\s,]/g,
@@ -70,8 +83,12 @@ describe("event time and baseline locales", () => {
     expect(formatEventDateTime(instant, "UTC", "en")).not.toBe(
       formatEventDateTime(instant, "Asia/Qyzylorda", "en"),
     );
+    // Kazakhstan zones read as their city; any other zone keeps its IANA id.
     expect(formatEventDateTime(instant, "Asia/Qyzylorda", "en")).toContain(
-      "Asia/Qyzylorda",
+      "Kyzylorda",
+    );
+    expect(formatEventDateTime(instant, "Europe/Berlin", "en")).toContain(
+      "Europe/Berlin",
     );
     expect(() => formatEventDateTime("2026-11-04T12:00:00", "UTC")).toThrow(
       RangeError,
@@ -106,7 +123,7 @@ describe("event time and baseline locales", () => {
 
     it("writes the event date with Kazakh month names", () => {
       expect(formatEventDateTime("2027-03-01T14:00:00Z", "Asia/Almaty", "kk")).toBe(
-        "2027 ж. 1 нау., 19:00 GMT+5 · Asia/Almaty",
+        "2027 ж. 1 нау., 19:00 GMT+5 · Алматы",
       );
     });
 

@@ -6,6 +6,7 @@ import { useSession } from "../auth/session";
 import { parseEvent, parseTicketTypes } from "../events/contracts";
 import { parseOrder } from "../checkout/model";
 import { operationsCopy } from "./copy";
+import { eventCopy } from "../events/copy";
 import {
   useOperationsQuery,
   useOrderSnapshot,
@@ -417,15 +418,6 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
                 {exporting ? t.working : t.export}
               </button>
             )}
-            {!["cancelled", "completed"].includes(ev.status) && (
-              <button
-                className="danger"
-                disabled={blocked}
-                onClick={() => open({ kind: "event", target: eventId })}
-              >
-                {t.cancelEvent}
-              </button>
-            )}
           </div>
           {view !== "refunds" && (
             <>
@@ -712,6 +704,20 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
                 </>
               )}
             </>
+          )}
+          {!["cancelled", "completed"].includes(ev.status) && (
+            // Set apart from refresh/export so it is never clicked by habit.
+            <section className="danger-zone" aria-labelledby="f6-danger">
+              <h2 id="f6-danger">{eventCopy[locale].dangerZone}</h2>
+              <p>{eventCopy[locale].cancelHint}</p>
+              <button
+                className="danger"
+                disabled={blocked}
+                onClick={() => open({ kind: "event", target: eventId })}
+              >
+                {t.cancelEvent}
+              </button>
+            </section>
           )}
         </>
       )}
