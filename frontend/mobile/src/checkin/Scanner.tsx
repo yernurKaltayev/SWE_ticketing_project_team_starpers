@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
+  ActivityIndicator,
   AppState,
   Linking,
   StyleSheet,
+  Text,
   Vibration,
   View,
 } from "react-native";
@@ -23,7 +25,8 @@ import {
 } from "./model";
 import type { Outcome, Ticket, VerifyOut } from "./model";
 import { ResultCard } from "./Result";
-import { Action, Body } from "./ui";
+import { color, radius, type } from "../theme";
+import { Action, Callout, Card, Muted } from "../ui";
 
 type Phase =
   | { name: "ready" }
@@ -137,31 +140,33 @@ export function Scanner({
 
   if (!visible) return null;
 
-  if (!permission) return <Body live="polite">{t.loading}</Body>;
+  if (!permission) return <Muted live="polite">{t.loading}</Muted>;
 
   if (!permission.granted) {
     return (
-      <View style={local.notice}>
-        <Body>{permission.canAskAgain ? t.cameraAsk : t.cameraDenied}</Body>
-        {permission.canAskAgain ? (
-          <Action
-            title={t.cameraAllow}
-            variant="primary"
-            onPress={() => void requestPermission()}
-          />
-        ) : (
-          <Action
-            title={t.cameraOpenSettings}
-            variant="primary"
-            onPress={() => void Linking.openSettings()}
-          />
-        )}
-      </View>
+      <Card>
+        <Text style={local.cardText}>{permission.canAskAgain ? t.cameraAsk : t.cameraDenied}</Text>
+        <View style={local.cardAction}>
+          {permission.canAskAgain ? (
+            <Action
+              title={t.cameraAllow}
+              variant="primary"
+              onPress={() => void requestPermission()}
+            />
+          ) : (
+            <Action
+              title={t.cameraOpenSettings}
+              variant="primary"
+              onPress={() => void Linking.openSettings()}
+            />
+          )}
+        </View>
+      </Card>
     );
   }
 
   if (cameraFailed && phase.name !== "result")
-    return <Body live="polite">{t.cameraUnavailable}</Body>;
+    return <Callout tone="warning">{t.cameraUnavailable}</Callout>;
 
   return (
     <View style={local.wrap}>
@@ -193,9 +198,22 @@ export function Scanner({
                 onMountError={() => setCameraFailed(true)}
               />
             ) : null}
-            <View style={local.frame} pointerEvents="none" />
+            <View style={local.frame} pointerEvents="none">
+              <View style={[local.corner, local.topLeft]} />
+              <View style={[local.corner, local.topRight]} />
+              <View style={[local.corner, local.bottomLeft]} />
+              <View style={[local.corner, local.bottomRight]} />
+            </View>
+            {phase.name === "verifying" ? (
+              <View style={local.verifying} pointerEvents="none">
+                <ActivityIndicator color={color.onPrimary} accessibilityElementsHidden />
+              </View>
+            ) : null}
           </View>
-          <Body live="polite">
+          <Text
+            accessibilityLiveRegion="polite"
+            style={[local.status, phase.name === "verifying" && phase.slow && local.slow]}
+          >
             {phase.name === "verifying"
               ? phase.slow
                 ? t.slow
@@ -203,30 +221,45 @@ export function Scanner({
               : cameraOn
                 ? t.aim
                 : t.paused}
-          </Body>
+          </Text>
         </>
       )}
     </View>
   );
 }
 
+const CORNER = 30;
+const STROKE = 4;
+
 const local = StyleSheet.create({
   wrap: { gap: 12 },
-  notice: { gap: 12 },
+  cardText: { ...type.body, color: color.ink },
+  cardAction: { marginTop: 8 },
   viewport: {
     width: "100%",
     aspectRatio: 1,
-    borderRadius: 12,
+    borderRadius: radius.card,
     overflow: "hidden",
-    backgroundColor: "#111",
+    backgroundColor: color.camera,
     justifyContent: "center",
     alignItems: "center",
   },
-  frame: {
-    width: "62%",
-    aspectRatio: 1,
-    borderWidth: 3,
-    borderColor: "rgba(255,255,255,0.9)",
-    borderRadius: 14,
+  frame: { width: "64%", aspectRatio: 1 },
+  corner: { position: "absolute", width: CORNER, height: CORNER, borderColor: "#ffffff" },
+  topLeft: { top: 0, left: 0, borderTopWidth: STROKE, borderLeftWidth: STROKE, borderTopLeftRadius: 14 },
+  topRight: { top: 0, right: 0, borderTopWidth: STROKE, borderRightWidth: STROKE, borderTopRightRadius: 14 },
+  bottomLeft: { bottom: 0, left: 0, borderBottomWidth: STROKE, borderLeftWidth: STROKE, borderBottomLeftRadius: 14 },
+  bottomRight: { bottom: 0, right: 0, borderBottomWidth: STROKE, borderRightWidth: STROKE, borderBottomRightRadius: 14 },
+  verifying: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: "rgba(15, 23, 36, 0.45)",
+    alignItems: "center",
+    justifyContent: "center",
   },
+  status: { ...type.body, color: color.muted, textAlign: "center" },
+  slow: { ...type.bodyStrong, color: color.warning },
 });

@@ -1,10 +1,22 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { useTheme } from "@react-navigation/native";
+import { StyleSheet, Text, View } from "react-native";
 import { ApiError } from "@biletflow/shared";
 import type { Locale, SessionSnapshot } from "@biletflow/shared";
 import { authCopy } from "./auth-copy";
 import { session } from "./session";
+import { color, type } from "./theme";
+import {
+  Action,
+  Callout,
+  Card,
+  Heading,
+  Input,
+  Label,
+  Muted,
+  Pill,
+  styles as ui,
+  Title,
+} from "./ui";
 
 const noSession: SessionSnapshot = {
   status: "signedOut",
@@ -17,12 +29,6 @@ const getSnapshot = () => session?.getSnapshot() ?? noSession;
 
 export default function SessionPanel({ locale }: { locale: Locale }) {
   const t = authCopy[locale];
-  const { colors, dark } = useTheme();
-  const inputStyle = {
-    color: colors.text,
-    borderColor: dark ? "#87958e" : "#70837b",
-    backgroundColor: colors.card,
-  };
   const snapshot = useSyncExternalStore(subscribe, getSnapshot);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -89,35 +95,26 @@ export default function SessionPanel({ locale }: { locale: Locale }) {
   }
 
   return (
-    <View style={styles.panel}>
-      <Text
-        accessibilityRole="header"
-        style={[styles.title, { color: colors.text }]}
-      >
-        {snapshot.user ? t.signedIn : t.title}
-      </Text>
-      {!session ? (
-        <Text style={[styles.body, { color: colors.text }]}>{t.config}</Text>
-      ) : null}
+    <View style={ui.stack}>
+      {snapshot.user ? (
+        <Heading>{t.signedIn}</Heading>
+      ) : (
+        <Title subtitle={session ? t.description : undefined}>{t.title}</Title>
+      )}
+      {!session ? <Callout tone="warning">{t.config}</Callout> : null}
       {snapshot.status === "loading" ? (
-        <Text
-          accessibilityLiveRegion="polite"
-          style={[styles.body, { color: colors.text }]}
-        >
-          {t.checking}
-        </Text>
+        <Muted live="polite">{t.checking}</Muted>
       ) : snapshot.user ? (
         <>
-          <Text style={[styles.body, { color: colors.text }]}>
-            {snapshot.user.full_name}
-          </Text>
-          <Text style={[styles.body, { color: colors.text }]}>
-            {snapshot.user.email}
-          </Text>
-          <Text style={[styles.body, { color: colors.text }]}>
-            {snapshot.user.email_verified_at ? t.verified : t.unverified}
-          </Text>
-          <Text style={[styles.body, { color: colors.text }]}>{t.next}</Text>
+          <Card>
+            <Text style={styles.name}>{snapshot.user.full_name}</Text>
+            <Muted>{snapshot.user.email}</Muted>
+            <Pill
+              label={snapshot.user.email_verified_at ? t.verified : t.unverified}
+              tone={snapshot.user.email_verified_at ? "success" : "warning"}
+            />
+            <Muted>{t.next}</Muted>
+          </Card>
           <Action
             title={busy ? t.working : t.refresh}
             disabled={busy}
@@ -141,16 +138,8 @@ export default function SessionPanel({ locale }: { locale: Locale }) {
         </>
       ) : (
         <>
-          <Text style={[styles.body, { color: colors.text }]}>
-            {t.description}
-          </Text>
-          <Text
-            nativeID="auth-email-label"
-            style={[styles.label, { color: colors.text }]}
-          >
-            {t.email}
-          </Text>
-          <TextInput
+          <Label nativeID="auth-email-label">{t.email}</Label>
+          <Input
             accessibilityLabel={t.email}
             accessibilityLabelledBy="auth-email-label"
             value={email}
@@ -161,16 +150,11 @@ export default function SessionPanel({ locale }: { locale: Locale }) {
             autoCorrect={false}
             autoComplete="email"
             textContentType="username"
+            placeholder="staff@example.com"
             editable={!busy && Boolean(session)}
-            style={[styles.input, inputStyle]}
           />
-          <Text
-            nativeID="auth-password-label"
-            style={[styles.label, { color: colors.text }]}
-          >
-            {t.password}
-          </Text>
-          <TextInput
+          <Label nativeID="auth-password-label">{t.password}</Label>
+          <Input
             accessibilityLabel={t.password}
             accessibilityLabelledBy="auth-password-label"
             value={password}
@@ -184,10 +168,10 @@ export default function SessionPanel({ locale }: { locale: Locale }) {
             editable={!busy && Boolean(session)}
             returnKeyType="go"
             onSubmitEditing={() => void signIn()}
-            style={[styles.input, inputStyle]}
           />
           <Action
             title={busy ? t.working : t.signIn}
+            variant="primary"
             disabled={busy || !session}
             busy={busy}
             onPress={() => void signIn()}
@@ -195,89 +179,20 @@ export default function SessionPanel({ locale }: { locale: Locale }) {
         </>
       )}
       {errorMessage ? (
-        <Text
-          accessibilityRole="alert"
-          accessibilityLiveRegion="assertive"
-          style={[styles.body, { color: colors.text }]}
-        >
-          {errorMessage}
-          {error instanceof ApiError && error.requestId
-            ? `\n${t.requestId}: ${error.requestId}`
-            : ""}
-        </Text>
+        <Callout tone="danger" alert>
+          <Text style={ui.body}>{errorMessage}</Text>
+          {error instanceof ApiError && error.requestId ? (
+            <Muted>
+              {t.requestId}: {error.requestId}
+            </Muted>
+          ) : null}
+        </Callout>
       ) : null}
-      {logoutIncomplete ? (
-        <Text
-          accessibilityLiveRegion="polite"
-          style={[styles.body, { color: colors.text }]}
-        >
-          {t.logoutIncomplete}
-        </Text>
-      ) : null}
+      {logoutIncomplete ? <Callout tone="warning">{t.logoutIncomplete}</Callout> : null}
     </View>
   );
 }
 
-function Action({
-  title,
-  disabled,
-  busy,
-  onPress,
-}: {
-  title: string;
-  disabled: boolean;
-  busy: boolean;
-  onPress: () => void;
-}) {
-  const { colors, dark } = useTheme();
-  const [focused, setFocused] = useState(false);
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={title}
-      accessibilityState={{ disabled, busy }}
-      disabled={disabled}
-      onPress={onPress}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      style={({ pressed }) => [
-        styles.action,
-        {
-          backgroundColor: pressed && !disabled ? colors.border : colors.card,
-          borderColor: focused ? colors.primary : dark ? "#87958e" : "#70837b",
-          opacity: disabled ? 0.5 : 1,
-        },
-      ]}
-    >
-      <Text style={[styles.actionText, { color: colors.text }]}>{title}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  panel: { gap: 12 },
-  title: { fontSize: 26, fontWeight: "600" },
-  body: { fontSize: 17, lineHeight: 26 },
-  label: { fontSize: 17, fontWeight: "600", marginTop: 8 },
-  input: {
-    minHeight: 48,
-    borderWidth: 1,
-    borderRadius: 5,
-    padding: 12,
-    fontSize: 17,
-  },
-  action: {
-    minHeight: 48,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderWidth: 2,
-    borderRadius: 5,
-    justifyContent: "center",
-  },
-  actionText: {
-    fontSize: 17,
-    lineHeight: 24,
-    fontWeight: "600",
-    textAlign: "center",
-  },
+  name: { ...type.heading, color: color.ink },
 });

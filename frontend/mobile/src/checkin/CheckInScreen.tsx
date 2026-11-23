@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useIsFocused, useTheme } from "@react-navigation/native";
+import { useIsFocused } from "@react-navigation/native";
 import type { Locale } from "@biletflow/shared";
 import { session } from "../session";
+import { color, type } from "../theme";
+import { Action, Callout, Card, Muted, Segmented, styles as ui, Title } from "../ui";
 import { checkInCopy } from "./copy";
 import { paths, percent } from "./model";
 import type { CheckInStats, Ticket } from "./model";
 import { AttendeeSearch } from "./AttendeeSearch";
 import { UndoSheet } from "./Result";
 import { Scanner } from "./Scanner";
-import { Action, Body, styles as ui, useBorderColor } from "./ui";
 
 /** Counts are re-read on this interval while the screen is visible, to include other scanners. */
 const STATS_REFRESH_MS = 30000;
@@ -19,13 +20,14 @@ type Mode = "scan" | "search";
 
 export function CheckInScreen({
   eventId,
+  title,
   locale,
 }: {
   eventId: string;
+  title: string;
   locale: Locale;
 }) {
   const t = checkInCopy[locale];
-  const { colors } = useTheme();
   const focused = useIsFocused();
   const [mode, setMode] = useState<Mode>("scan");
   const [stats, setStats] = useState<CheckInStats | null>(null);
@@ -74,43 +76,36 @@ export function CheckInScreen({
   const remaining = stats ? Math.max(0, stats.registered - stats.checked_in) : null;
 
   return (
-    <SafeAreaView
-      edges={["bottom", "left", "right"]}
-      style={[ui.fill, { backgroundColor: colors.background }]}
-    >
+    <SafeAreaView edges={["bottom", "left", "right"]} style={ui.fill}>
       <ScrollView contentContainerStyle={ui.content} keyboardShouldPersistTaps="handled">
-        <View
-          style={local.stats}
-          accessible
-          accessibilityLabel={
-            stats
-              ? `${t.checkedIn} ${stats.checked_in}, ${t.registered} ${stats.registered}, ${t.remaining} ${remaining}`
-              : t.loading
-          }
-        >
-          <Stat label={t.checkedIn} value={stats ? `${stats.checked_in}` : "—"} />
-          <Stat label={t.registered} value={stats ? `${stats.registered}` : "—"} />
-          <Stat label={t.remaining} value={remaining === null ? "—" : `${remaining}`} />
-          <Stat label="%" value={stats ? `${percent(stats)}` : "—"} />
-        </View>
-        {statsFailed ? (
-          <Text style={[ui.muted, { color: colors.text }]}>{t.countsStale}</Text>
-        ) : null}
-        <View style={local.tabs} accessibilityRole="tablist">
-          {(["scan", "search"] as const).map((value) => (
-            <Tab
-              key={value}
-              label={value === "scan" ? t.scan : t.search}
-              selected={mode === value}
-              onPress={() => setMode(value)}
-            />
-          ))}
-        </View>
-        {notice ? (
-          <Body live="polite" style={local.notice}>
-            {notice}
-          </Body>
-        ) : null}
+        <Title>{title}</Title>
+        <Card style={local.statsCard}>
+          <View
+            style={local.stats}
+            accessible
+            accessibilityLabel={
+              stats
+                ? `${t.checkedIn} ${stats.checked_in}, ${t.registered} ${stats.registered}, ${t.remaining} ${remaining}`
+                : t.loading
+            }
+          >
+            <Stat label={t.checkedIn} value={stats ? `${stats.checked_in}` : "—"} strong />
+            <Stat label={t.registered} value={stats ? `${stats.registered}` : "—"} />
+            <Stat label={t.remaining} value={remaining === null ? "—" : `${remaining}`} />
+            <Stat label="%" value={stats ? `${percent(stats)}` : "—"} last />
+          </View>
+        </Card>
+        {statsFailed ? <Muted style={local.stale}>{t.countsStale}</Muted> : null}
+        <Segmented
+          kind="tabs"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: "scan", label: t.scan },
+            { value: "search", label: t.search },
+          ]}
+        />
+        {notice ? <Callout tone="success">{notice}</Callout> : null}
         <Scanner
           eventId={eventId}
           locale={locale}
@@ -153,57 +148,34 @@ export function CheckInScreen({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  const { colors } = useTheme();
-  const border = useBorderColor();
+function Stat({
+  label,
+  value,
+  strong = false,
+  last = false,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+  last?: boolean;
+}) {
   return (
-    <View style={[local.stat, { borderColor: border, backgroundColor: colors.card }]}>
-      <Text style={[local.statValue, { color: colors.text }]}>{value}</Text>
-      <Text style={[local.statLabel, { color: colors.text }]} numberOfLines={2}>
+    <View style={[local.stat, !last && local.divider]}>
+      <Text style={[local.statValue, strong && local.statStrong]}>{value}</Text>
+      <Text style={local.statLabel} numberOfLines={2}>
         {label}
       </Text>
     </View>
   );
 }
 
-function Tab({
-  label,
-  selected,
-  onPress,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  const { colors } = useTheme();
-  const border = useBorderColor();
-  return (
-    <Pressable
-      accessibilityRole="tab"
-      accessibilityState={{ selected }}
-      onPress={onPress}
-      style={[
-        local.tab,
-        {
-          borderColor: selected ? colors.primary : border,
-          backgroundColor: selected ? colors.primary : colors.card,
-        },
-      ]}
-    >
-      <Text style={[local.tabText, { color: selected ? "#FFFFFF" : colors.text }]}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 const local = StyleSheet.create({
-  stats: { flexDirection: "row", gap: 8 },
-  stat: { flex: 1, borderWidth: 1, borderRadius: 8, paddingVertical: 10, paddingHorizontal: 6, alignItems: "center" },
-  statValue: { fontSize: 24, fontWeight: "800", fontVariant: ["tabular-nums"] },
-  statLabel: { fontSize: 13, textAlign: "center" },
-  tabs: { flexDirection: "row", gap: 8 },
-  tab: { flex: 1, minHeight: 48, borderWidth: 2, borderRadius: 6, justifyContent: "center" },
-  tabText: { fontSize: 17, fontWeight: "700", textAlign: "center" },
-  notice: { fontWeight: "600" },
+  statsCard: { paddingVertical: 12, paddingHorizontal: 4 },
+  stats: { flexDirection: "row" },
+  stat: { flex: 1, alignItems: "center", paddingHorizontal: 4, gap: 2 },
+  divider: { borderRightWidth: StyleSheet.hairlineWidth * 2, borderRightColor: color.line },
+  statValue: { ...type.stat, color: color.ink },
+  statStrong: { color: color.success },
+  statLabel: { ...type.small, fontSize: 12, lineHeight: 16, color: color.muted, textAlign: "center" },
+  stale: { color: color.warning },
 });
