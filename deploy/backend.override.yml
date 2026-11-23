@@ -1,0 +1,20 @@
+# Production overrides for backend/docker-compose.yml: no backend port is published on the
+# host (Caddy reaches the web container, which proxies /api, /health and /c/ to the API),
+# and every long-running service restarts after a reboot or crash.
+services:
+  api:
+    ports: !reset []
+    restart: unless-stopped
+  worker:
+    restart: unless-stopped
+  postgres:
+    ports: !reset []
+    restart: unless-stopped
+  minio:
+    ports: !reset []
+    restart: unless-stopped
+  mailhog:
+    # Reachable only from the server itself, e.g. over `ssh -L 8025:127.0.0.1:8025`.
+    ports: !override
+      - "127.0.0.1:8025:8025"
+    restart: unless-stopped

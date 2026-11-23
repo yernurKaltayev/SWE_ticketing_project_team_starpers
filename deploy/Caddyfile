@@ -1,0 +1,5 @@
+# Automatic HTTPS (Let's Encrypt) for $DOMAIN; everything goes to the web container.
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy web:80
+}
