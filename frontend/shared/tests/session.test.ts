@@ -536,3 +536,110 @@ describe("session lifecycle", () => {
     ).toHaveLength(1);
   });
 });
+
+describe("web cookie session", () => {
+  const cookieTokens = { ...tokens, refresh_token: null };
+  const cookieRotated = { ...rotated, refresh_token: null };
+
+  function cookieSetup(
+    handler: (path: string, init?: RequestInit) => Response | Promise<Response>,
+    present = true,
+  ) {
+    const store = createMemoryTokenStore();
+    const locked = vi.fn();
+    const transport = vi.fn<typeof fetch>(async (input, init) =>
+      handler(new URL(String(input)).pathname, init),
+    );
+    const session = createSession({
+      baseUrl: "https://api.example.test",
+      tokenStore: store,
+      fetch: transport,
+      cookieSession: {
+        present: () => present,
+        async lock(run) {
+          locked();
+          return run();
+        },
+      },
+    });
+    return { session, store, transport, locked };
+  }
+  const calls = (transport: ReturnType<typeof vi.fn<typeof fetch>>, end: string) =>
+    transport.mock.calls.filter(([url]) => String(url).endsWith(end));
+
+  it("signs in through the cookie transport and keeps no refresh token in script", async () => {
+    const { session, store, transport } = cookieSetup((path) =>
+      path.endsWith("/login") ? Response.json(cookieTokens) : Response.json(user),
+    );
+    await expect(session.login(login)).resolves.toEqual(user);
+    const [, init] = calls(transport, "/login")[0]!;
+    expect(new Headers(init?.headers).get("X-Auth-Transport")).toBe("cookie");
+    expect(init?.credentials).toBe("include");
+    expect(await store.get()).toEqual({ accessToken: "access-1", refreshToken: null });
+  });
+
+  it("restores a reloaded page from the cookie before reading /me", async () => {
+    const { session, transport, locked } = cookieSetup((path) =>
+      path.endsWith("/refresh") ? Response.json(cookieRotated) : Response.json(user),
+    );
+    await session.initialize();
+    expect(session.getSnapshot()).toEqual({ status: "authenticated", user, reason: null });
+    const [, init] = calls(transport, "/refresh")[0]!;
+    expect(init?.body).toBeUndefined();
+    expect(init?.credentials).toBe("include");
+    expect(new Headers(init?.headers).has("Authorization")).toBe(false);
+    expect(locked).toHaveBeenCalledTimes(1);
+    expect(
+      new Headers(calls(transport, "/me")[0]![1]?.headers).get("Authorization"),
+    ).toBe("Bearer access-2");
+  });
+
+  it("does not call the API on load when no session cookie is present", async () => {
+    const { session, transport } = cookieSetup(() => Response.json(user), false);
+    await session.initialize();
+    expect(session.getSnapshot()).toEqual({ status: "signedOut", user: null, reason: null });
+    expect(transport).not.toHaveBeenCalled();
+  });
+
+  it("signs out when the cookie is rejected on load", async () => {
+    const { session, transport } = cookieSetup((path) =>
+      path.endsWith("/refresh")
+        ? Response.json({ code: "invalid_refresh_token" }, { status: 401 })
+        : Response.json(user),
+    );
+    await session.initialize();
+    expect(session.getSnapshot().status).toBe("signedOut");
+    expect(calls(transport, "/me")).toHaveLength(0);
+  });
+
+  it("refreshes an expired access token from the cookie and replays the read", async () => {
+    let meCalls = 0;
+    const { session, transport, locked } = cookieSetup((path) => {
+      if (path.endsWith("/login")) return Response.json(cookieTokens);
+      if (path.endsWith("/refresh")) return Response.json(cookieRotated);
+      meCalls += 1;
+      return meCalls === 2 ? unauthorized() : Response.json(user);
+    });
+    await session.login(login);
+    await expect(session.reloadUser()).resolves.toEqual(user);
+    expect(calls(transport, "/refresh")).toHaveLength(1);
+    expect(locked).toHaveBeenCalledTimes(1);
+  });
+
+  it("signs out through the cookie even without an access token", async () => {
+    const { session, transport } = cookieSetup((path) =>
+      path.endsWith("/login")
+        ? Response.json(cookieTokens)
+        : path.endsWith("/me")
+          ? Response.json(user)
+          : new Response(null, { status: 204 }),
+    );
+    await session.login(login);
+    await session.logout();
+    expect(session.getSnapshot().status).toBe("signedOut");
+    const [, init] = calls(transport, "/logout")[0]!;
+    expect(init?.body).toBeUndefined();
+    expect(init?.credentials).toBe("include");
+    expect(new Headers(init?.headers).has("Authorization")).toBe(false);
+  });
+});

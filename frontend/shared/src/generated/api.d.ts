@@ -70,7 +70,7 @@ export interface paths {
         put?: never;
         /**
          * Sign in (rate limited)
-         * @description Owner: P1. Access: public. 401 invalid_credentials; 403 account_suspended or email_not_verified, only after a correct password.
+         * @description Owner: P1. Access: public. 401 invalid_credentials; 403 account_suspended or email_not_verified, only after a correct password. With X-Auth-Transport: cookie (web) the refresh token is set as the HttpOnly cookie biletflow_refresh (SameSite=Strict, path /api/v1/auth) with a readable marker cookie biletflow_session (path /), and refresh_token in the body is null. Without the header (mobile) it is returned in the body and no cookie is set.
          */
         post: operations["post_auth_login"];
         delete?: never;
@@ -90,7 +90,7 @@ export interface paths {
         put?: never;
         /**
          * Exchange a refresh token; the old one is revoked
-         * @description Owner: P1. Access: public. Presenting an already rotated token is treated as theft: every session of that user is revoked. Clients must not refresh twice in parallel.
+         * @description Owner: P1. Access: public. Presenting an already rotated token is treated as theft: every session of that user is revoked. Clients must not refresh twice in parallel. A token in the body is answered in the body (mobile). Without a body the biletflow_refresh cookie is used: the replacement is set as the cookie and refresh_token in the body is null (web). A rejected cookie is cleared with the error.
          */
         post: operations["post_auth_refresh"];
         delete?: never;
@@ -110,7 +110,7 @@ export interface paths {
         put?: never;
         /**
          * Revoke a refresh token
-         * @description Owner: P1. Access: any signed-in user.
+         * @description Owner: P1. Access: a token in the body needs the bearer of the same account. Without a body the biletflow_refresh cookie is revoked with no bearer needed, so a web sign-out works after the access token expired; both session cookies are cleared.
          */
         post: operations["post_auth_logout"];
         delete?: never;
@@ -3442,8 +3442,11 @@ export interface components {
         TokenOut: {
             /** Access Token */
             access_token: string;
-            /** Refresh Token */
-            refresh_token: string;
+            /**
+             * Refresh Token
+             * @description null when the refresh token was set as the HttpOnly cookie (web sessions).
+             */
+            refresh_token: string | null;
             /**
              * Token Type
              * @default bearer
@@ -3954,7 +3957,9 @@ export interface operations {
     post_auth_login: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "X-Auth-Transport"?: "cookie";
+            };
             path?: never;
             cookie?: never;
         };
@@ -3984,9 +3989,11 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                biletflow_refresh?: string;
+            };
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": components["schemas"]["RefreshIn"];
             };
@@ -4011,9 +4018,11 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
+            cookie?: {
+                biletflow_refresh?: string;
+            };
         };
-        requestBody: {
+        requestBody?: {
             content: {
                 "application/json": components["schemas"]["RefreshIn"];
             };

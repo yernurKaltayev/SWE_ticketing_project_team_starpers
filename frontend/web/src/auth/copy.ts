@@ -72,8 +72,8 @@ const en = {
   home: "Home",
   notFound: "Page not found",
   homeDescription: "Manage your account and organizer contact details.",
-  memorySession:
-    "Sign-in lasts while this page is open. Reloading the browser requires signing in again.",
+  sessionNote:
+    "You stay signed in on this browser until you sign out.",
   organizationName: "Organization name",
   contactEmail: "Contact email",
   contactPhone: "Contact phone",
@@ -180,8 +180,8 @@ export const authCopy: Record<Locale, Copy> = {
     notFound: "Бет табылмады",
     homeDescription:
       "Тіркелгіңізді және ұйымдастырушының байланыс деректерін басқарыңыз.",
-    memorySession:
-      "Осы бет ашық тұрғанда жүйеде қаласыз. Браузерді қайта жүктегенде қайта кіру қажет.",
+    sessionNote:
+      "Жүйеден шыққанша осы браузерде кірген күйде қаласыз.",
     organizationName: "Ұйым атауы",
     contactEmail: "Байланыс поштасы",
     contactPhone: "Байланыс телефоны",
@@ -284,8 +284,8 @@ export const authCopy: Record<Locale, Copy> = {
     home: "Главная",
     notFound: "Страница не найдена",
     homeDescription: "Управляйте аккаунтом и контактными данными организатора.",
-    memorySession:
-      "Вход действует, пока страница открыта. После перезагрузки браузера нужно войти снова.",
+    sessionNote:
+      "Вы останетесь в аккаунте в этом браузере, пока не выйдете.",
     organizationName: "Название организации",
     contactEmail: "Контактная почта",
     contactPhone: "Контактный телефон",

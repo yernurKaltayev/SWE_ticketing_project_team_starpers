@@ -16,6 +16,7 @@ import {
 import { isLocale, localeLabels, locales, messages } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { config } from "./config";
+import { readLocale, saveLocale } from "./localePreference";
 import { AuthPage } from "./auth/AuthPage";
 import type { AuthKind } from "./auth/AuthPage";
 import { ProfilePage, OrganizerPage } from "./auth/ProfilePage";
@@ -122,7 +123,7 @@ export default function App() {
 }
 
 function Application() {
-  const [locale, setLocale] = useState<Locale>("kk");
+  const [locale, setLocale] = useState<Locale>(readLocale);
   const [logoutError, setLogoutError] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const { user, controller } = useSession();
@@ -133,6 +134,7 @@ function Application() {
     isOrganizer && location.pathname.startsWith("/organizer/");
   useEffect(() => {
     document.documentElement.lang = locale;
+    saveLocale(locale);
   }, [locale]);
   useEffect(() => {
     document.title = "BiletFlow";

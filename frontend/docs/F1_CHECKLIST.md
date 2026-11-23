@@ -16,7 +16,7 @@ Follow the dependency-based incremental workflow and module ownership in [FRONTE
 
 ## Session and safety behavior
 
-- One portable session controller per platform. Web credentials remain in memory; **browser reload signs out**. There is no local/session-storage persistence and no new cookie contract.
+- One portable session controller per platform. Web: access token in memory, refresh token in the P1 HttpOnly cookie; **a browser reload restores the session** (changed 23 November 2026, previously reload signed out). Nothing is persisted in local/session storage. Refreshes are serialized across tabs with Web Locks.
 - Native persists only the refresh credential through the existing SecureStore adapter. Startup exchanges it before authenticated reads; access tokens stay in memory.
 - Concurrent 401s share one rotating refresh operation. A late 401 does not spend the already-rotated credential again. An uncertain refresh response clears the local session instead of retrying the spent credential.
 - Before sending a refresh, the controller removes the stored credential and waits for confirmed removal. Only its in-memory copy is used for that attempt. If the native process ends before a replacement is saved, the next launch requires sign-in instead of replaying the spent token and triggering P1's account-wide refresh-session revocation. A storage-removal failure prevents the refresh request entirely.

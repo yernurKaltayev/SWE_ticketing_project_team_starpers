@@ -118,7 +118,7 @@ Using app navigation, without reloading the browser:
 - Sign out: verify local identity/private views disappear and the successful backend logout returns 204. Opening a protected path must require sign-in.
 - Open `/organizer/profile` while signed out, then sign in as the attendee. The return path should be preserved, but the organizer page must show Access denied. No organizer identity/contact data may appear.
 - Switch between the two accounts through sign-out/sign-in and check that the previous user's profile data does not remain visible.
-- Reload the web page: expect sign-out under the current memory-only web contract. This is intentional and is different from native startup recovery.
+- Reload the web page: expect to stay signed in (HttpOnly refresh-cookie session since 23 November 2026). Sign out, then reload: expect to stay signed out.
 
 Full cross-organizer **event** resource isolation remains pending until the relevant P2 endpoints/F2 flow exist. Test it with organizer A/B once available; do not use an attendee profile denial as substitute evidence. Missing payout fields remain explicitly deferred to the agreed later contract/F4.
 
@@ -128,7 +128,7 @@ Full cross-organizer **event** resource isolation remains pending until the rele
 
 - Forgot password: request a link for a disposable verified account, inspect MailHog, set a new password and sign in with it. The old password must fail. Reusing the reset link must show an invalid/expired-link error. Known/unknown addresses receive generic success wording.
 - Password reset revokes refresh sessions under P1. Existing access tokens on other sessions may remain valid until their configured expiry; do not expect immediate access-token revocation from this backend contract.
-- With a disposable signed-in account, wait beyond the configured access-token lifetime (default 30 minutes). Keep the web page open; reloading it would discard credentials and would not test refresh. Navigate to a profile that requires a real read. Inspect Network for rejected access → one rotating refresh → successful read.
+- With a disposable signed-in account, wait beyond the configured access-token lifetime (default 30 minutes). Keep the web page open; a reload would restore the session through the cookie and would not test the in-page 401 → refresh path. Navigate to a profile that requires a real read. Inspect Network for rejected access → one rotating refresh → successful read.
 - To verify concurrent recovery from the existing development client, after expiry run the following in the browser DevTools console while still signed in. It performs two real read requests without extracting credentials:
 
 ```javascript

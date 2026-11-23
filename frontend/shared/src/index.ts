@@ -7,7 +7,12 @@ export type {
 export { createMemoryTokenStore } from "./token-store";
 export type { TokenPair, TokenStore } from "./token-store";
 export { createSession } from "./session";
-export type { Session, SessionOptions, SessionSnapshot } from "./session";
+export type {
+  CookieSession,
+  Session,
+  SessionOptions,
+  SessionSnapshot,
+} from "./session";
 export { formatMoney, formatEventDateTime } from "./format";
 export {
   locales,

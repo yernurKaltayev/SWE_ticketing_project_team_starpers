@@ -21,6 +21,15 @@ export interface SessionOptions {
   readRefreshToken?: () => Promise<string | null>;
   /** Remove user-specific caches whenever the current session is discarded. */
   onClear?: () => void;
+  /** Web only: the API keeps the refresh token in an HttpOnly cookie. */
+  cookieSession?: CookieSession;
+}
+
+export interface CookieSession {
+  /** Whether the API's readable marker cookie says a session may exist. */
+  present(): boolean;
+  /** Tabs share one cookie and a rotated token is single-use: run refreshes one at a time. */
+  lock?<T>(run: () => Promise<T>): Promise<T>;
 }
 
 export interface Session {
@@ -39,19 +48,23 @@ function sessionChanged() {
   return new ApiError(401, "session_changed", "The session has changed.");
 }
 
-function tokenPair(data: Tokens): TokenPair {
+function tokenPair(data: Tokens, cookie: boolean): TokenPair {
   if (
     typeof data?.access_token !== "string" ||
     !data.access_token ||
-    typeof data.refresh_token !== "string" ||
-    !data.refresh_token ||
+    (cookie
+      ? data.refresh_token != null
+      : typeof data.refresh_token !== "string" || !data.refresh_token) ||
     (data.token_type !== undefined &&
       (typeof data.token_type !== "string" ||
         data.token_type.toLowerCase() !== "bearer"))
   ) {
     throw new ApiError(200, "invalid_response", "Invalid session credentials.");
   }
-  return { accessToken: data.access_token, refreshToken: data.refresh_token };
+  return {
+    accessToken: data.access_token,
+    refreshToken: cookie ? null : data.refresh_token!,
+  };
 }
 
 /**
@@ -63,6 +76,9 @@ export function createSession(options: SessionOptions): Session {
     baseUrl: options.baseUrl,
     fetch: options.fetch,
   });
+  const cookie = options.cookieSession;
+  // Sent only on the auth calls that read or replace the HttpOnly cookie.
+  const withCookie = { credentials: "include" } as const;
   const listeners = new Set<() => void>();
   let snapshot: SessionSnapshot = {
     status: "loading",
@@ -115,6 +131,14 @@ export function createSession(options: SessionOptions): Session {
     credentials = tokens;
   };
   const revoke = async (tokens: TokenPair) => {
+    if (cookie) {
+      // Holding the cookie is the proof, so this works after the access token expired.
+      await publicApi.request<void>("/api/v1/auth/logout", {
+        method: "POST",
+        ...withCookie,
+      });
+      return;
+    }
     await authenticatedApi(tokens.accessToken).request<void>(
       "/api/v1/auth/logout",
       {
@@ -128,7 +152,15 @@ export function createSession(options: SessionOptions): Session {
     const expected = epoch;
     if (refreshFlight?.epoch === expected) return refreshFlight.promise;
     const prior = credentials;
-    if (!prior?.refreshToken) return Promise.reject(sessionChanged());
+    if (!prior || (!cookie && !prior.refreshToken))
+      return Promise.reject(sessionChanged());
+    const rotate = () =>
+      publicApi.request<Tokens>(
+        "/api/v1/auth/refresh",
+        cookie
+          ? { method: "POST", ...withCookie }
+          : { method: "POST", body: { refresh_token: prior.refreshToken } },
+      );
     const promise = (async () => {
       try {
         // Remove the durable copy before spending this single-use credential.
@@ -140,10 +172,8 @@ export function createSession(options: SessionOptions): Session {
         });
         assertCurrent(expected);
         const tokens = tokenPair(
-          await publicApi.request<Tokens>("/api/v1/auth/refresh", {
-            method: "POST",
-            body: { refresh_token: prior.refreshToken },
-          }),
+          await (cookie?.lock ? cookie.lock(rotate) : rotate()),
+          Boolean(cookie),
         );
         if (epoch !== expected) {
           // The server may have rotated while logout was clearing local state.
@@ -257,17 +287,21 @@ export function createSession(options: SessionOptions): Session {
         try {
           const existing = await options.tokenStore.get();
           assertCurrent(expected);
-          const refreshToken =
-            existing?.refreshToken ?? (await options.readRefreshToken?.());
+          const refreshToken = cookie
+            ? null
+            : (existing?.refreshToken ??
+              (await options.readRefreshToken?.()) ??
+              null);
           assertCurrent(expected);
-          if (!refreshToken) {
+          if (!existing && !refreshToken && !cookie?.present()) {
             publish({ status: "signedOut", user: null, reason: null });
             return;
           }
-          credentials = existing ?? { accessToken: "", refreshToken };
-          // Native process restarts must exchange persisted refresh credentials
-          // before performing any authenticated request.
-          if (!credentials.accessToken) await refresh();
+          const restored = existing ?? { accessToken: "", refreshToken };
+          credentials = restored;
+          // Native process restarts and reloaded web pages must exchange the
+          // persisted refresh credential before any authenticated request.
+          if (!restored.accessToken) await refresh();
           await reloadUser();
         } catch (error) {
           await forget(
@@ -292,7 +326,11 @@ export function createSession(options: SessionOptions): Session {
           await publicApi.request<Tokens>("/api/v1/auth/login", {
             method: "POST",
             body: data,
+            ...(cookie
+              ? { headers: { "X-Auth-Transport": "cookie" }, ...withCookie }
+              : {}),
           }),
+          Boolean(cookie),
         );
         if (epoch !== expected) {
           await revoke(tokens).catch(() => undefined);
@@ -321,7 +359,10 @@ export function createSession(options: SessionOptions): Session {
       const tokens = credentials;
       const results = await Promise.allSettled([
         forget(expected, null),
-        tokens?.accessToken ? revoke(tokens) : Promise.resolve(),
+        // A cookie session is revoked even if this page never held an access token.
+        cookie || tokens?.accessToken
+          ? revoke(tokens ?? { accessToken: "", refreshToken: null })
+          : Promise.resolve(),
       ]);
       // Local logout is complete even if the revocation request fails. Surface
       // that failure to the caller; never pretend remote revocation succeeded.

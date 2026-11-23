@@ -16,6 +16,8 @@ from app.models.event import Event
 from app.models.user import OrganizerProfile, StaffAssignment, StaffRole, User, UserRole
 
 _bearer = HTTPBearer(auto_error=False, description="JWT access token")
+# For routes where a bearer token is required only in some cases: pass it to get_current_user.
+BearerCredentials = Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)]
 
 
 async def get_db() -> AsyncIterator[AsyncSession]:
