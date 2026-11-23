@@ -1491,3 +1491,42 @@ nav.controls:has(> a[aria-current]) > a[aria-current] {
     font-size: 1.0625rem;
   }
 }
+
+/* ---------- Event help (support + report) ---------- */
+.help-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+.help-panel h2 {
+  margin: 0;
+  font-size: 1.0625rem;
+}
+.help-panel p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+}
+.help-panel .action-link {
+  width: 100%;
+}
+/* Reporting is a rare action: a quiet text button, not a second call to action. */
+.help-panel .insights {
+  display: grid;
+  gap: 0.75rem;
+}
+.help-panel .insights > button.secondary {
+  justify-self: start;
+  min-height: 36px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.help-panel .insights > button.secondary:hover {
+  background: none;
+  color: var(--color-ink);
+}
