@@ -92,7 +92,42 @@ ssh -L 8025:127.0.0.1:8025 ubuntu@<server>
 For real email, fill in the `SMTP_*` lines in `.env` (see "Send real email" in
 `backend/README.md`) and run `docker compose up -d`.
 
-## Update after a merge to master
+## Continuous deployment
+
+`.github/workflows/deploy.yml` deploys every master commit once all CI that ran for it
+(Backend CI, Frontend foundation) has passed. Changes only under `deploy/` run no CI and
+deploy on push; pull requests that touch `deploy/` only get validated. A failed CI run
+blocks the deploy, and a deploy can also be started by hand from the Actions tab
+(Deploy → Run workflow).
+
+On the server, `deploy/deploy.sh <sha>` fetches master, deploys the commit only if it
+is still the tip of master, runs `docker compose up -d --build --wait`, and rolls back to
+the previous commit if the stack does not become healthy (migrations are not reverted).
+
+CI reaches the server with its own SSH key, restricted in `~/.ssh/authorized_keys` to a
+forced command, so the key cannot open a shell, forward ports or run anything but
+`deploy/ci-deploy.sh` with a commit sha:
+
+```bash
+# on your machine: a key used only by CI
+ssh-keygen -t ed25519 -N "" -C biletflow-ci-deploy -f ~/.ssh/biletflow_ci_deploy
+
+# on the server: allow it to run the deploy script and nothing else
+echo "command=\"$HOME/biletflow/deploy/ci-deploy.sh\",restrict $(cat biletflow_ci_deploy.pub)" \
+  >> ~/.ssh/authorized_keys
+```
+
+Repository settings (Settings → Secrets and variables → Actions; on a personal-account
+repository only its owner can set these):
+
+| Kind | Name | Value |
+|---|---|---|
+| Secret | `DEPLOY_SSH_KEY` | the private key `~/.ssh/biletflow_ci_deploy` |
+| Secret | `DEPLOY_HOST` | server IP |
+| Secret | `DEPLOY_KNOWN_HOSTS` | output of `ssh-keyscan -t ed25519 <server IP>` |
+| Variable | `DEPLOY_URL` | `https://<DOMAIN>` (smoke check and environment link) |
+
+## Update by hand
 
 ```bash
 cd ~/biletflow && git pull && cd deploy && docker compose up -d --build --wait
