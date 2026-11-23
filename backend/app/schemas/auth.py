@@ -22,7 +22,8 @@ class LoginIn(BaseModel):
 
 class TokenOut(BaseModel):
     access_token: str
-    refresh_token: str
+    # null when the refresh token was set as an HttpOnly cookie instead (web sessions).
+    refresh_token: str | None
     token_type: str = "bearer"  # noqa: S105 - the OAuth2 token type name
 
 

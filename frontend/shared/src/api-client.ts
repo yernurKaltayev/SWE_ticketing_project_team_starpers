@@ -28,6 +28,8 @@ export interface ApiRequestOptions {
   body?: unknown;
   signal?: AbortSignal;
   headers?: HeadersInit;
+  /** Only the web cookie-session auth calls send cookies; everything else omits them. */
+  credentials?: RequestCredentials;
   /** Successful binary downloads retain the same URL/auth/error boundaries. */
   responseType?: "json" | "blob";
 }
@@ -125,8 +127,8 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
           headers,
           ...(body === undefined ? {} : { body }),
           ...(requestOptions.signal ? { signal: requestOptions.signal } : {}),
-          // F0 follows the current bearer contract; cookie refresh is not implemented.
-          credentials: "omit",
+          // Bearer auth everywhere; only web refresh/logout opt in to the session cookie.
+          credentials: requestOptions.credentials ?? "omit",
           redirect: "error",
         });
         if (response.ok && requestOptions.responseType === "blob") {

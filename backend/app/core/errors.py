@@ -97,13 +97,18 @@ def _status_code_name(status_code: int) -> str:
         return f"http_{status_code}"
 
 
-async def _app_error(_: Request, exc: Exception) -> JSONResponse:
-    assert isinstance(exc, AppError)  # noqa: S101 - narrows the type for Starlette's signature
+def app_error_response(exc: AppError) -> JSONResponse:
+    """The response the handler gives `exc`, for routes that must add to it (e.g. cookies)."""
     return JSONResponse(
         error_body(exc.code, exc.message, exc.details),
         status_code=exc.status_code,
         headers=exc.headers,
     )
+
+
+async def _app_error(_: Request, exc: Exception) -> JSONResponse:
+    assert isinstance(exc, AppError)  # noqa: S101 - narrows the type for Starlette's signature
+    return app_error_response(exc)
 
 
 async def _http_exception(_: Request, exc: Exception) -> JSONResponse:

@@ -74,13 +74,15 @@ TokenOut: { access_token, refresh_token, token_type }
 RefreshIn: { refresh_token }
 ```
 
-P1 implements this JSON bearer contract. Login and refresh return token pairs; refresh consumes and replaces the old refresh token. Logout requires the current bearer credential and a `RefreshIn` body, then returns `204`. There is no `Set-Cookie` implementation. A future HttpOnly-cookie web-refresh contract requires an explicit backend change and review.
+P1 implements this JSON bearer contract. Login and refresh return token pairs; refresh consumes and replaces the old refresh token. Logout with a `RefreshIn` body requires the bearer credential of the same account, then returns `204`.
+
+**Web cookie sessions (23 November 2026).** Login with the header `X-Auth-Transport: cookie` sets the refresh token as the cookie `biletflow_refresh` (HttpOnly, Secure, SameSite=Strict, path `/api/v1/auth`, refresh-token lifetime) plus a readable marker `biletflow_session` (path `/`), and returns `refresh_token: null`. `POST /auth/refresh` and `POST /auth/logout` without a body use the cookie: refresh replaces it and again returns `refresh_token: null`; logout revokes it without needing a bearer token and clears both cookies; a rejected cookie is cleared with the error. Requests with a body (mobile) behave as before and never set cookies. SameSite=Strict is the CSRF defence for these two endpoints. Cookie sessions need the web app and API on the same site; the dev proxy and the nginx demo are same-origin. Set `AUTH_COOKIE_SECURE=false` only to demo over plain HTTP on a non-localhost address.
 
 Coordinate refresh as a single in-flight operation per session. Reusing an unexpired, already rotated refresh token causes P1 to revoke all refresh sessions for that user. Do not refresh in parallel or blindly retry a refresh after an uncertain response. F0's JSON client performs no implicit refresh; F1 must implement and verify session recovery against this behavior.
 
 F0 separates platform storage adapters:
 
-- **Web:** access/refresh token pairs stay in memory. Refreshing the browser clears this state; do not add local/session storage persistence to disguise the missing cookie/session contract.
+- **Web:** the access token stays in memory; the refresh token lives only in the HttpOnly cookie, which scripts cannot read. On load, if the marker cookie is present, the session exchanges the cookie for an access token before any authenticated read, so a reload keeps the user signed in. Tabs share the cookie, so refreshes run one at a time across tabs through the Web Locks API. Do not store credentials in local/session storage.
 - **Native:** access tokens stay in memory; only refresh credentials use `expo-secure-store`. A restarted process must exchange its stored refresh credential before it has an access token. Keep the adapter separate from browser assumptions and clear credentials on logout/session failure; backend lifecycle and actual device verification remain pending.
 - **Shared:** portable client/types and an asynchronous token-store interface. No DOM, native storage dependency or hidden authentication state in shared contract code.
 
@@ -90,7 +92,7 @@ Tests of a token store or mock bearer request prove client infrastructure only. 
 
 | Decision | Frontend owner | Backend contact | Required agreement |
 |---|---|---|---|
-| Web token transport/recovery | Yernur Slyamshaikhov | Yernur (backend) | Keep JSON/memory semantics or add a reviewed cookie contract; define refresh expiry, revocation and CSRF/CORS requirements |
+| Web token transport/recovery | Yernur Slyamshaikhov | Yernur (backend) | Decided 23 November 2026: HttpOnly refresh cookie (see above); refresh expiry follows `REFRESH_TOKEN_TTL_DAYS`, CSRF relies on SameSite=Strict |
 | Native session lifecycle | Yernur Slyamshaikhov | Yernur (backend) | Native-compatible login/refresh/logout, persisted credential policy and assigned-event discovery |
 | Event permissions | Yernur Slyamshaikhov | Yernur (backend) | Global role versus per-event `manager`, `checkin`, `support` assignments; current-user capability/assignment response |
 | First real mutation | Yernur Slyamshaikhov | Yernur (backend) | P1 provides profile PATCH operations; select safe test data and verify auth/validation/error behavior against the running backend |

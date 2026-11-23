@@ -1,6 +1,7 @@
 export interface TokenPair {
   accessToken: string;
-  refreshToken: string;
+  /** null for web cookie sessions: the API keeps it in an HttpOnly cookie scripts cannot read. */
+  refreshToken: string | null;
 }
 
 export interface TokenStore {
@@ -19,8 +20,10 @@ export function createMemoryTokenStore(): TokenStore {
       return current ? { ...current } : null;
     },
     async set(tokens) {
-      if (!tokens.accessToken || !tokens.refreshToken) {
-        throw new TypeError("Both access and refresh tokens must be nonempty.");
+      if (!tokens.accessToken || tokens.refreshToken === "") {
+        throw new TypeError(
+          "The access token, and a refresh token if present, must be nonempty.",
+        );
       }
       current = {
         accessToken: tokens.accessToken,

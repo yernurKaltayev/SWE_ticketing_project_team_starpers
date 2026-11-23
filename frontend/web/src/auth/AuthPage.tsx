@@ -185,7 +185,7 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
   return (
     <section className="auth-page" aria-labelledby="auth-title">
       <h1 id="auth-title">{titles[kind]}</h1>
-      {kind === "login" ? <p>{t.memorySession}</p> : null}
+      {kind === "login" ? <p>{t.sessionNote}</p> : null}
       {reason && kind === "login" ? (
         <Status>{reason === "suspended" ? t.suspended : t.expired}</Status>
       ) : null}

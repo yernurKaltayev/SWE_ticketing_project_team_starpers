@@ -118,9 +118,20 @@ paths:
       - auth
       summary: Sign in (rate limited)
       description: 'Owner: P1. Access: public. 401 invalid_credentials; 403 account_suspended or
-        email_not_verified, only after a correct password.'
+        email_not_verified, only after a correct password. With X-Auth-Transport: cookie (web) the
+        refresh token is set as the HttpOnly cookie biletflow_refresh (SameSite=Strict, path /api/v1/auth)
+        with a readable marker cookie biletflow_session (path /), and refresh_token in the body is
+        null. Without the header (mobile) it is returned in the body and no cookie is set.'
       operationId: post_auth_login
       security: []
+      parameters:
+      - name: X-Auth-Transport
+        in: header
+        required: false
+        schema:
+          type: string
+          enum:
+          - cookie
       requestBody:
         required: true
         content:
@@ -148,11 +159,20 @@ paths:
       - auth
       summary: Exchange a refresh token; the old one is revoked
       description: 'Owner: P1. Access: public. Presenting an already rotated token is treated as theft:
-        every session of that user is revoked. Clients must not refresh twice in parallel.'
+        every session of that user is revoked. Clients must not refresh twice in parallel. A token in
+        the body is answered in the body (mobile). Without a body the biletflow_refresh cookie is used:
+        the replacement is set as the cookie and refresh_token in the body is null (web). A rejected
+        cookie is cleared with the error.'
       operationId: post_auth_refresh
       security: []
+      parameters:
+      - name: biletflow_refresh
+        in: cookie
+        required: false
+        schema:
+          type: string
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
@@ -175,12 +195,21 @@ paths:
       tags:
       - auth
       summary: Revoke a refresh token
-      description: 'Owner: P1. Access: any signed-in user.'
+      description: 'Owner: P1. Access: a token in the body needs the bearer of the same account. Without
+        a body the biletflow_refresh cookie is revoked with no bearer needed, so a web sign-out works
+        after the access token expired; both session cookies are cleared.'
       operationId: post_auth_logout
       security:
       - bearerAuth: []
+      - {}
+      parameters:
+      - name: biletflow_refresh
+        in: cookie
+        required: false
+        schema:
+          type: string
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
@@ -6112,8 +6141,11 @@ components:
           title: Access Token
           type: string
         refresh_token:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Refresh Token
-          type: string
+          description: null when the refresh token was set as the HttpOnly cookie (web sessions).
         token_type:
           default: bearer
           title: Token Type
