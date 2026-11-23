@@ -19,7 +19,7 @@ export type AuthKind =
   "login" | "register" | "verify-email" | "forgot-password" | "reset-password";
 export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
   const t = authCopy[locale];
-  const [params, setParams] = useSearchParams();
+  const [params] = useSearchParams();
   const returnTo = safeReturnTo(params.get("returnTo"));
   const suffix = `?returnTo=${encodeURIComponent(returnTo)}`;
   const [token, setToken] = useState(() => params.get("token") ?? "");
@@ -45,14 +45,44 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
       pending.current?.abort();
     };
   }, []);
-  // Consume a link only on explicit submission; keep its secret out of later browser URLs/referrers.
+  // Keep the link's secret out of later browser URLs/referrers. This edits the address bar directly
+  // rather than navigating: App keys the page tree on location.key, so a router navigation would
+  // remount this page, drop the token from state and lose the in-flight verification.
   useEffect(() => {
-    if (params.has("token")) {
-      const next = new URLSearchParams(params);
-      next.delete("token");
-      setParams(next, { replace: true });
-    }
-  }, [params, setParams]);
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("token")) return;
+    url.searchParams.delete("token");
+    window.history.replaceState(window.history.state, "", url);
+  }, []);
+  // A verification link confirms the address as soon as it opens. Scanners that prefetch email
+  // links only issue a GET and never run this script, so the single-use token is spent by the
+  // POST below. The ref keeps React StrictMode's double effect from sending a second request,
+  // which the single-use token would reject. On failure the resend form takes over.
+  const autoVerify = useRef(false);
+  const [linkUsed, setLinkUsed] = useState(false);
+  useEffect(() => {
+    if (kind !== "verify-email" || !token || autoVerify.current) return;
+    autoVerify.current = true;
+    setBusy(true);
+    api
+      .request("/api/v1/auth/verify-email", {
+        method: "POST",
+        body: { token } satisfies components["schemas"]["VerifyEmailIn"],
+      })
+      .then(() => {
+        if (active.current) setSuccess("verified");
+      })
+      .catch((caught: unknown) => {
+        if (!active.current) return;
+        if ((caught as { code?: string }).code === "invalid_email_token")
+          setLinkUsed(true);
+        else setError(caught);
+        setToken("");
+      })
+      .finally(() => {
+        if (active.current) setBusy(false);
+      });
+  }, [kind, token]);
   const titles = {
     login: t.login,
     register: t.register,
@@ -180,16 +210,23 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
     success === "registrationSent" ||
     success === "verified" ||
     success === "passwordReset";
+  // Opening a verification link: confirming while the request runs, then a confirmed state with
+  // no resend prompts, so the page never looks like it is asking for the email again.
+  const emailConfirmed = kind === "verify-email" && success === "verified";
+  const confirming = hasTokenForm && !success && !linkUsed && !error;
   if (user && (kind === "login" || kind === "register"))
     return <Navigate to={returnTo} replace />;
   return (
     <section className="auth-page" aria-labelledby="auth-title">
-      <h1 id="auth-title">{titles[kind]}</h1>
+      <h1 id="auth-title">{emailConfirmed ? t.verifiedTitle : titles[kind]}</h1>
       {kind === "login" ? <p>{t.memorySession}</p> : null}
       {reason && kind === "login" ? (
         <Status>{reason === "suspended" ? t.suspended : t.expired}</Status>
       ) : null}
-      {kind === "verify-email" ? <p>{t.verifyHelp}</p> : null}
+      {kind === "verify-email" && !emailConfirmed && !confirming ? (
+        <p>{t.verifyHelp}</p>
+      ) : null}
+      {confirming ? <Status>{t.confirming}</Status> : null}
       {success ? (
         <Status>
           {
@@ -204,13 +241,22 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
           }
         </Status>
       ) : null}
+      {linkUsed && !success ? (
+        <Status>
+          {t.linkUsed} <Link to={`/login${suffix}`}>{t.login}</Link>
+        </Status>
+      ) : null}
       <FormError error={error} fields={errors} locale={locale} />
       {kind === "reset-password" && !token && !succeeded ? (
         <>
           <Status>{t.tokenMissing}</Status>
           <Link to={`/forgot-password${suffix}`}>{t.sendReset}</Link>
         </>
-      ) : !succeeded ? (
+      ) : emailConfirmed ? (
+        <Link className="action-link" to={`/login${suffix}`}>
+          {t.login}
+        </Link>
+      ) : !succeeded && !confirming ? (
         <form
           noValidate
           onSubmit={(event) => {
@@ -303,32 +349,34 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
           </fieldset>
         </form>
       ) : null}
-      <nav className="auth-links" aria-label={titles[kind]}>
-        {kind !== "login" ? (
-          <Link to={`/login${suffix}`}>{t.login}</Link>
-        ) : (
-          <>
-            <Link to={`/register${suffix}`}>{t.register}</Link>
-            <Link to={`/forgot-password${suffix}`}>{t.forgot}</Link>
-          </>
-        )}
-        {kind !== "verify-email" || hasTokenForm ? (
-          <Link
-            to={`/verify-email${suffix}`}
-            onClick={() => {
-              setToken("");
-              setSuccess("");
-              setError(null);
-              setErrors({});
-            }}
-          >
-            {t.resend}
-          </Link>
-        ) : null}
-        {kind === "reset-password" ? (
-          <Link to={`/forgot-password${suffix}`}>{t.sendReset}</Link>
-        ) : null}
-      </nav>
+      {emailConfirmed || confirming ? null : (
+        <nav className="auth-links" aria-label={titles[kind]}>
+          {kind !== "login" ? (
+            <Link to={`/login${suffix}`}>{t.login}</Link>
+          ) : (
+            <>
+              <Link to={`/register${suffix}`}>{t.register}</Link>
+              <Link to={`/forgot-password${suffix}`}>{t.forgot}</Link>
+            </>
+          )}
+          {kind !== "verify-email" || hasTokenForm ? (
+            <Link
+              to={`/verify-email${suffix}`}
+              onClick={() => {
+                setToken("");
+                setSuccess("");
+                setError(null);
+                setErrors({});
+              }}
+            >
+              {t.resend}
+            </Link>
+          ) : null}
+          {kind === "reset-password" ? (
+            <Link to={`/forgot-password${suffix}`}>{t.sendReset}</Link>
+          ) : null}
+        </nav>
+      )}
     </section>
   );
 }
