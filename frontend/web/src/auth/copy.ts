@@ -25,14 +25,18 @@ const en = {
   verify: "Confirm email",
   resend: "Resend confirmation link",
   verifyHelp:
-    "Open the confirmation link from your email. You can request a new link below.",
+    "We confirm your email when you open the link from your message. If that fails, request a new link below.",
   registrationSent:
     "Account created. Check your email for a confirmation link before signing in.",
   verificationSent:
-    "If this address needs confirming, a new link is on its way. Check your email.",
+    "If this address is registered and not yet confirmed, a new link is on its way. Check your email. If you already confirmed it, just sign in.",
+  linkUsed:
+    "This link was already used or has expired. If you already confirmed your email, sign in. Otherwise request a new link below.",
   resetSent:
     "If an account exists for this address, a reset link is on its way. Check your email.",
   verified: "Email confirmed. You can now sign in.",
+  verifiedTitle: "Email confirmed",
+  confirming: "Confirming your email…",
   passwordReset: "Password changed. Sign in with your new password.",
   saving: "Saving…",
   working: "Please wait…",
@@ -126,14 +130,18 @@ export const authCopy: Record<Locale, Copy> = {
     verify: "Поштаны растау",
     resend: "Растау сілтемесін қайта жіберу",
     verifyHelp:
-      "Поштаңызға келген растау сілтемесін ашыңыз. Төменде жаңа сілтеме сұрата аласыз.",
+      "Хаттағы сілтемені ашқанда поштаңыз расталады. Болмаса, төменнен жаңа сілтеме сұратыңыз.",
     registrationSent:
       "Тіркелгі құрылды. Кіру алдында поштаңыздағы растау сілтемесін ашыңыз.",
     verificationSent:
-      "Бұл мекенжайды растау қажет болса, жаңа сілтеме жіберіледі. Поштаңызды тексеріңіз.",
+      "Бұл мекенжай тіркелген және әлі расталмаған болса, жаңа сілтеме жіберіледі. Поштаңызды тексеріңіз. Егер расталған болса, жай ғана кіріңіз.",
+    linkUsed:
+      "Бұл сілтеме бұрын қолданылған немесе мерзімі өткен. Поштаңыз расталған болса, кіріңіз. Болмаса, төменнен жаңа сілтеме сұратыңыз.",
     resetSent:
       "Бұл мекенжайда тіркелгі болса, қалпына келтіру сілтемесі жіберіледі. Поштаңызды тексеріңіз.",
     verified: "Пошта расталды. Енді кіре аласыз.",
+    verifiedTitle: "Пошта расталды",
+    confirming: "Поштаңыз расталуда…",
     passwordReset: "Құпиясөз өзгертілді. Жаңа құпиясөзбен кіріңіз.",
     saving: "Сақталуда…",
     working: "Күте тұрыңыз…",
@@ -227,14 +235,18 @@ export const authCopy: Record<Locale, Copy> = {
     verify: "Подтвердить почту",
     resend: "Отправить подтверждение повторно",
     verifyHelp:
-      "Откройте ссылку подтверждения из письма. Ниже можно запросить новую ссылку.",
+      "Почта подтверждается при открытии ссылки из письма. Если не получилось, запросите новую ссылку ниже.",
     registrationSent:
       "Аккаунт создан. Перед входом откройте ссылку подтверждения из письма.",
     verificationSent:
-      "Если этот адрес нужно подтвердить, мы отправим новую ссылку. Проверьте почту.",
+      "Если этот адрес зарегистрирован и ещё не подтверждён, мы отправим новую ссылку. Проверьте почту. Если вы уже подтвердили почту, просто войдите.",
+    linkUsed:
+      "Эта ссылка уже использована или истекла. Если почта уже подтверждена, войдите. Иначе запросите новую ссылку ниже.",
     resetSent:
       "Если аккаунт с этим адресом существует, мы отправим ссылку для сброса. Проверьте почту.",
     verified: "Почта подтверждена. Теперь вы можете войти.",
+    verifiedTitle: "Почта подтверждена",
+    confirming: "Подтверждаем вашу почту…",
     passwordReset: "Пароль изменён. Войдите с новым паролем.",
     saving: "Сохранение…",
     working: "Подождите…",
