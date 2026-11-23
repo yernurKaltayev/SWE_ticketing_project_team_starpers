@@ -34,6 +34,7 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --header-h: 68px;
   --gutter: clamp(1rem, 4vw, 2.5rem);
+  --content-max: 1600px;
   font-family: var(--font-sans);
   font-size: 15px;
   font-feature-settings: "cv11", "ss01";
@@ -578,7 +579,7 @@ dt {
   align-items: center;
   gap: 1rem 2rem;
   min-height: var(--header-h);
-  padding: 0.65rem max(var(--gutter), calc((100% - 1240px) / 2 + var(--gutter)));
+  padding: 0.65rem max(var(--gutter), calc((100% - var(--content-max)) / 2 + var(--gutter)));
   background: rgb(255 255 255 / 0.92);
   backdrop-filter: saturate(1.4) blur(10px);
   border-bottom: 1px solid var(--color-line);
@@ -613,6 +614,8 @@ dt {
 .site-nav {
   flex: 1 1 auto;
   min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 .account-nav {
   margin-left: auto;
@@ -678,7 +681,7 @@ dt {
 }
 
 .page {
-  max-width: 1240px;
+  max-width: var(--content-max);
   margin: 0 auto;
   padding: clamp(1.5rem, 4vw, 2.75rem) var(--gutter) 5rem;
 }
@@ -807,6 +810,14 @@ main:focus {
 .event-filters .field:first-child {
   grid-column: span 2;
 }
+@media (min-width: 1100px) {
+  .event-filters {
+    grid-template-columns: 2fr repeat(4, minmax(0, 1fr));
+  }
+  .event-filters .field:first-child {
+    grid-column: auto;
+  }
+}
 .event-filters .controls {
   grid-column: 1 / -1;
   margin: 0.15rem 0 1.1rem;
@@ -839,7 +850,7 @@ main:focus {
 }
 .event-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 1.5rem 1.25rem;
 }
 .event-card {
