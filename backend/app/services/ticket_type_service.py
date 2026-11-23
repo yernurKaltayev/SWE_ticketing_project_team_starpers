@@ -217,8 +217,10 @@ async def update_ticket_type(
         metadata={
             "fields": sorted(changes),
             # Price and quantity changes must be traceable (P12); other fields stay names-only.
+            # Both are whole numbers (tiyn and units), but the price arrives as a Decimal, which
+            # audit metadata cannot hold, so store plain ints.
             "changes": {
-                key: {"from": before[key], "to": getattr(item, key)}
+                key: {"from": int(before[key]), "to": int(getattr(item, key))}
                 for key in ("price_amount", "quantity_total")
                 if key in changes
             },

@@ -90,6 +90,16 @@ function EventContent({
   return (
     <>
       <PromotionBanner locale={locale} />
+      {!preview &&
+        event.status === "published" &&
+        event.visibility !== "private" && (
+          <ReportEvent id={event.id} locale={locale} />
+        )}
+      {!preview && (
+        <p>
+          <SupportLink locale={locale} context={{ event_id: event.id }} />
+        </p>
+      )}
       {preview && <Status>{t.previewHint}</Status>}
       <header className="detail-header">
         <h1>{event.title}</h1>
@@ -175,25 +185,28 @@ function EventContent({
             {!tickets.data && !tickets.error && <Status>{t.loading}</Status>}
             {tickets.data?.length === 0 && <p>{t.ticketEmpty}</p>}
             <ul className="ticket-list">
-              {tickets.data?.map((ticket) => (
-                <li key={ticket.ticket_type_id}>
-                  <strong>{ticket.name}</strong>
-                  <span className="price">
-                    {ticket.price_amount === 0
-                      ? t.free
-                      : formatMoney(ticket.price_amount, locale)}
-                  </span>
-                  <span className="availability">
-                    {t.available}: {ticket.available}
-                  </span>
-                  <span
-                    className="status-badge"
-                    data-tone={toneFor(salesState(event, ticket))}
-                  >
-                    {t[salesState(event, ticket)]}
-                  </span>
-                </li>
-              ))}
+              {tickets.data?.map((ticket) => {
+                const state = salesState(event, ticket);
+                return (
+                  <li key={ticket.ticket_type_id}>
+                    <strong>{ticket.name}</strong>
+                    <span className="price">
+                      {ticket.price_amount === 0
+                        ? t.free
+                        : formatMoney(ticket.price_amount, locale)}
+                    </span>
+                    {/* Closed tickets report 0, which is not a real count. */}
+                    {state === "onSale" || state === "soldOut" ? (
+                      <span className="availability">
+                        {t.available}: {ticket.available}
+                      </span>
+                    ) : null}
+                    <span className="status-badge" data-tone={toneFor(state)}>
+                      {t[state]}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
             {!preview && event.status === "published" && (
               <Link
