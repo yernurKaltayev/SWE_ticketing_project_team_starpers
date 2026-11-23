@@ -4,6 +4,11 @@ import {
   parsePrice,
   priceInput,
   salesState,
+  activeRange,
+  categoryTone,
+  dayBoundary,
+  offerSummary,
+  quickRange,
   searchQuery,
   ticketBody,
   toInstant,
@@ -107,7 +112,7 @@ describe("F2 money, time and recovery inputs", () => {
     );
     expect(q.get("q")).toBe("a & b");
     expect(q.get("offset")).toBe("0");
-    expect(q.get("date_to")).toBe("2027-01-20T23:59:59.999Z");
+    expect(q.get("date_to")).toBe(dayBoundary("2027-01-20", true));
   });
   it("never presents a draft, cancellation, inactive paid sale or sold out ticket as purchasable", () => {
     const e = {
@@ -128,5 +133,82 @@ describe("F2 money, time and recovery inputs", () => {
         now,
       ),
     ).toBe("notOpen");
+  });
+});
+
+describe("discovery helpers", () => {
+  it("turns local calendar days into instants for the viewer's zone", () => {
+    // Almaty is UTC+5, so getTimezoneOffset() reports -300.
+    expect(dayBoundary("2027-01-20", false, -300)).toBe("2027-01-19T19:00:00.000Z");
+    expect(dayBoundary("2027-01-20", true, -300)).toBe("2027-01-20T18:59:59.999Z");
+    expect(dayBoundary("2027-01-20", false, 0)).toBe("2027-01-20T00:00:00.000Z");
+    expect(dayBoundary("not-a-day", false, 0)).toBe("not-a-day");
+  });
+  it("computes today, weekend and month shortcuts from local dates", () => {
+    const wednesday = new Date(2027, 0, 20, 15);
+    expect(quickRange("today", wednesday)).toEqual({
+      date_from: "2027-01-20",
+      date_to: "2027-01-20",
+    });
+    expect(quickRange("weekend", wednesday)).toEqual({
+      date_from: "2027-01-23",
+      date_to: "2027-01-24",
+    });
+    expect(quickRange("weekend", new Date(2027, 0, 23))).toEqual({
+      date_from: "2027-01-23",
+      date_to: "2027-01-24",
+    });
+    expect(quickRange("weekend", new Date(2027, 0, 24))).toEqual({
+      date_from: "2027-01-24",
+      date_to: "2027-01-24",
+    });
+    expect(quickRange("month", wednesday)).toEqual({
+      date_from: "2027-01-20",
+      date_to: "2027-01-31",
+    });
+    expect(
+      activeRange(new URLSearchParams(quickRange("weekend", wednesday)), wednesday),
+    ).toBe("weekend");
+    expect(
+      activeRange(new URLSearchParams({ date_from: "2027-01-01" }), wednesday),
+    ).toBeUndefined();
+  });
+  it("gives each category a stable cover tone and none to blank categories", () => {
+    expect(categoryTone("concert")).toBe(categoryTone(" Concert "));
+    expect(categoryTone("concert")).toBeGreaterThanOrEqual(1);
+    expect(categoryTone("concert")).toBeLessThanOrEqual(6);
+    expect(categoryTone("")).toBe(0);
+  });
+  it("summarises price and stock from public availability", () => {
+    const row = (price_amount: number, available: number): Availability => ({
+      ticket_type_id: crypto.randomUUID(),
+      name: "x",
+      price_amount,
+      currency: "KZT",
+      available,
+      on_sale: true,
+    });
+    expect(offerSummary([])).toBeNull();
+    expect(offerSummary([row(0, 50)])).toEqual({
+      minPrice: 0,
+      priceVaries: false,
+      allFree: true,
+      soldOut: false,
+      remaining: 50,
+    });
+    // The cheapest type is sold out, so the lowest price still on offer wins.
+    expect(offerSummary([row(100_000, 0), row(250_000, 4)])).toMatchObject({
+      minPrice: 250_000,
+      priceVaries: false,
+      allFree: false,
+      remaining: 4,
+    });
+    expect(
+      offerSummary([row(500_000, 3), row(900_000, 3)]),
+    ).toMatchObject({ minPrice: 500_000, priceVaries: true });
+    expect(offerSummary([row(500_000, 0)])).toMatchObject({
+      minPrice: 500_000,
+      soldOut: true,
+    });
   });
 });

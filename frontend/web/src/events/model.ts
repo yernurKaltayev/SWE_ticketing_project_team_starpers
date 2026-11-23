@@ -159,6 +159,79 @@ export function ticketBody(
     sales_end,
   };
 }
+/**
+ * Instant at the start (or end) of a calendar day in the viewer's own time
+ * zone, so "today" means the attendee's today rather than UTC's.
+ */
+export function dayBoundary(
+  day: string,
+  end: boolean,
+  offsetMinutes?: number,
+): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
+  if (!match) return day;
+  const [, y, m, d] = match.map(Number) as [number, number, number, number];
+  const local = end
+    ? Date.UTC(y, m - 1, d, 23, 59, 59, 999)
+    : Date.UTC(y, m - 1, d);
+  const offset =
+    offsetMinutes ?? new Date(y, m - 1, d, end ? 23 : 0).getTimezoneOffset();
+  return new Date(local + offset * 60_000).toISOString();
+}
+export type QuickRange = "today" | "weekend" | "month";
+const isoDay = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+/** Local calendar days for the discovery shortcuts; the weekend is Sat–Sun. */
+export function quickRange(kind: QuickRange, now = new Date()) {
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (kind === "today") return { date_from: isoDay(start), date_to: isoDay(start) };
+  if (kind === "month") {
+    const last = new Date(start.getFullYear(), start.getMonth() + 1, 0);
+    return { date_from: isoDay(start), date_to: isoDay(last) };
+  }
+  const day = start.getDay();
+  const saturday = new Date(start);
+  if (day !== 0) saturday.setDate(start.getDate() + (6 - day));
+  const sunday = new Date(saturday);
+  if (day !== 0) sunday.setDate(saturday.getDate() + 1);
+  return {
+    date_from: isoDay(day === 0 || day === 6 ? start : saturday),
+    date_to: isoDay(sunday),
+  };
+}
+/** Which shortcut, if any, the current date filters correspond to. */
+export function activeRange(params: URLSearchParams, now = new Date()) {
+  return (["today", "weekend", "month"] as const).find((kind) => {
+    const r = quickRange(kind, now);
+    return (
+      params.get("date_from") === r.date_from &&
+      params.get("date_to") === r.date_to
+    );
+  });
+}
+/** Stable cover colour per category so the grid isn't one uniform tile. */
+export function categoryTone(category: string): number {
+  let hash = 0;
+  for (const ch of category.trim().toLowerCase())
+    hash = (hash * 31 + ch.codePointAt(0)!) >>> 0;
+  return category.trim() ? (hash % 6) + 1 : 0;
+}
+/** Card summary from public availability: lowest visible price and stock. */
+export function offerSummary(tickets: Availability[]) {
+  if (tickets.length === 0) return null;
+  const remaining = tickets.reduce((n, t) => n + Math.max(0, t.available), 0);
+  const inStock = tickets.filter((t) => t.available > 0);
+  const prices = (inStock.length ? inStock : tickets).map((t) => t.price_amount);
+  const min = Math.min(...prices);
+  return {
+    minPrice: min,
+    /** Only say "from" when there is more than one price on offer. */
+    priceVaries: new Set(prices).size > 1,
+    allFree: prices.every((p) => p === 0),
+    soldOut: remaining === 0,
+    remaining,
+  };
+}
 export function searchQuery(params: URLSearchParams) {
   const query = new URLSearchParams();
   for (const key of ["q", "category", "city", "date_from", "date_to"]) {
@@ -167,7 +240,7 @@ export function searchQuery(params: URLSearchParams) {
       query.set(
         key,
         key.startsWith("date_")
-          ? `${value}T${key === "date_to" ? "23:59:59.999" : "00:00:00"}Z`
+          ? dayBoundary(value, key === "date_to")
           : value,
       );
   }

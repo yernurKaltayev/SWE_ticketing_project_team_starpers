@@ -54,6 +54,7 @@ test("F9 attendee and responder exchange messages, update a case and read its no
   await expect(
     page.getByLabel("Choose responder", { exact: true }),
   ).toHaveCount(0);
+  await page.getByRole("button", { name: "Account menu" }).click();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await login("organizer@example.com");
   await page
@@ -64,6 +65,7 @@ test("F9 attendee and responder exchange messages, update a case and read its no
     .selectOption("waiting_customer");
   await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(page.getByText("Server confirmed the change.")).toBeVisible();
+  await page.getByRole("button", { name: "Account menu" }).click();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await login("attendee@example.com");
   await page.getByRole("link", { name: /^Notifications/ }).click();
@@ -86,6 +88,7 @@ test("F9 attendee and responder exchange messages, update a case and read its no
   await expect(
     page.getByText("Thank you, I still have one question.", { exact: true }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "Account menu" }).click();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await login("organizer@example.com");
   await expect(page.getByLabel("Status", { exact: true })).toHaveValue(
