@@ -12,7 +12,9 @@ import {
 import type { Event, Availability } from "./model";
 function form(values: Record<string, string | undefined>) {
   const f = new FormData();
-  for (const [k, v] of Object.entries(values)) { if (v !== undefined) f.set(k, v); }
+  for (const [k, v] of Object.entries(values)) {
+    if (v !== undefined) f.set(k, v);
+  }
   return f;
 }
 const values = {
@@ -128,5 +130,28 @@ describe("F2 money, time and recovery inputs", () => {
         now,
       ),
     ).toBe("notOpen");
+  });
+  it("calls a ticket sold out only when it is on sale with nothing left", () => {
+    const e = {
+      status: "published",
+      starts_at: "2027-01-20T00:00:00Z",
+      ends_at: "2027-01-21T00:00:00Z",
+      paid_sales_status: "disabled",
+    } as Event;
+    const now = Date.parse("2027-01-01T00:00:00Z");
+    // Public availability reports 0 for any ticket that is off sale.
+    const closed = {
+      available: 0,
+      on_sale: false,
+      price_amount: 0,
+    } as Availability;
+    expect(salesState(e, { ...closed, price_amount: 10000 }, now)).toBe(
+      "paidBlocked",
+    );
+    expect(salesState(e, closed, now)).toBe("unavailable");
+    expect(salesState(e, closed, Date.parse("2027-01-20T12:00:00Z"))).toBe(
+      "ended",
+    );
+    expect(salesState(e, { ...closed, on_sale: true }, now)).toBe("soldOut");
   });
 });
