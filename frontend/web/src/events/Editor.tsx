@@ -17,7 +17,9 @@ import { toneFor } from "../tone";
 import { useEventRequest, useResource } from "./data";
 import {
   eventBody,
+  findVenue,
   InputError,
+  venueLabel,
   ticketBody,
   toInstant,
   zonedInput,
@@ -26,7 +28,12 @@ import {
 import type { Event, Page, Ticket, Venue } from "./model";
 import { EventError, Image, SelectField, TextArea } from "./ui";
 import { ArrowLeftIcon } from "../icons";
-import { parseEvent, parseVenues, parseTicketTypes } from "./contracts";
+import {
+  parseEvent,
+  parseVenue,
+  parseVenues,
+  parseTicketTypes,
+} from "./contracts";
 
 export function EventEditor({ locale }: { locale: Locale }) {
   const { eventId } = useParams();
@@ -72,6 +79,12 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
     parseVenues,
   );
   const [venueOptions, setVenueOptions] = useState<Venue[]>([]);
+  // null until the organizer types: the field then shows the saved event's venue.
+  const [typedVenue, setTypedVenue] = useState<string | null>(null);
+  const savedVenue = venueOptions.find((v) => v.id === event?.venue_id);
+  const venueText = typedVenue ?? (savedVenue ? venueLabel(savedVenue) : "");
+  const newVenue =
+    venueText.trim() !== "" && !findVenue(venueOptions, venueText);
   // Accumulating paginated remote results synchronizes the venue selector with the API.
   useEffect(() => {
     if (moreVenues.data)
@@ -196,18 +209,48 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
           const form = new FormData(e.currentTarget);
           setError(undefined);
           setSaved(false);
-          let body;
+          let body: ReturnType<typeof eventBody>;
+          let venueToCreate: { name: string; address: string; city: string } | null =
+            null;
           try {
+            const typed = venueText.trim();
+            const match = findVenue(venueOptions, typed);
+            if (match) form.set("venue_id", match.id);
+            else if (typed) {
+              const address = String(form.get("venue_address") ?? "").trim();
+              const city = String(form.get("venue_city") ?? "").trim();
+              if (!address) throw new InputError("venue_address");
+              if (!city) throw new InputError("venue_city");
+              venueToCreate = { name: typed, address, city };
+              // Placeholder until the venue exists; replaced below before the event is sent.
+              form.set("venue_id", "new");
+            } else form.set("venue_id", "");
             body = eventBody(form);
           } catch (err) {
             setError(err);
             return;
           }
           setPending(true);
-          void request(
-            event ? `/api/v1/events/${event.id}` : "/api/v1/events",
-            { method: event ? "PATCH" : "POST", body },
+          // The event is checked first, so an invalid form never leaves a stray venue behind.
+          void (
+            venueToCreate
+              ? request("/api/v1/venues", { method: "POST", body: venueToCreate })
+                  .then(parseVenue)
+                  .then((venue) => {
+                    setVenueOptions((old) =>
+                      old.some((v) => v.id === venue.id) ? old : [...old, venue],
+                    );
+                    setTypedVenue(venueLabel(venue));
+                    return venue.id;
+                  })
+              : Promise.resolve(body.venue_id)
           )
+            .then((venue_id) =>
+              request(event ? `/api/v1/events/${event.id}` : "/api/v1/events", {
+                method: event ? "PATCH" : "POST",
+                body: { ...body, venue_id },
+              }),
+            )
             .then(parseEvent)
             .then((result) => {
               // On create, let the destination route load the saved event before
@@ -249,23 +292,45 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
               defaultValue={event?.category}
               required
             />
-            <SelectField
-              name="venue_id"
+            <Field
+              id="venue_id"
+              name="venue_name"
               label={t.venue_id}
-              defaultValue={event?.venue_id}
+              hint={t.venueHint}
+              list="venue-options"
+              autoComplete="off"
+              maxLength={200}
               required
-            >
-              <option value="">—</option>
-              {event && !venueOptions.some((v) => v.id === event.venue_id) && (
-                <option value={event.venue_id}>{event.venue_id}</option>
-              )}
+              value={venueText}
+              onChange={(e) => setTypedVenue(e.target.value)}
+            />
+            <datalist id="venue-options">
               {venueOptions.map((venue) => (
-                <option key={venue.id} value={venue.id}>
-                  {venue.name} · {venue.city} · {venue.address}
-                </option>
+                <option key={venue.id} value={venueLabel(venue)} />
               ))}
-            </SelectField>
+            </datalist>
           </div>
+          {newVenue && (
+            <p className="field-hint" role="status">
+              {t.venueNew}
+            </p>
+          )}
+          {newVenue && (
+            <div className="event-form-grid">
+              <Field
+                name="venue_address"
+                label={t.venue_address}
+                maxLength={300}
+                required
+              />
+              <Field
+                name="venue_city"
+                label={t.venue_city}
+                maxLength={100}
+                required
+              />
+            </div>
+          )}
           {moreVenues.data &&
             moreVenues.data.offset + moreVenues.data.limit <
               moreVenues.data.total && (

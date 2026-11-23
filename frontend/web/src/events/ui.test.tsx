@@ -89,12 +89,12 @@ async function editor() {
   fill("Category", "student");
   await waitFor(() =>
     expect(
-      screen.getByRole("option", {
-        name: "Demo campus auditorium · Astana · Demo venue address",
-      }),
-    ).toBeDefined(),
+      document.querySelector(
+        'option[value="Demo campus auditorium · Astana · Demo venue address"]',
+      ),
+    ).not.toBeNull(),
   );
-  fill("Venue", "4aab9cc5-d54c-47e8-9b53-09085463ce4c");
+  fill("Venue", "Demo campus auditorium · Astana · Demo venue address");
   fill("Starts", "2027-02-01T18:00");
   fill("Ends", "2027-02-01T20:00");
   return { fill, session };
@@ -332,4 +332,77 @@ it("validates event discovery before rendering malformed dates or images", async
   expect(
     screen.getByRole("heading", { name: "Discover events" }),
   ).toBeDefined();
+});
+
+function recordPosts() {
+  const posts: { path: string; body: unknown }[] = [];
+  server.events.on("request:start", async ({ request }) => {
+    if (request.method !== "POST") return;
+    const path = new URL(request.url).pathname;
+    if (path === "/api/v1/venues" || path === "/api/v1/events")
+      posts.push({ path, body: await request.clone().json() });
+  });
+  return posts;
+}
+
+it("creates a typed venue that is not in the list, then saves the event at it", async () => {
+  const posts = recordPosts();
+  const { fill } = await editor();
+  fill("Venue", "Abay Opera House");
+  fill("Venue address", "Abay Ave 110");
+  fill("Venue city", "Almaty");
+  await userEvent.click(
+    screen.getByRole("button", { name: "Save draft / changes" }),
+  );
+  await screen.findByRole("heading", { name: "Edit event" });
+  const [venuePost, eventPost] = posts;
+  expect(venuePost).toEqual({
+    path: "/api/v1/venues",
+    body: { name: "Abay Opera House", address: "Abay Ave 110", city: "Almaty" },
+  });
+  expect(eventPost?.path).toBe("/api/v1/events");
+  const created = (eventPost!.body as { venue_id: string }).venue_id;
+  expect(created).not.toBe("4aab9cc5-d54c-47e8-9b53-09085463ce4c");
+  expect(created).not.toBe("new");
+  await waitFor(() =>
+    expect(
+      (screen.getByLabelText("Venue", { exact: true }) as HTMLInputElement)
+        .value,
+    ).toBe("Abay Opera House · Almaty · Abay Ave 110"),
+  );
+  server.events.removeAllListeners();
+});
+
+it("uses a saved venue typed by its bare name without creating a copy", async () => {
+  const posts = recordPosts();
+  const { fill } = await editor();
+  fill("Venue", "demo campus auditorium");
+  expect(screen.queryByLabelText("Venue address", { exact: true })).toBeNull();
+  await userEvent.click(
+    screen.getByRole("button", { name: "Save draft / changes" }),
+  );
+  await screen.findByRole("heading", { name: "Edit event" });
+  expect(posts.map((p) => p.path)).toEqual(["/api/v1/events"]);
+  expect((posts[0]!.body as { venue_id: string }).venue_id).toBe(
+    "4aab9cc5-d54c-47e8-9b53-09085463ce4c",
+  );
+  server.events.removeAllListeners();
+});
+
+it("asks for the address and city of a new venue before sending anything", async () => {
+  const posts = recordPosts();
+  const { fill } = await editor();
+  fill("Venue", "Abay Opera House");
+  expect(
+    screen.getByText(
+      "New venue. Add its address and city; it will be saved to the venue list.",
+    ),
+  ).toBeTruthy();
+  fireEvent.submit(
+    screen.getByRole("button", { name: "Save draft / changes" }).closest("form")!,
+  );
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toContain("Venue address");
+  expect(posts).toEqual([]);
+  server.events.removeAllListeners();
 });

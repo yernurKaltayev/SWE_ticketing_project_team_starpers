@@ -1,8 +1,18 @@
 from decimal import Decimal
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
-from app.schemas.common import OrmModel
+from pydantic import BaseModel, StringConstraints
+
+from app.schemas.common import Name, OrmModel
+
+
+class VenueCreate(BaseModel):
+    """A venue an organizer types in the event editor. It joins the shared venue list."""
+
+    name: Name
+    address: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=300)]
+    city: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
 
 
 class VenueOut(OrmModel):

@@ -18,6 +18,8 @@ const venue: Venue = {
   lat: null,
   lng: null,
 };
+// Seeded venue plus any typed in the editor (POST /venues), shared by all organizers.
+const venues = new Map<string, Venue>([[venue.id, venue]]);
 export const demoEventId = "04e1dfa3-c0a1-43d7-a774-32c7dc9fb419";
 type Record = { value: Event; owner: string; policy?: { summary: string } };
 const events = new Map<string, Record>();
@@ -63,6 +65,8 @@ export function mockConfirmCheckout(
 export function resetEventMocks() {
   events.clear();
   tickets.clear();
+  venues.clear();
+  venues.set(venue.id, venue);
   events.set(demoEventId, {
     owner: "organizer@example.com",
     value: {
@@ -191,13 +195,31 @@ export const eventHandlers = [
     );
   }),
   http.get("*/api/v1/venues", ({ request }) =>
-    HttpResponse.json(page([venue], request)),
+    HttpResponse.json(page([...venues.values()], request)),
   ),
-  http.get("*/api/v1/venues/:id", ({ params }) =>
-    params.id === venue.id
-      ? HttpResponse.json(venue)
-      : fail(404, "venue_not_found"),
-  ),
+  http.get("*/api/v1/venues/:id", ({ params }) => {
+    const found = venues.get(String(params.id));
+    return found ? HttpResponse.json(found) : fail(404, "venue_not_found");
+  }),
+  http.post("*/api/v1/venues", async ({ request }) => {
+    const user = access(request);
+    if (user instanceof Response) return user;
+    const body = (await request.json()) as { [key: string]: unknown };
+    const field = (key: string) =>
+      typeof body[key] === "string" ? (body[key] as string).trim() : "";
+    const [name, address, city] = ["name", "address", "city"].map(field);
+    if (!name || !address || !city) return fail(422, "validation_error");
+    const same = [...venues.values()].find(
+      (v) =>
+        v.name.toLowerCase() === name.toLowerCase() &&
+        v.address.toLowerCase() === address.toLowerCase() &&
+        v.city.toLowerCase() === city.toLowerCase(),
+    );
+    if (same) return HttpResponse.json(same);
+    const created: Venue = { id: crypto.randomUUID(), name, address, city, lat: null, lng: null };
+    venues.set(created.id, created);
+    return HttpResponse.json(created, { status: 201 });
+  }),
   http.get("*/api/v1/events/:id", ({ request, params }) => {
     const r = events.get(String(params.id));
     return r && canView(request, r)
@@ -214,7 +236,7 @@ export const eventHandlers = [
       Date.parse(body.ends_at) <= Date.parse(body.starts_at)
     )
       return fail(422, "validation_error");
-    if (body.venue_id !== venue.id) return fail(404, "venue_not_found");
+    if (!venues.has(body.venue_id)) return fail(404, "venue_not_found");
     const id = crypto.randomUUID();
     const value: Event = {
       ...body,

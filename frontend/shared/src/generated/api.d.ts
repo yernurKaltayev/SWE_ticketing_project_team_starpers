@@ -452,7 +452,11 @@ export interface paths {
          */
         get: operations["get_venues"];
         put?: never;
-        post?: never;
+        /**
+         * Add a venue typed in the event editor
+         * @description Owner: P2. Access: organizer or platform admin. Fields are trimmed. The new venue joins the shared list. The same name, address and city (any letter case) returns the existing venue with 200 instead of a copy; a new one returns 201.
+         */
+        post: operations["post_venues"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3489,6 +3493,15 @@ export interface components {
             /** Phone */
             phone?: string | null;
         };
+        /** VenueCreate */
+        VenueCreate: {
+            /** Name */
+            name: string;
+            /** Address */
+            address: string;
+            /** City */
+            city: string;
+        };
         /** VenueOut */
         VenueOut: {
             /**
@@ -4588,6 +4601,42 @@ export interface operations {
                     "application/json": components["schemas"]["PageVenueOut"];
                 };
             };
+            422: components["responses"]["Error"];
+        };
+    };
+    post_venues: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VenueCreate"];
+            };
+        };
+        responses: {
+            /** @description An existing venue with the same name, address and city */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueOut"];
+                };
+            };
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VenueOut"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
     };
