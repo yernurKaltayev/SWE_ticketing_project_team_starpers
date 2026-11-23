@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import AfterValidator, BaseModel, EmailStr, model_validator
 
-from app.schemas.common import Name, OrmModel, Phone
+from app.schemas.common import KazakhstanPhone, Name, OrmModel, Phone
 
 
 class UserOut(OrmModel):
@@ -29,7 +29,7 @@ NotNull = AfterValidator(_reject_null)
 
 class UserUpdate(BaseModel):
     full_name: Annotated[Name | None, NotNull] = None
-    phone: Phone | None = None
+    phone: KazakhstanPhone | None = None
 
 
 class OrganizerProfileUpdate(BaseModel):

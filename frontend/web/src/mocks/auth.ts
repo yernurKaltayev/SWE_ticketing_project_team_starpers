@@ -1,5 +1,6 @@
 import { http, HttpResponse } from "msw";
 import type { components } from "@biletflow/shared/api";
+import { kazakhstanPhone } from "../auth/helpers";
 
 type User = components["schemas"]["UserOut"];
 type Organizer = components["schemas"]["OrganizerProfileOut"];
@@ -181,12 +182,16 @@ export const authHandlers = [
     if (!validName(data.full_name)) return invalid("full_name");
     if (data.role !== "attendee" && data.role !== "organizer")
       return invalid("role");
+    const phone =
+      typeof data.phone === "string" ? kazakhstanPhone(data.phone) : null;
+    if (!phone) return invalid("phone");
     if (data.email === "rate-limited@example.com")
       return error(429, "too_many_requests");
     if (accounts.has(data.email.toLowerCase()))
       return error(409, "email_taken");
     const entry = account(data.email, data.role, false);
     entry.user.full_name = data.full_name.trim();
+    entry.user.phone = phone;
     entry.password = data.password;
     if (entry.organizer)
       entry.organizer.organization_name = data.full_name.trim();

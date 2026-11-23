@@ -7,6 +7,7 @@ import { api } from "../api";
 import { authCopy } from "./copy";
 import {
   fieldErrors,
+  kazakhstanPhone,
   safeReturnTo,
   validEmail,
   validName,
@@ -27,6 +28,7 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
     email: "",
     password: "",
     full_name: "",
+    phone: "",
     confirm: "",
     role: "attendee",
   });
@@ -108,6 +110,8 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
       next.password = t.passwordRequired;
     if (action === "register" && !validName(values.full_name))
       next.full_name = t.nameRequired;
+    const phone = kazakhstanPhone(values.phone);
+    if (action === "register" && !phone) next.phone = t.phoneInvalid;
     if (action === "register" || action === "reset-password") {
       if (!validPassword(values.password)) next.password = t.passwordInvalid;
       if (values.confirm !== values.password)
@@ -138,6 +142,7 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
               password: values.password,
               full_name: values.full_name.trim(),
               role: values.role === "organizer" ? "organizer" : "attendee",
+              phone: phone!,
             } satisfies components["schemas"]["RegisterIn"],
           },
         );
@@ -190,7 +195,7 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
       setError(caught);
       const serverFields = fieldErrors(
         caught,
-        ["email", "full_name", "password", "new_password"],
+        ["email", "full_name", "phone", "password", "new_password"],
         locale,
       );
       if (serverFields.new_password) {
@@ -288,6 +293,21 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
                 value={values.email}
                 error={errors.email}
                 onChange={(e) => change("email", e.target.value)}
+              />
+            ) : null}
+            {kind === "register" ? (
+              <Field
+                label={t.phone}
+                name="phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                maxLength={32}
+                required
+                hint={t.phoneHint}
+                value={values.phone}
+                error={errors.phone}
+                onChange={(e) => change("phone", e.target.value)}
               />
             ) : null}
             {showPassword ? (

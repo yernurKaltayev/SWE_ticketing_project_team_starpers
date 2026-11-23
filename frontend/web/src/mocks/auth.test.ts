@@ -52,6 +52,7 @@ describe("F1 development auth fixtures (no live backend evidence)", () => {
       password: mockPassword,
       full_name: "New organizer",
       role: "organizer",
+      phone: "+7 701 234 56 78",
     });
     expect(registered.status).toBe(201);
     expect(await registered.json()).toMatchObject({
@@ -154,6 +155,7 @@ describe("F1 development auth fixtures (no live backend evidence)", () => {
       password: mockPassword,
       full_name: "Duplicate",
       role: "organizer",
+      phone: "+7 701 234 56 78",
     });
     expect(duplicate.status).toBe(409);
     expect(await duplicate.json()).toMatchObject({ code: "email_taken" });

@@ -3,7 +3,23 @@ import type { components } from "@biletflow/shared/api";
 import { authCopy } from "./copy";
 import type { Locale } from "@biletflow/shared";
 
-/** Accept only app-relative destinations. Never let email links or URL params redirect off-site. */
+/**
+ * A Kazakhstan phone in one format (+77012345678), or null. Mirrors the API's rule so the form
+ * can explain the problem before sending: spaces, brackets, dashes and an 8/7 prefix are fine;
+ * the number must be +7 6xx or +7 7xx (other +7 ranges are Russia).
+ */
+export function kazakhstanPhone(value: string): string | null {
+  let digits = value.replace(/[\s().-]/g, "").replace(/^\+/, "");
+  if (!/^\d+$/.test(digits)) return null;
+  if (digits.length === 11 && (digits[0] === "7" || digits[0] === "8"))
+    digits = digits.slice(1);
+  return digits.length === 10 && /^[67]/.test(digits) ? `+7${digits}` : null;
+}
+
+/**
+ * Accept only app-relative destinations. Never let email links or URL params redirect off-site.
+ * With nothing (valid) asked for, sign-in opens the main page.
+ */
 const unsafeCharacter = (value: string) =>
   [...value].some((char) => char.charCodeAt(0) <= 32 || char === "\\");
 export function safeReturnTo(value: string | null | undefined): string {
@@ -13,7 +29,7 @@ export function safeReturnTo(value: string | null | undefined): string {
     value.startsWith("//") ||
     unsafeCharacter(value)
   )
-    return "/account";
+    return "/";
   try {
     const url = new URL(value, "https://biletflow.invalid");
     const path = decodeURIComponent(url.pathname);
@@ -25,10 +41,10 @@ export function safeReturnTo(value: string | null | undefined): string {
         path,
       )
     )
-      return "/account";
+      return "/";
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {
-    return "/account";
+    return "/";
   }
 }
 

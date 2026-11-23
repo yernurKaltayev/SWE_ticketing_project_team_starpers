@@ -484,6 +484,7 @@ it("rejects another organizer's actual list and refund requests", async () => {
       password: "BiletFlow123!",
       full_name: "Other organizer",
       role: "organizer",
+      phone: "+7 701 234 56 78",
     }),
   });
   expect(register.status).toBe(201);

@@ -2,7 +2,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, EmailStr, Field
 
-from app.schemas.common import Name
+from app.schemas.common import KazakhstanPhone, Name
 
 # The upper bound keeps a request from making the server hash megabytes of input.
 NewPassword = Annotated[str, Field(min_length=8, max_length=128)]
@@ -13,6 +13,8 @@ class RegisterIn(BaseModel):
     password: NewPassword
     full_name: Name
     role: Literal["attendee", "organizer"]
+    # Required at sign-up, stored as +77012345678. Not verified yet.
+    phone: KazakhstanPhone
 
 
 class LoginIn(BaseModel):
