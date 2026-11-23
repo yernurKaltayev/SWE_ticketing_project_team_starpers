@@ -210,3 +210,21 @@ export function priceInput(amount: number) {
   const n = BigInt(amount);
   return `${n / 100n}.${String(n % 100n).padStart(2, "0")}`;
 }
+
+/** The text a saved venue shows as in the venue suggestions. */
+export function venueLabel(venue: Venue) {
+  return `${venue.name} · ${venue.city} · ${venue.address}`;
+}
+
+/**
+ * The saved venue the organizer typed: its full suggestion label, or its bare name when
+ * exactly one saved venue has that name (letter case ignored). Anything else is a new venue.
+ */
+export function findVenue(venues: Venue[], typed: string): Venue | undefined {
+  const text = typed.trim().toLowerCase();
+  if (!text) return undefined;
+  const byLabel = venues.find((v) => venueLabel(v).toLowerCase() === text);
+  if (byLabel) return byLabel;
+  const byName = venues.filter((v) => v.name.trim().toLowerCase() === text);
+  return byName.length === 1 ? byName[0] : undefined;
+}

@@ -841,6 +841,41 @@ paths:
                 $ref: '#/components/schemas/PageVenueOut'
         '422':
           $ref: '#/components/responses/Error'
+    post:
+      tags:
+      - venues
+      summary: Add a venue typed in the event editor
+      description: 'Owner: P2. Access: organizer or platform admin. Fields are trimmed. The new
+        venue joins the shared list. The same name, address and city (any letter case) returns
+        the existing venue with 200 instead of a copy; a new one returns 201.'
+      operationId: post_venues
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VenueCreate'
+      responses:
+        '200':
+          description: An existing venue with the same name, address and city
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenueOut'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenueOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
   /venues/{venue_id}:
     get:
       tags:
@@ -6217,6 +6252,29 @@ components:
           - type: 'null'
           title: Phone
       title: UserUpdate
+      type: object
+    VenueCreate:
+      properties:
+        name:
+          maxLength: 200
+          minLength: 1
+          title: Name
+          type: string
+        address:
+          maxLength: 300
+          minLength: 1
+          title: Address
+          type: string
+        city:
+          maxLength: 100
+          minLength: 1
+          title: City
+          type: string
+      required:
+      - name
+      - address
+      - city
+      title: VenueCreate
       type: object
     VenueOut:
       properties:
