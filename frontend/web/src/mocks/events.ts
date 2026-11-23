@@ -18,8 +18,20 @@ const venue: Venue = {
   lat: null,
   lng: null,
 };
-// Seeded venue plus any typed in the editor (POST /venues), shared by all organizers.
-const venues = new Map<string, Venue>([[venue.id, venue]]);
+const almatyVenue: Venue = {
+  id: "9b0c6d1e-2f4a-4c55-8a2e-5d7f1b3c9e01",
+  name: "Demo Almaty concert hall",
+  address: "Demo Almaty address",
+  city: "Almaty",
+  lat: null,
+  lng: null,
+};
+// Seeded venues plus any typed in the editor (POST /venues), shared by all organizers.
+const venues = new Map<string, Venue>([
+  [venue.id, venue],
+  [almatyVenue.id, almatyVenue],
+]);
+const venueOf = (id: string) => venues.get(id);
 export const demoEventId = "04e1dfa3-c0a1-43d7-a774-32c7dc9fb419";
 type Record = { value: Event; owner: string; policy?: { summary: string } };
 const events = new Map<string, Record>();
@@ -67,6 +79,7 @@ export function resetEventMocks() {
   tickets.clear();
   venues.clear();
   venues.set(venue.id, venue);
+  venues.set(almatyVenue.id, almatyVenue);
   events.set(demoEventId, {
     owner: "organizer@example.com",
     value: {
@@ -109,6 +122,101 @@ export function resetEventMocks() {
       checked_in: 0,
     },
   ]);
+  addDiscoveryFixtures();
+}
+/**
+ * Extra public events from a separate demo organizer so the discovery grid
+ * shows paid, low-stock and sold-out states. Organizer-owned lists are
+ * unaffected because no mock account owns them.
+ */
+function addDiscoveryFixtures() {
+  const owner = "partner-organizer@example.com";
+  const fixtures: {
+    id: string;
+    title: string;
+    category: string;
+    venue: Venue;
+    starts_at: string;
+    price: number;
+    total: number;
+    available: number;
+  }[] = [
+    {
+      id: "6f1d1c2a-7b3e-4f0a-9c11-0a7d3e5b8c21",
+      title: "Demo · Almaty jazz evening",
+      category: "concert",
+      venue: almatyVenue,
+      starts_at: "2027-02-14T14:00:00Z",
+      price: 500_000,
+      total: 120,
+      available: 12,
+    },
+    {
+      id: "8a2e4b6c-1d3f-4a5b-8c7d-9e0f1a2b3c42",
+      title: "Demo · Astana spring city run",
+      category: "sport",
+      venue,
+      starts_at: "2027-04-18T04:00:00Z",
+      price: 0,
+      total: 300,
+      available: 300,
+    },
+    {
+      id: "3c5e7a9b-2d4f-4b6a-8c0e-1f3a5b7c9d63",
+      title: "Demo · Product design workshop",
+      category: "workshop",
+      venue: almatyVenue,
+      starts_at: "2027-03-06T05:00:00Z",
+      price: 1_500_000,
+      total: 30,
+      available: 0,
+    },
+  ];
+  for (const f of fixtures) {
+    const ends = new Date(Date.parse(f.starts_at) + 3 * 3_600_000);
+    events.set(f.id, {
+      owner,
+      value: {
+        id: f.id,
+        title: f.title,
+        description: "Demonstration event for frontend development.",
+        category: f.category,
+        venue_id: f.venue.id,
+        layout_id: null,
+        starts_at: f.starts_at,
+        ends_at: ends.toISOString(),
+        timezone: "Asia/Almaty",
+        visibility: "public",
+        seating_mode: "general_admission",
+        capacity: f.total,
+        registration_opens_at: null,
+        registration_closes_at: null,
+        status: "published",
+        paid_sales_status: f.price > 0 ? "active" : "disabled",
+        share_token: `demo-${f.id.slice(0, 8)}`,
+        images: [],
+      },
+    });
+    tickets.set(f.id, [
+      {
+        id: crypto.randomUUID(),
+        name: f.price > 0 ? "Demo · Standard" : "Demo · Free entry",
+        description: null,
+        price_amount: f.price,
+        quantity_total: f.total,
+        max_per_order: 10,
+        is_hidden: false,
+        price_category: null,
+        sales_start: null,
+        sales_end: null,
+        available: f.available,
+        reserved: 0,
+        sold: f.total - f.available,
+        refunded: 0,
+        checked_in: 0,
+      },
+    ]);
+  }
 }
 resetEventMocks();
 const fail = (status: number, code: string) =>
@@ -171,7 +279,8 @@ export const eventHandlers = [
                 e.category.toLowerCase() ===
                   p.get("category")!.toLowerCase()) &&
               (!p.get("city") ||
-                venue.city.toLowerCase() === p.get("city")!.toLowerCase()) &&
+                venueOf(e.venue_id)?.city.toLowerCase() ===
+                  p.get("city")!.toLowerCase()) &&
               (!p.get("date_from") ||
                 Date.parse(e.starts_at) >= Date.parse(p.get("date_from")!)) &&
               (!p.get("date_to") ||

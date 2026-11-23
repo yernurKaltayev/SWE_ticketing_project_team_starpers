@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterAll, afterEach, beforeAll, expect, it, vi } from "vitest";
 import { StrictMode } from "react";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
@@ -89,4 +89,45 @@ it("keeps a password reset link's token so the new-password form shows", async (
   open("/reset-password?token=abc", "reset-password");
   expect(await screen.findByLabelText(authCopy.en.newPassword)).toBeTruthy();
   expect(screen.queryByText(authCopy.en.tokenMissing)).toBeNull();
+});
+
+function fillRegistration(phone: string) {
+  const type = (label: string, value: string) =>
+    fireEvent.change(screen.getByLabelText(label, { exact: true }), {
+      target: { value },
+    });
+  type(authCopy.en.fullName, "Aida Nurlan");
+  type(authCopy.en.email, "aida@example.com");
+  type(authCopy.en.phone, phone);
+  type(authCopy.en.password, "correct-horse-1");
+  type(authCopy.en.confirmPassword, "correct-horse-1");
+  fireEvent.click(screen.getByRole("button", { name: authCopy.en.register }));
+}
+
+it("asks for a Kazakhstan phone at registration and sends it in one format", async () => {
+  let sent: Record<string, unknown> | undefined;
+  server.use(
+    http.post("*/api/v1/auth/register", async ({ request }) => {
+      sent = (await request.json()) as Record<string, unknown>;
+      return HttpResponse.json({ id: "u1" }, { status: 201 });
+    }),
+  );
+  open("/register", "register");
+  fillRegistration("8 (701) 234-56-78");
+  expect(await screen.findByText(authCopy.en.registrationSent)).toBeTruthy();
+  expect(sent).toMatchObject({ email: "aida@example.com", phone: "+77012345678" });
+});
+
+it("explains a phone that is not a Kazakhstan number before sending anything", async () => {
+  let requests = 0;
+  server.use(
+    http.post("*/api/v1/auth/register", () => {
+      requests += 1;
+      return HttpResponse.json({ id: "u1" }, { status: 201 });
+    }),
+  );
+  open("/register", "register");
+  fillRegistration("12345");
+  expect((await screen.findAllByText(authCopy.en.phoneInvalid)).length).toBeGreaterThan(0);
+  expect(requests).toBe(0);
 });

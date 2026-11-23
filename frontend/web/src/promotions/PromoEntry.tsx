@@ -21,6 +21,7 @@ export function PromoEntry({
       <label htmlFor="promo-code">{t.entry}</label>
       <div className="controls">
         <input
+          type="text"
           id="promo-code"
           name="promo-code"
           autoComplete="off"

@@ -26,6 +26,72 @@ export function formatMoney(
     .join("");
 }
 
+/** CLDR abbreviated Kazakh month names, as full-ICU engines print them. */
+const kazakhMonths = [
+  "қаң.",
+  "ақп.",
+  "нау.",
+  "сәу.",
+  "мам.",
+  "мау.",
+  "шіл.",
+  "там.",
+  "қыр.",
+  "қаз.",
+  "қар.",
+  "жел.",
+];
+
+export interface DateTimeOptions {
+  /** Add hours and minutes (24-hour). */
+  time?: boolean;
+  /** IANA zone to show the moment in; the device zone when omitted. */
+  timeZone?: string;
+  /** Append the short zone name, e.g. "GMT+5". */
+  zoneName?: boolean;
+}
+
+/**
+ * A date (and optionally time) in the interface language. Chrome and Hermes ship no
+ * Kazakh calendar data and print "2027 M03 1", so Kazakh is composed from numeric parts
+ * in the CLDR pattern full-ICU engines use: "2027 ж. 1 нау., 19:00".
+ */
+export function formatDateTime(
+  value: string | Date,
+  locale: Locale,
+  { time = false, timeZone, zoneName = false }: DateTimeOptions = {},
+): string {
+  const date = value instanceof Date ? value : new Date(value);
+  const zone = zoneName ? ({ timeZoneName: "short" } as const) : {};
+  const clock = time ? ({ hour: "2-digit", minute: "2-digit" } as const) : {};
+  if (locale !== "kk")
+    return new Intl.DateTimeFormat(intlLocales[locale], {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      ...clock,
+      ...zone,
+      timeZone,
+    }).format(date);
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      ...clock,
+      hourCycle: "h23",
+      ...zone,
+      timeZone,
+    })
+      .formatToParts(date)
+      .map((part) => [part.type, part.value]),
+  );
+  const day = `${parts.year} ж. ${Number(parts.day)} ${kazakhMonths[Number(parts.month) - 1]}`;
+  const clockText = time ? `, ${parts.hour}:${parts.minute}` : "";
+  const zoneText = zoneName && parts.timeZoneName ? ` ${parts.timeZoneName}` : "";
+  return `${day}${clockText}${zoneText}`;
+}
+
 /** Requires an absolute timestamp and the event's explicit IANA time zone. */
 export function formatEventDateTime(
   value: string | Date,
@@ -40,14 +106,6 @@ export function formatEventDateTime(
   const date = value instanceof Date ? value : new Date(value);
   if (!Number.isFinite(date.getTime()))
     throw new RangeError("Timestamp is invalid.");
-  const formatted = new Intl.DateTimeFormat(intlLocales[locale], {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone,
-    timeZoneName: "short",
-  }).format(date);
+  const formatted = formatDateTime(date, locale, { time: true, timeZone, zoneName: true });
   return `${formatted} · ${timeZone}`;
 }

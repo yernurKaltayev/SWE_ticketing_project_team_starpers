@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import type { Locale } from "@biletflow/shared";
 import type { components } from "@biletflow/shared/api";
 import { authCopy } from "./copy";
-import { fieldErrors, validEmail, validName } from "./helpers";
+import { fieldErrors, kazakhstanPhone, validEmail, validName } from "./helpers";
 import { useSession } from "./session";
 import { Field, FormError, Status } from "./ui";
 import { toneFor } from "../tone";
@@ -26,7 +26,7 @@ export function ProfilePage({ locale }: { locale: Locale }) {
     if (!user || busy) return;
     const next: Record<string, string> = {};
     if (!validName(name)) next.full_name = t.nameRequired;
-    if (phone.trim().length > 32) next.phone = t.phoneInvalid;
+    if (phone.trim() && !kazakhstanPhone(phone)) next.phone = t.phoneInvalid;
     setErrors(next);
     setError(null);
     setSaved(false);

@@ -1,6 +1,6 @@
 import { CalendarActions } from "../calendar/CalendarActions";
 import { ReportEvent } from "../insights/ReportEvent";
-import { SupportLink } from "../support/ui";
+import { supportLink } from "../support/model";
 import { PromotionBanner } from "../promotions/Banner";
 import { checkoutLink } from "../promotions/model";
 import { seatingCopy } from "../seating/copy";
@@ -229,6 +229,21 @@ function EventContent({
           )}
           {!preview && (
             <CalendarActions event={event} venue={venue.data} locale={locale} />
+          )}
+          {!preview && (
+            <section className="panel help-panel" aria-labelledby="event-help-title">
+              <h2 id="event-help-title">{t.helpTitle}</h2>
+              <p>{t.helpHint}</p>
+              <Link
+                className="action-link ghost"
+                to={supportLink({ event_id: event.id })}
+              >
+                {t.helpSupport}
+              </Link>
+              {event.status === "published" && event.visibility !== "private" && (
+                <ReportEvent id={event.id} locale={locale} />
+              )}
+            </section>
           )}
         </aside>
       </div>

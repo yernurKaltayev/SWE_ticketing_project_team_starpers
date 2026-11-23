@@ -232,6 +232,9 @@ it("creates an event with live P4 venue arrays, then saves and edits a paid tick
     screen.getByRole("button", { name: "Save ticket type" }),
   );
   await screen.findByRole("rowheader", { name: "Paid regression" });
+  // The edit column names the ticket-type action, not the event.
+  expect(screen.getByRole("columnheader", { name: "Edit ticket type" })).toBeTruthy();
+  expect(screen.queryByRole("columnheader", { name: "Edit event" })).toBeNull();
   expect(savedBody).toMatchObject({
     price_amount: 2500,
     is_free: false,

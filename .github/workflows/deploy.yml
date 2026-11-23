@@ -1,0 +1,97 @@
+name: Deploy
+
+# Continuous deployment of master to the demo server (deploy/README.md).
+# A master commit is deployed once every CI workflow that ran for it has passed:
+# Backend CI and Frontend foundation each trigger this when they finish, and the gate
+# below waits for the other one if it is still running. Changes under deploy/ alone run
+# no CI, so they deploy on push.
+on:
+  workflow_run:
+    workflows: ["Backend CI", "Frontend foundation"]
+    types: [completed]
+    branches: [master]
+  push:
+    branches: [master]
+    paths: ["deploy/**", ".github/workflows/deploy.yml"]
+  pull_request:
+    paths: ["deploy/**", ".github/workflows/deploy.yml"]
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy scripts parse
+        run: sh -n deploy/deploy.sh && sh -n deploy/ci-deploy.sh && shellcheck deploy/*.sh
+      - name: Production Compose file is valid
+        run: |
+          sed 's/=CHANGE$/=ci-0123456789abcdef0123456789abcdef0123/; s/CHANGE\./ci./g' \
+            deploy/.env.example > deploy/.env
+          docker compose -f deploy/compose.yml config --quiet
+
+  deploy:
+    needs: validate
+    # validate is skipped for workflow_run and workflow_dispatch; run anyway, but never for
+    # a pull request or a failed validation, and only for CI runs on pushes to master.
+    if: >-
+      always() &&
+      github.event_name != 'pull_request' &&
+      needs.validate.result != 'failure' &&
+      (github.event_name != 'workflow_run' || github.event.workflow_run.event == 'push') &&
+      github.repository == 'yernurKaltayev/SWE_ticketing_project_team_starpers'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.DEPLOY_URL }}
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - name: Wait for CI on this commit
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          runs=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$SHA&event=push&per_page=100" \
+            --jq '[.workflow_runs[] | select(.name == "Backend CI" or .name == "Frontend foundation")]')
+          echo "$runs" | jq -r '.[] | "\(.name): \(.status) \(.conclusion // "")"'
+          pending=$(echo "$runs" | jq '[.[] | select(.status != "completed")] | length')
+          failed=$(echo "$runs" | jq '[.[] | select(.status == "completed" and .conclusion != "success" and .conclusion != "skipped")] | length')
+          if [ "$failed" -gt 0 ]; then
+            echo "::error::CI failed for $SHA; not deploying."
+            exit 1
+          fi
+          if [ "$pending" -gt 0 ]; then
+            echo "::notice::CI is still running for $SHA; its completion deploys it."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy over SSH
+        if: steps.gate.outputs.deploy == 'true'
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # The server's forced command takes nothing but the sha (deploy/ci-deploy.sh).
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o ConnectTimeout=20 "ubuntu@$HOST" "$SHA"
+
+      - name: Smoke check
+        if: steps.gate.outputs.deploy == 'true' && vars.DEPLOY_URL != ''
+        run: |
+          curl -fsS --retry 6 --retry-delay 5 --retry-all-errors "${{ vars.DEPLOY_URL }}/health"
+          curl -fsS -o /dev/null "${{ vars.DEPLOY_URL }}/"

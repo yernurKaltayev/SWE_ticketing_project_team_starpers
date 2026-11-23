@@ -69,6 +69,7 @@ async def register(db: AsyncSession, data: RegisterIn) -> tuple[User, str]:
         email=data.email,
         password_hash=await asyncio.to_thread(hash_password, data.password),
         full_name=data.full_name,
+        phone=data.phone,
         role=UserRole(data.role),
     )
     db.add(user)
@@ -86,7 +87,7 @@ async def register(db: AsyncSession, data: RegisterIn) -> tuple[User, str]:
                 user_id=user.id,
                 organization_name=data.full_name,
                 contact_email=data.email,
-                contact_phone="",
+                contact_phone=data.phone,
             )
         )
     token = await issue_email_token(db, user.id, EmailTokenPurpose.verify)

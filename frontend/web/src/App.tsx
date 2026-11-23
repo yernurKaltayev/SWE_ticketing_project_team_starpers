@@ -13,10 +13,10 @@ import {
   Routes,
   useLocation,
 } from "react-router-dom";
-import { isLocale, localeLabels, locales, messages } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { config } from "./config";
 import { readLocale, saveLocale } from "./localePreference";
+import { AccountMenu, DemoNotice, LanguagePicker } from "./HeaderMenus";
 import { AuthPage } from "./auth/AuthPage";
 import type { AuthKind } from "./auth/AuthPage";
 import { ProfilePage, OrganizerPage } from "./auth/ProfilePage";
@@ -157,51 +157,51 @@ function Application() {
         <nav className="site-nav" aria-label="BiletFlow">
           <NavLink to="/events">{eventCopy[locale].events}</NavLink>
           {user ? (
-            <>
-              <NotificationLink locale={locale} />
-              <NavLink to="/support">{supportCopy[locale].title}</NavLink>
-              <NavLink to="/account/tickets">
-                {commerceNavigation[locale].tickets}
-              </NavLink>
-              <NavLink to="/account/orders">
-                {commerceNavigation[locale].orders}
-              </NavLink>
-            </>
+            <NavLink to="/support">{supportCopy[locale].title}</NavLink>
           ) : null}
           {hasRole(user, ["platform_admin"]) && (
             <NavLink to="/admin/users">{insightLabel(locale, "admin")}</NavLink>
           )}
+        </nav>
+        <div className="account-nav">
           {isOrganizer && (
-            <NavLink to="/organizer/events">
+            <NavLink className="organizer-link" to="/organizer/events">
               {eventCopy[locale].organizer}
             </NavLink>
           )}
-        </nav>
-        <div className="account-nav">
-          <label className="language-control">
-            <span>{messages[locale].language}</span>
-            <select
-              value={locale}
-              onChange={(event) => {
-                if (isLocale(event.target.value)) setLocale(event.target.value);
-              }}
-            >
-              {locales.map((code) => (
-                <option key={code} value={code}>
-                  {localeLabels[code]}
-                </option>
-              ))}
-            </select>
-          </label>
+          <LanguagePicker locale={locale} onChange={setLocale} />
           {user ? (
             <>
-              <NavLink to="/account" end className="account-secondary">
-                {t.account}
-              </NavLink>
-              <button
-                className="secondary"
-                disabled={loggingOut}
-                onClick={() => {
+              <NotificationLink locale={locale} />
+              <AccountMenu
+                locale={locale}
+                name={user.full_name}
+                email={user.email}
+                links={[
+                  ...(isOrganizer
+                    ? [
+                        {
+                          to: "/organizer/events",
+                          label: eventCopy[locale].organizer,
+                          kind: "events" as const,
+                        },
+                      ]
+                    : []),
+                  {
+                    to: "/account/tickets",
+                    label: commerceNavigation[locale].tickets,
+                    kind: "tickets",
+                  },
+                  {
+                    to: "/account/orders",
+                    label: commerceNavigation[locale].orders,
+                    kind: "orders",
+                  },
+                  { to: "/account", label: t.account, kind: "account" },
+                ]}
+                logoutLabel={loggingOut ? t.working : t.logout}
+                busy={loggingOut}
+                onLogout={() => {
                   setLoggingOut(true);
                   setLogoutError(false);
                   void controller
@@ -209,9 +209,7 @@ function Application() {
                     .catch(() => setLogoutError(true))
                     .finally(() => setLoggingOut(false));
                 }}
-              >
-                {loggingOut ? t.working : t.logout}
-              </button>
+              />
             </>
           ) : (
             <>
@@ -229,7 +227,7 @@ function Application() {
       </header>
       <main id="main" className="page" tabIndex={-1}>
         {config.useMocks ? (
-          <p className="environment-notice">{t.mockNotice}</p>
+          <DemoNotice locale={locale} text={t.mockNotice} />
         ) : null}
         {logoutError ? <Status>{t.logoutFailed}</Status> : null}
         <div className={showWorkspace ? "workspace" : undefined}>

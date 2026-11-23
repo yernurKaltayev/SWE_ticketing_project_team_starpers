@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryTokenStore } from "../src/token-store";
-import { formatEventDateTime, formatMoney } from "../src/format";
+import { formatDateTime, formatEventDateTime, formatMoney } from "../src/format";
 import { isLocale, locales, messages } from "../src/locales";
 
 describe("non-persistent token storage", () => {
@@ -78,6 +78,46 @@ describe("event time and baseline locales", () => {
     );
     expect(() => formatEventDateTime(instant, "")).toThrow(RangeError);
     expect(() => formatEventDateTime("invalidZ", "UTC")).toThrow(RangeError);
+  });
+
+  describe("Kazakh dates in engines without Kazakh month names", () => {
+    // Chrome and Hermes ship no Kazakh calendar data and print "2027 M03 1 19:00".
+    const RealFormat = Intl.DateTimeFormat;
+    beforeEach(() => {
+      const chromeLike = function (
+        locales?: string | string[],
+        options?: Intl.DateTimeFormatOptions,
+      ) {
+        const asked = Array.isArray(locales) ? locales[0] : locales;
+        if (!asked?.startsWith("kk")) return new RealFormat(locales, options);
+        const english = new RealFormat("en-CA", { ...options, month: options?.month ? "2-digit" : undefined });
+        return {
+          format: (date?: Date | number) =>
+            english.format(date).replace(/(\d{4})-(\d{2})-(\d{2})/, "$1 M$2 $3"),
+          formatToParts: (date?: Date | number) => english.formatToParts(date),
+          resolvedOptions: () => english.resolvedOptions(),
+        } as Intl.DateTimeFormat;
+      } as unknown as typeof Intl.DateTimeFormat;
+      vi.stubGlobal("Intl", { ...Intl, DateTimeFormat: chromeLike });
+    });
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("writes the event date with Kazakh month names", () => {
+      expect(formatEventDateTime("2027-03-01T14:00:00Z", "Asia/Almaty", "kk")).toBe(
+        "2027 ж. 1 нау., 19:00 GMT+5 · Asia/Almaty",
+      );
+    });
+
+    it("writes timestamps and plain dates the same way", () => {
+      const instant = "2026-11-23T18:20:00Z";
+      expect(formatDateTime(instant, "kk", { time: true, timeZone: "Asia/Almaty" })).toBe(
+        "2026 ж. 23 қар., 23:20",
+      );
+      expect(formatDateTime(instant, "kk", { timeZone: "Asia/Almaty" })).toBe("2026 ж. 23 қар.");
+      expect(formatDateTime(instant, "en", { time: true, timeZone: "UTC" })).toContain("2026");
+    });
   });
 
   it("has complete matching F0 message keys for kk, ru and en", () => {

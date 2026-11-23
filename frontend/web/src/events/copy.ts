@@ -11,8 +11,8 @@ const en = {
   search: "Search",
   category: "Category",
   city: "City",
-  date_from: "From date (UTC)",
-  date_to: "Through date (UTC)",
+  date_from: "From date",
+  date_to: "Through date",
   filter: "Apply filters",
   reset: "Clear filters",
   previous: "Previous",
@@ -112,6 +112,9 @@ const en = {
   serverError:
     "Something went wrong on the server. Try again; if it keeps happening, share the ID below.",
   hasOrders: "This event has orders. Use the cancellation and refund workflow.",
+  helpTitle: "Need help?",
+  helpHint: "Questions about tickets, payment or the event itself.",
+  helpSupport: "Contact support",
   refund: "Refund policy",
   policyGap:
     "The current API does not return the saved refund policy. Confirm the organizer’s terms before registering.",
@@ -144,8 +147,8 @@ const ru: Copy = {
   search: "Поиск",
   category: "Категория",
   city: "Город",
-  date_from: "С даты (UTC)",
-  date_to: "По дату (UTC)",
+  date_from: "С даты",
+  date_to: "По дату",
   filter: "Применить фильтры",
   reset: "Сбросить фильтры",
   previous: "Назад",
@@ -244,6 +247,9 @@ const ru: Copy = {
   serverError:
     "На сервере произошла ошибка. Повторите попытку; если ошибка повторяется, сообщите ID ниже.",
   hasOrders: "Есть заказы. Используйте отмену с возвратом.",
+  helpTitle: "Нужна помощь?",
+  helpHint: "Вопросы о билетах, оплате или самом событии.",
+  helpSupport: "Написать в поддержку",
   refund: "Правила возврата",
   policyGap:
     "Текущий API не возвращает сохранённые правила возврата. Уточните условия у организатора до регистрации.",
@@ -276,8 +282,8 @@ const kk: Copy = {
   search: "Іздеу",
   category: "Санат",
   city: "Қала",
-  date_from: "Бастапқы күн (UTC)",
-  date_to: "Соңғы күн (UTC)",
+  date_from: "Бастапқы күн",
+  date_to: "Соңғы күн",
   filter: "Сүзгілерді қолдану",
   reset: "Сүзгілерді тазарту",
   previous: "Артқа",
@@ -376,6 +382,9 @@ const kk: Copy = {
   serverError:
     "Серверде қате орын алды. Қайталап көріңіз; қате қайталанса, төмендегі ID-ді жіберіңіз.",
   hasOrders: "Тапсырыстар бар. Бас тарту және қайтару үдерісін қолданыңыз.",
+  helpTitle: "Көмек керек пе?",
+  helpHint: "Билеттер, төлем немесе іс-шараның өзі туралы сұрақтар.",
+  helpSupport: "Қолдауға жазу",
   refund: "Қайтару ережелері",
   policyGap:
     "Қазіргі API сақталған қайтару ережелерін бермейді. Тіркелмес бұрын ұйымдастырушыдан шарттарды нақтылаңыз.",

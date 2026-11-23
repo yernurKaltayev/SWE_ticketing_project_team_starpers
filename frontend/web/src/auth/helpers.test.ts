@@ -2,9 +2,33 @@ import { describe, expect, it } from "vitest";
 import { ApiError } from "@biletflow/shared";
 import type { components } from "@biletflow/shared/api";
 import { authCopy } from "./copy";
-import { fieldErrors, hasRole, safeReturnTo } from "./helpers";
+import { fieldErrors, hasRole, kazakhstanPhone, safeReturnTo } from "./helpers";
+
+describe("kazakhstanPhone", () => {
+  it("accepts the ways people type a Kazakhstan number and returns one format", () => {
+    for (const typed of [
+      "+7 701 234 56 78",
+      "+7 (701) 234-56-78",
+      "87012345678",
+      "77012345678",
+      "7012345678",
+      "+7 612 345 67 89",
+    ])
+      expect(kazakhstanPhone(typed), typed).toMatch(/^\+7[67]\d{9}$/);
+    expect(kazakhstanPhone(" 8 (701) 234-56-78 ")).toBe("+77012345678");
+  });
+
+  it("rejects everything else", () => {
+    for (const typed of ["", "12345", "+7 901 234 56 78", "+7 701 234 56 78 9", "phone"])
+      expect(kazakhstanPhone(typed), typed).toBeNull();
+  });
+});
 
 describe("safeReturnTo", () => {
+  it("opens the main page when no destination was asked for", () => {
+    expect(safeReturnTo(null)).toBe("/");
+  });
+
   it("preserves app paths, query state and fragments through sign-in", () => {
     for (const destination of [
       "/account",
@@ -33,7 +57,7 @@ describe("safeReturnTo", () => {
       " /account",
       "/invalid%",
     ])
-      expect(safeReturnTo(destination), String(destination)).toBe("/account");
+      expect(safeReturnTo(destination), String(destination)).toBe("/");
   });
 
   it("rejects auth loops including case-insensitive and encoded route matches", () => {
@@ -51,7 +75,7 @@ describe("safeReturnTo", () => {
       "/events/../login",
       "/login/extra",
     ])
-      expect(safeReturnTo(destination), destination).toBe("/account");
+      expect(safeReturnTo(destination), destination).toBe("/");
   });
 });
 

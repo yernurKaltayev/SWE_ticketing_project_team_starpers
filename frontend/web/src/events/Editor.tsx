@@ -545,7 +545,7 @@ function TicketEditor({
                   {t[key as keyof typeof t]}
                 </th>
               ))}
-              <th scope="col">{t.edit}</th>
+              <th scope="col">{t.editTicket}</th>
             </tr>
           </thead>
           <tbody>
