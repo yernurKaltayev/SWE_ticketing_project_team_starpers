@@ -1,0 +1,37 @@
+# Single-server production stack: the backend Compose project, the production web build
+# and Caddy for HTTPS. Only Caddy is published (80/443). See docs/deployment.md.
+#   cp .env.example .env   # then fill in the secrets
+#   docker compose up -d --build --wait
+name: biletflow
+
+include:
+  - path:
+      - ../backend/docker-compose.yml
+      - ./backend.override.yml
+    env_file: ./.env
+
+services:
+  web:
+    build:
+      context: ../frontend
+      dockerfile: web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in deploy/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [web]
+
+volumes:
+  caddy-data:
+  caddy-config:
