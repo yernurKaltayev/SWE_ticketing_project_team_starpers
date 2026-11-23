@@ -7,6 +7,7 @@ import { parseEvent } from "../events/contracts";
 import { useLiveQuery } from "../support/data";
 import { dateQuery, parseHistory, categories } from "./model";
 import { label } from "./copy";
+import { eventCopy } from "../events/copy";
 import { DateFields, Failure, Pager } from "./ui";
 export default function History({
   locale
@@ -52,8 +53,8 @@ export default function History({
   const history = useLiveQuery(filter.query !== undefined ? `${root}/history?${filter.query}` : "", parseHistory, 30000, !event.isError);
   const data = event.isError || history.isError ? undefined : history.data;
   return <section className="insights">
-  <Link to="/organizer/events">
-    {t("archive")}
+  <Link className="back-link" to="/organizer/events">
+    {eventCopy[locale].back}
   </Link>
   <h1>
     {t("history")}

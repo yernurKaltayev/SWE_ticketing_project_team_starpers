@@ -6,6 +6,7 @@ import { parseEvent } from "../events/contracts";
 import { allEvents } from "./model";
 import { useWriteScope } from "./data";
 import { label } from "./copy";
+import { eventCopy } from "../events/copy";
 import { Confirm, Failure } from "./ui";
 export function DuplicateEvent({
   id,
@@ -38,8 +39,8 @@ export function DuplicateEvent({
     <p role="alert">
       {t("unknown")}
     </p>
-    <Link to="/organizer/events">
-      {t("archive")}
+    <Link className="back-link" to="/organizer/events">
+      {eventCopy[locale].back}
     </Link>
     <button type="button" disabled={checking} onClick={() => {
         setChecking(true);

@@ -769,6 +769,9 @@ main:focus {
 .workspace-main {
   min-width: 0;
 }
+.workspace-nav-toggle {
+  display: none;
+}
 
 /* ---------- Auth ---------- */
 .auth-page {
@@ -1218,27 +1221,30 @@ main:focus {
   }
   .workspace-nav {
     position: static;
-    display: flex;
-    gap: 0.25rem 1rem;
-    overflow-x: auto;
+    gap: 1rem;
     padding: 0.5rem;
-    scrollbar-width: thin;
   }
-  .workspace-nav section {
+  .workspace-nav-toggle {
     display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    flex: none;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.6rem;
   }
-  .workspace-nav .nav-label {
+  .workspace-nav-toggle span {
+    flex: 1;
+    text-align: left;
+  }
+  .workspace-nav-toggle svg:last-child {
+    transition: transform 160ms var(--ease-out);
+  }
+  .workspace-nav[data-open] .workspace-nav-toggle svg:last-child {
+    transform: rotate(180deg);
+  }
+  .workspace-nav:not([data-open]) section {
     display: none;
   }
-  .workspace-nav ul {
-    display: flex;
-    gap: 0.25rem;
-  }
-  .workspace-nav a {
-    white-space: nowrap;
+  .workspace-nav section {
+    padding-inline: 0.25rem;
   }
 }
 @media (max-width: 760px) {
@@ -2095,6 +2101,7 @@ button.password-toggle[aria-pressed="true"] {
   font-size: 0.875rem;
 }
 .title-row {
+  margin-block: 0.5rem 1rem;
   display: flex;
   align-items: center;
   flex-wrap: wrap;

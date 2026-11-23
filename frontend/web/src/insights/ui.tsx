@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
-import { ApiError, formatMoney, formatEventDateTime } from "@biletflow/shared";
+import { ApiError, formatMoney, formatEventDateTime, zoneLabel } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { Field } from "../auth/ui";
 import { label } from "./copy";
@@ -40,8 +40,8 @@ export function DateFields({
   zone: string;
 }) {
   return <>
-  <Field label={`${label(locale, "from")} · ${zone}`} name={keys[0]} type="datetime-local" defaultValue={params.get(keys[0]) ?? ""} />
-  <Field label={`${label(locale, "to")} · ${zone}`} name={keys[1]} type="datetime-local" defaultValue={params.get(keys[1]) ?? ""} />
+  <Field label={`${label(locale, "from")} · ${zoneLabel(zone, locale)}`} name={keys[0]} type="datetime-local" defaultValue={params.get(keys[0]) ?? ""} />
+  <Field label={`${label(locale, "to")} · ${zoneLabel(zone, locale)}`} name={keys[1]} type="datetime-local" defaultValue={params.get(keys[1]) ?? ""} />
 </>;
 }
 export function Pager({

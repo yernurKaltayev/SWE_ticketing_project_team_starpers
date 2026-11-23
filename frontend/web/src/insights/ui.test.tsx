@@ -148,12 +148,12 @@ it("sends event-zone dates and ticket type as one applied analytics filter", asy
   }));
   await mount(`${path}/analytics`);
   await screen.findByText(formatMoney(7001, "en").replace(/\s/g, " "));
-  fireEvent.change(screen.getByLabelText("From (inclusive) · Asia/Almaty"), {
+  fireEvent.change(screen.getByLabelText("From (inclusive) · Almaty"), {
     target: {
       value: "2026-11-18T10:00"
     }
   });
-  fireEvent.change(screen.getByLabelText("Until (exclusive) · Asia/Almaty"), {
+  fireEvent.change(screen.getByLabelText("Until (exclusive) · Almaty"), {
     target: {
       value: "2026-11-19T10:00"
     }

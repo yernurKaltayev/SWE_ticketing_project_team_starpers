@@ -42,6 +42,7 @@ import {
   BellIcon,
   BoltIcon,
   BrandMark,
+  ChevronDownIcon,
   ChartIcon,
   EditIcon,
   EyeIcon,
@@ -628,8 +629,34 @@ function OrganizerNav({
       ? [{ id: "nav-event", label: ev.details, links: eventLinks }]
       : []),
   ];
+  // Phones/tablets: the full list collapses behind a button that names the
+  // current page, instead of a sideways-scrolling strip of 15 links.
+  // Remember which page the menu was opened on, so navigating closes it.
+  const [openOn, setOpenOn] = useState<string | null>(null);
+  const open = openOn === pathname;
+  const current = groups
+    .flatMap((group) => group.links)
+    .filter((link) => {
+      const path = link.to.split("?")[0]!;
+      return pathname === path || (!("end" in link) && pathname.startsWith(`${path}/`));
+    })
+    .sort((a, b) => b.to.length - a.to.length)[0];
   return (
-    <nav className="workspace-nav" aria-label={authCopy[locale].organizerRole}>
+    <nav
+      className="workspace-nav"
+      data-open={open || undefined}
+      aria-label={authCopy[locale].organizerRole}
+    >
+      <button
+        type="button"
+        className="workspace-nav-toggle secondary"
+        aria-expanded={open}
+        onClick={() => setOpenOn(open ? null : pathname)}
+      >
+        {current?.icon}
+        <span>{current?.label ?? authCopy[locale].organizerRole}</span>
+        <ChevronDownIcon />
+      </button>
       {groups.map((group) => (
         <section key={group.id}>
           <p className="nav-label" id={group.id}>
