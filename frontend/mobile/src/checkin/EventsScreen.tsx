@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
-import { useIsFocused, useTheme } from "@react-navigation/native";
+import { useIsFocused } from "@react-navigation/native";
 import { ApiError, formatEventDateTime } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { session } from "../session";
 import { checkInCopy } from "./copy";
 import { paths, scannableEvents } from "./model";
 import type { StaffEvent } from "./model";
-import { Action, Body, Heading, styles as ui, useBorderColor } from "./ui";
+import { color, type } from "../theme";
+import { Action, Body, Callout, Card, Muted, Pill, styles as ui, Title } from "../ui";
 
 function when(event: StaffEvent, locale: Locale) {
   try {
@@ -29,8 +30,6 @@ export function EventsScreen({
   header?: ReactNode;
 }) {
   const t = checkInCopy[locale];
-  const { colors } = useTheme();
-  const border = useBorderColor();
   const focused = useIsFocused();
   const [events, setEvents] = useState<StaffEvent[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -69,28 +68,40 @@ export function EventsScreen({
     <FlatList
       data={events ?? []}
       keyExtractor={(event) => event.event_id}
+      style={ui.fill}
       contentContainerStyle={ui.content}
       refreshControl={
-        <RefreshControl refreshing={loading} onRefresh={() => void load()} />
+        <RefreshControl
+          refreshing={loading}
+          onRefresh={() => void load()}
+          tintColor={color.primary}
+          colors={[color.primary]}
+        />
       }
       ListHeaderComponent={
-        <View style={local.header}>
+        <View style={ui.stack}>
           {header}
-          <Heading>{t.events}</Heading>
-          <Body>{t.eventsIntro}</Body>
+          <Title subtitle={t.eventsIntro}>{t.events}</Title>
           {failed ? (
             <>
-              <Body live="assertive">
-                {t.loadFailed} ({failed})
-              </Body>
-              <Action title={t.reload} onPress={() => void load()} />
+              <Callout tone="danger" alert>
+                {`${t.loadFailed} (${failed})`}
+              </Callout>
+              <Action title={t.reload} variant="primary" onPress={() => void load()} />
             </>
           ) : null}
-          {events === null && !failed ? <Body live="polite">{t.loading}</Body> : null}
+          {events === null && !failed ? <Muted live="polite">{t.loading}</Muted> : null}
         </View>
       }
       ListEmptyComponent={
-        events !== null && !failed ? <Body>{t.noEvents}</Body> : undefined
+        events !== null && !failed ? (
+          <Card>
+            <Body>{t.noEvents}</Body>
+            <View style={local.cardAction}>
+              <Action title={t.reload} variant="primary" onPress={() => void load()} />
+            </View>
+          </Card>
+        ) : undefined
       }
       renderItem={({ item }) => {
         const canScan = scannable.has(item.event_id);
@@ -101,27 +112,29 @@ export function EventsScreen({
               ? t.suspendedEvent
               : null;
         return (
-          <View style={[ui.card, local.card, { borderColor: border, backgroundColor: colors.card }]}>
-            <Text style={[local.title, { color: colors.text }]}>{item.title}</Text>
-            <Text style={[ui.muted, { color: colors.text }]}>{when(item, locale)}</Text>
-            <Text style={[ui.muted, { color: colors.text }]}>
+          <Card>
+            <Text style={local.title}>{item.title}</Text>
+            <Text style={local.when}>{when(item, locale)}</Text>
+            <Muted>
               {item.venue_name}, {item.venue_city}
-            </Text>
-            <Text style={[local.role, { color: colors.text }]}>
-              {t.roles[item.role]}
-              {statusLabel ? ` · ${statusLabel}` : ""}
-            </Text>
+            </Muted>
+            <View style={local.pills}>
+              <Pill label={t.roles[item.role]} tone="primary" />
+              {statusLabel ? <Pill label={statusLabel} tone="danger" /> : null}
+            </View>
             {canScan ? (
-              <Action
-                title={t.open}
-                variant="primary"
-                accessibilityHint={item.title}
-                onPress={() => onOpen(item)}
-              />
+              <View style={local.cardAction}>
+                <Action
+                  title={t.open}
+                  variant="primary"
+                  accessibilityHint={item.title}
+                  onPress={() => onOpen(item)}
+                />
+              </View>
             ) : (
-              <Text style={[ui.muted, { color: colors.text }]}>{t.notScannable}</Text>
+              <Muted>{t.notScannable}</Muted>
             )}
-          </View>
+          </Card>
         );
       }}
     />
@@ -129,8 +142,8 @@ export function EventsScreen({
 }
 
 const local = StyleSheet.create({
-  header: { gap: 12, marginBottom: 4 },
-  card: { marginBottom: 12 },
-  title: { fontSize: 19, fontWeight: "700" },
-  role: { fontSize: 15, fontWeight: "600" },
+  title: { ...type.heading, color: color.ink },
+  when: { ...type.body, color: color.ink },
+  pills: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 4 },
+  cardAction: { marginTop: 8 },
 });

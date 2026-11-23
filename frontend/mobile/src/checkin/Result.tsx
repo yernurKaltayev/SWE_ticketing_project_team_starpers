@@ -1,34 +1,34 @@
 import { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
-import { useTheme } from "@react-navigation/native";
+import { StyleSheet, Text, View } from "react-native";
 import { ApiError } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { session } from "../session";
 import { checkInCopy } from "./copy";
-import { paths, toneOf, UNDO_REASON_MAX, validUndoReason } from "./model";
-import type { Outcome, Ticket } from "./model";
-import {
-  Action,
-  Body,
-  Heading,
-  Sheet,
-  styles as ui,
-  tonePalette,
-  useBorderColor,
-} from "./ui";
+import { paths, UNDO_REASON_MAX, validUndoReason } from "./model";
+import type { Outcome, OutcomeKind, Ticket } from "./model";
+import { VerdictIcon } from "../icons";
+import type { Glyph } from "../icons";
+import { color, feedback, radius, type, verdictFeedback } from "../theme";
+import { Action, Body, Callout, Card, Input, Label, Muted, Sheet, Title } from "../ui";
+
+function glyphOf(kind: OutcomeKind): Glyph {
+  if (kind === "accepted") return "check";
+  if (kind === "unknown" || kind === "error") return "question";
+  if (kind === "already_used" || kind === "wrong_event") return "alert";
+  return "cross";
+}
 
 export function TicketFacts({
   ticket,
   locale,
-  color,
+  labelColor = color.muted,
 }: {
   ticket: Ticket;
   locale: Locale;
-  color?: string;
+  /** On a tinted verdict panel, labels take the panel's hue rather than grey. */
+  labelColor?: string;
 }) {
   const t = checkInCopy[locale];
-  const { colors } = useTheme();
-  const text = { color: color ?? colors.text };
   const rows: [string, string][] = [
     [t.attendee, ticket.attendee_name],
     [t.ticketType, ticket.ticket_type],
@@ -42,16 +42,16 @@ export function TicketFacts({
   return (
     <View style={local.facts}>
       {rows.map(([label, value]) => (
-        <Text key={label} style={[local.fact, text]}>
-          <Text style={local.factLabel}>{label}: </Text>
-          {value}
-        </Text>
+        <View key={label} style={local.fact}>
+          <Text style={[local.factLabel, { color: labelColor }]}>{label}</Text>
+          <Text style={local.factValue}>{value}</Text>
+        </View>
       ))}
     </View>
   );
 }
 
-/** Full-width verdict banner: symbol + headline + instruction, never color alone. */
+/** Verdict: drawn symbol + coloured headline over a tinted card, never colour alone. */
 export function ResultCard({
   outcome,
   locale,
@@ -66,59 +66,52 @@ export function ResultCard({
   onUndo?: () => void;
 }) {
   const t = checkInCopy[locale];
-  const tone = tonePalette[toneOf(outcome.kind)];
-  const textColor = { color: tone.text };
+  const tone = feedback[verdictFeedback(outcome.kind)];
   const cause =
     outcome.kind === "unknown"
       ? outcome.cause === "timeout"
         ? t.timeout
         : t.offline
       : null;
+  const retry = onRetry && (outcome.kind === "unknown" || outcome.kind === "error");
+  const undo = onUndo && outcome.kind === "accepted" && outcome.ticket;
   return (
-    <View
-      accessible
-      accessibilityRole="alert"
-      accessibilityLiveRegion="assertive"
-      style={[local.card, { backgroundColor: tone.background }]}
-    >
-      <View style={local.headline}>
-        <Text style={[local.symbol, textColor]} accessibilityElementsHidden>
-          {tone.symbol}
-        </Text>
-        <Text style={[local.title, textColor]}>{t.outcome[outcome.kind]}</Text>
-      </View>
-      <Text style={[local.detail, textColor]}>{t.detail[outcome.kind]}</Text>
-      {cause ? <Text style={[local.detail, textColor]}>{cause}</Text> : null}
-      {outcome.reconciled ? (
-        <Text style={[local.detail, textColor, local.strong]}>
-          {t.reconciled}
-        </Text>
-      ) : null}
-      {outcome.ticket ? (
-        <TicketFacts ticket={outcome.ticket} locale={locale} color={tone.text} />
-      ) : null}
-      {outcome.latencyMs !== null && outcome.kind !== "unknown" ? (
-        <Text style={[local.meta, textColor]}>
-          {t.serverTime} {outcome.latencyMs} {t.ms}
-        </Text>
-      ) : null}
-      {outcome.code ? (
-        <Text style={[local.meta, textColor]}>
-          {outcome.code}
-          {outcome.requestId ? ` · ${outcome.requestId}` : ""}
-        </Text>
-      ) : null}
-      <View style={local.actions}>
-        {onRetry && (outcome.kind === "unknown" || outcome.kind === "error") ? (
-          <Action title={t.retry} onPress={onRetry} />
+    <View style={local.result}>
+      <View
+        accessible
+        accessibilityRole="alert"
+        accessibilityLiveRegion="assertive"
+        style={local.verdict}
+      >
+        <View style={local.headline}>
+          <VerdictIcon glyph={glyphOf(outcome.kind)} tint={tone.text} size={38} />
+          <Text style={[local.title, { color: tone.text }]}>{t.outcome[outcome.kind]}</Text>
+        </View>
+        <View style={[local.panel, { backgroundColor: tone.soft, borderColor: tone.line }]}>
+          <Text style={local.detail}>{t.detail[outcome.kind]}</Text>
+          {cause ? <Text style={local.body}>{cause}</Text> : null}
+          {outcome.reconciled ? <Text style={local.detail}>{t.reconciled}</Text> : null}
+          {outcome.ticket ? (
+            <TicketFacts ticket={outcome.ticket} locale={locale} labelColor={tone.text} />
+          ) : null}
+        </View>
+        {outcome.latencyMs !== null && outcome.kind !== "unknown" ? (
+          <Muted>
+            {t.serverTime} {outcome.latencyMs} {t.ms}
+          </Muted>
         ) : null}
-        {onUndo && outcome.kind === "accepted" && outcome.ticket ? (
-          <Action title={t.undo} onPress={onUndo} />
-        ) : null}
-        {onScanNext ? (
-          <Action title={t.scanNext} onPress={onScanNext} variant="primary" />
+        {outcome.code ? (
+          <Muted>
+            {outcome.code}
+            {outcome.requestId ? ` · ${outcome.requestId}` : ""}
+          </Muted>
         ) : null}
       </View>
+      {retry ? <Action title={t.retry} variant="primary" onPress={onRetry} /> : null}
+      {onScanNext ? (
+        <Action title={t.scanNext} variant={retry ? "secondary" : "primary"} onPress={onScanNext} />
+      ) : null}
+      {undo ? <Action title={t.undo} onPress={onUndo} /> : null}
     </View>
   );
 }
@@ -136,8 +129,6 @@ export function UndoSheet({
   onDone: (updated: Ticket) => void;
 }) {
   const t = checkInCopy[locale];
-  const { colors } = useTheme();
-  const border = useBorderColor();
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -177,13 +168,12 @@ export function UndoSheet({
 
   return (
     <Sheet visible={ticket !== null} onClose={onClose}>
-      <Heading>{t.undoTitle}</Heading>
-      {ticket ? <Body style={local.strong}>{ticket.label}</Body> : null}
-      <Body>{t.undoExplain}</Body>
-      <Text nativeID="undo-reason-label" style={[ui.body, { color: colors.text }]}>
-        {t.undoReason}
-      </Text>
-      <TextInput
+      <Title subtitle={ticket?.label}>{t.undoTitle}</Title>
+      <Card>
+        <Body>{t.undoExplain}</Body>
+      </Card>
+      <Label nativeID="undo-reason-label">{t.undoReason}</Label>
+      <Input
         accessibilityLabel={t.undoReason}
         accessibilityLabelledBy="undo-reason-label"
         value={reason}
@@ -191,20 +181,16 @@ export function UndoSheet({
         maxLength={UNDO_REASON_MAX}
         multiline
         editable={!busy}
-        style={[
-          ui.input,
-          local.reason,
-          { color: colors.text, borderColor: border, backgroundColor: colors.card },
-        ]}
+        style={local.reason}
       />
       {error ? (
-        <Body live="assertive" style={local.strong}>
+        <Callout tone="danger" alert>
           {error}
-        </Body>
+        </Callout>
       ) : null}
       <Action
         title={t.undoConfirm}
-        variant="danger"
+        variant="primary"
         busy={busy}
         disabled={busy || !validUndoReason(reason)}
         onPress={() => void submit()}
@@ -215,16 +201,16 @@ export function UndoSheet({
 }
 
 const local = StyleSheet.create({
-  card: { borderRadius: 10, padding: 18, gap: 8 },
+  result: { gap: 12 },
+  verdict: { gap: 12 },
   headline: { flexDirection: "row", alignItems: "center", gap: 12 },
-  symbol: { fontSize: 40, fontWeight: "800", lineHeight: 46 },
-  title: { fontSize: 28, fontWeight: "800", flexShrink: 1 },
-  detail: { fontSize: 17, lineHeight: 24 },
-  strong: { fontWeight: "700" },
-  meta: { fontSize: 14, opacity: 0.9 },
-  facts: { gap: 2, marginTop: 4 },
-  fact: { fontSize: 17, lineHeight: 24 },
-  factLabel: { fontWeight: "700" },
-  actions: { gap: 10, marginTop: 8 },
-  reason: { minHeight: 90, textAlignVertical: "top" },
+  title: { ...type.verdict, flexShrink: 1 },
+  panel: { borderWidth: StyleSheet.hairlineWidth * 2, borderRadius: radius.card, padding: 16, gap: 8 },
+  detail: { ...type.bodyStrong, color: color.ink },
+  body: { ...type.body, color: color.ink },
+  facts: { gap: 8, marginTop: 4 },
+  fact: { gap: 1 },
+  factLabel: { ...type.small },
+  factValue: { ...type.bodyStrong, color: color.ink },
+  reason: { minHeight: 96, textAlignVertical: "top" },
 });

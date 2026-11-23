@@ -1,26 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
-import {
-  Button,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import {
-  DarkTheme,
-  DefaultTheme,
-  NavigationContainer,
-  createNavigationContainerRef,
-  useTheme,
-} from "@react-navigation/native";
+import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
+// Per-weight entry points: importing the package index would bundle all 18 Inter files.
+import { useFonts } from "@expo-google-fonts/inter/useFonts";
+import { Inter_400Regular } from "@expo-google-fonts/inter/400Regular";
+import { Inter_500Medium } from "@expo-google-fonts/inter/500Medium";
+import { Inter_600SemiBold } from "@expo-google-fonts/inter/600SemiBold";
+import { Inter_700Bold } from "@expo-google-fonts/inter/700Bold";
 import { ApiError, localeLabels, locales, messages } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import type { components } from "@biletflow/shared/api";
@@ -34,6 +23,21 @@ import SessionPanel from "./src/SessionPanel";
 import { CheckInScreen } from "./src/checkin/CheckInScreen";
 import { EventsScreen } from "./src/checkin/EventsScreen";
 import { checkInCopy } from "./src/checkin/copy";
+import { Brand } from "./src/icons";
+import { color, navigationTheme } from "./src/theme";
+import {
+  Action,
+  Body,
+  Card,
+  HeaderAction,
+  Heading,
+  Label,
+  Muted,
+  Screen,
+  Segmented,
+  styles as ui,
+  Title,
+} from "./src/ui";
 
 type Screens = {
   Home: undefined;
@@ -45,8 +49,13 @@ const Stack = createNativeStackNavigator<Screens>();
 const navigation = createNavigationContainerRef<Screens>();
 
 export default function App() {
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
   const [locale, setLocale] = useState<Locale>("kk");
-  const theme = useColorScheme() === "dark" ? DarkTheme : DefaultTheme;
   const t = messages[locale];
   const c = checkInCopy[locale];
   const snapshot = useSessionSnapshot();
@@ -59,44 +68,47 @@ export default function App() {
       navigation.reset({ index: 0, routes: [{ name: "Home" }] });
   }, [signedIn]);
 
-  const languageButtons = (
+  // The bundled Inter files load in milliseconds; a failed load falls back to the system face.
+  if (!fontsLoaded && !fontError) return null;
+
+  const language = (
     <>
-      <Text style={[styles.body, { color: theme.colors.text }]}>{t.language}</Text>
-      {locales.map((code) => (
-        <View key={code} style={styles.button}>
-          <Button
-            title={localeLabels[code]}
-            accessibilityLabel={localeLabels[code]}
-            onPress={() => setLocale(code)}
-            disabled={locale === code}
-          />
-        </View>
-      ))}
+      <Label>{t.language}</Label>
+      <Segmented
+        kind="choice"
+        value={locale}
+        onChange={setLocale}
+        options={locales.map((code) => ({ value: code, label: localeLabels[code] }))}
+      />
     </>
   );
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer theme={theme} ref={navigation}>
-        <StatusBar style="auto" />
-        <Stack.Navigator>
+      <NavigationContainer theme={navigationTheme} ref={navigation}>
+        <StatusBar style="dark" />
+        <Stack.Navigator
+          screenOptions={{
+            headerTitle: () => <Brand />,
+            headerTitleAlign: "left",
+            headerTintColor: color.primary,
+            headerStyle: { backgroundColor: color.surface },
+            headerShadowVisible: true,
+            headerBackButtonDisplayMode: "generic",
+            contentStyle: { backgroundColor: color.canvas },
+          }}
+        >
           <Stack.Screen
             name="Home"
             options={({ navigation: nav }) => ({
-              title: "BiletFlow Event Admin",
               headerRight: signedIn
-                ? () => (
-                    <Button title={c.settings} onPress={() => nav.navigate("Settings")} />
-                  )
+                ? () => <HeaderAction title={c.settings} onPress={() => nav.navigate("Settings")} />
                 : undefined,
             })}
           >
             {(props: NativeStackScreenProps<Screens, "Home">) =>
               signedIn ? (
-                <SafeAreaView
-                  edges={["bottom", "left", "right"]}
-                  style={[styles.fill, { backgroundColor: theme.colors.background }]}
-                >
+                <SafeAreaView edges={["bottom", "left", "right"]} style={ui.fill}>
                   <EventsScreen
                     key={snapshot.user?.id}
                     locale={locale}
@@ -109,84 +121,53 @@ export default function App() {
                   />
                 </SafeAreaView>
               ) : (
-                <Page background={theme.colors.background}>
+                <Screen>
                   <SessionPanel locale={locale} />
-                  <Text
-                    accessibilityRole="header"
-                    style={[styles.title, { color: theme.colors.text }]}
-                  >
-                    {t.foundationTitle}
-                  </Text>
-                  <Text style={[styles.body, { color: theme.colors.text }]}>
-                    {t.foundationDescription}
-                  </Text>
-                  {languageButtons}
-                  <View style={styles.button}>
-                    <Button
+                  {language}
+                  <Card style={{ marginTop: 8 }}>
+                    <Heading>{t.foundationTitle}</Heading>
+                    <Muted>{t.foundationDescription}</Muted>
+                    <Action
                       title={t.checkApi}
                       onPress={() => props.navigation.navigate("Connection")}
                     />
-                  </View>
-                </Page>
+                  </Card>
+                </Screen>
               )
             }
           </Stack.Screen>
-          <Stack.Screen
-            name="CheckIn"
-            options={({ route }) => ({ title: route.params.title })}
-          >
+          <Stack.Screen name="CheckIn">
             {(props: NativeStackScreenProps<Screens, "CheckIn">) => (
               <CheckInScreen
                 key={`${snapshot.user?.id}:${props.route.params.eventId}`}
                 eventId={props.route.params.eventId}
+                title={props.route.params.title}
                 locale={locale}
               />
             )}
           </Stack.Screen>
-          <Stack.Screen name="Settings" options={{ title: c.settings }}>
+          <Stack.Screen name="Settings">
             {(props: NativeStackScreenProps<Screens, "Settings">) => (
-              <Page background={theme.colors.background}>
+              <Screen>
+                <Title>{c.settings}</Title>
                 <SessionPanel locale={locale} />
-                {languageButtons}
-                <View style={styles.button}>
-                  <Button
-                    title={c.connection}
-                    onPress={() => props.navigation.navigate("Connection")}
-                  />
-                </View>
-              </Page>
+                {language}
+                <Action
+                  title={c.connection}
+                  onPress={() => props.navigation.navigate("Connection")}
+                />
+              </Screen>
             )}
           </Stack.Screen>
-          <Stack.Screen name="Connection" options={{ title: t.apiStatus }}>
-            {() => <Connection locale={locale} />}
-          </Stack.Screen>
+          <Stack.Screen name="Connection">{() => <Connection locale={locale} />}</Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
   );
 }
 
-function Page({ background, children }: { background: string; children: ReactNode }) {
-  return (
-    <SafeAreaView
-      edges={["bottom", "left", "right"]}
-      style={[styles.fill, { backgroundColor: background }]}
-    >
-      <KeyboardAvoidingView
-        style={styles.fill}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {children}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
-}
-
 function Connection({ locale }: { locale: Locale }) {
   const t = messages[locale];
-  const { colors } = useTheme();
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [storageStatus, setStorageStatus] = useState("");
@@ -200,84 +181,44 @@ function Connection({ locale }: { locale: Locale }) {
     setBusy(true);
     setStatus(t.checking);
     try {
-      const result = await api.request<components["schemas"]["HealthOut"]>(
-        "/health",
-        { signal: controller.signal },
-      );
-      if (!controller.signal.aborted)
-        setStatus(`${t.ready}: ${result.status} / ${result.database}`);
+      const result = await api.request<components["schemas"]["HealthOut"]>("/health", {
+        signal: controller.signal,
+      });
+      if (!controller.signal.aborted) setStatus(`${t.ready}: ${result.status} / ${result.database}`);
     } catch (error) {
       if (!controller.signal.aborted)
-        setStatus(
-          `${t.unavailable}: ${error instanceof ApiError ? error.code : t.unknownError}`,
-        );
+        setStatus(`${t.unavailable}: ${error instanceof ApiError ? error.code : t.unknownError}`);
     } finally {
       if (!controller.signal.aborted) setBusy(false);
     }
   }
   return (
-    <SafeAreaView
-      edges={["bottom", "left", "right"]}
-      style={[styles.fill, { backgroundColor: colors.background }]}
-    >
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text
-          accessibilityRole="header"
-          style={[styles.title, { color: colors.text }]}
-        >
-          {t.apiStatus}
-        </Text>
-        <Text style={[styles.body, { color: colors.text }]}>
-          {origin || "EXPO_PUBLIC_API_ORIGIN"}
-        </Text>
-        {!api ? (
-          <Text style={[styles.body, { color: colors.text }]}>
-            {t.notChecked}: EXPO_PUBLIC_API_ORIGIN
-          </Text>
-        ) : null}
-        <View style={styles.button}>
-          <Button
-            title={busy ? t.checking : t.checkApi}
-            onPress={() => void check()}
-            disabled={!api || busy}
+    <Screen>
+      <Title subtitle={origin || "EXPO_PUBLIC_API_ORIGIN"}>{t.apiStatus}</Title>
+      <Card>
+        {!api ? <Body>{t.notChecked}: EXPO_PUBLIC_API_ORIGIN</Body> : null}
+        <Body live="polite">{status || t.notChecked}</Body>
+      </Card>
+      <Action
+        title={busy ? t.checking : t.checkApi}
+        variant="primary"
+        busy={busy}
+        onPress={() => void check()}
+        disabled={!api || busy}
+      />
+      {__DEV__ ? (
+        <>
+          <Action
+            title="SecureStore · F0"
+            onPress={() => {
+              void probeSecureStorage()
+                .then((ok) => setStorageStatus(ok ? t.ready : t.unavailable))
+                .catch(() => setStorageStatus(t.unavailable));
+            }}
           />
-        </View>
-        <Text
-          accessibilityLiveRegion="polite"
-          style={[styles.body, { color: colors.text }]}
-        >
-          {status || t.notChecked}
-        </Text>
-        {__DEV__ ? (
-          <>
-            <View style={styles.button}>
-              <Button
-                title="SecureStore · F0"
-                onPress={() => {
-                  void probeSecureStorage()
-                    .then((ok) =>
-                      setStorageStatus(ok ? t.ready : t.unavailable),
-                    )
-                    .catch(() => setStorageStatus(t.unavailable));
-                }}
-              />
-            </View>
-            <Text
-              accessibilityLiveRegion="polite"
-              style={[styles.body, { color: colors.text }]}
-            >
-              {storageStatus}
-            </Text>
-          </>
-        ) : null}
-      </ScrollView>
-    </SafeAreaView>
+          {storageStatus ? <Muted live="polite">{storageStatus}</Muted> : null}
+        </>
+      ) : null}
+    </Screen>
   );
 }
-const styles = StyleSheet.create({
-  fill: { flex: 1 },
-  content: { padding: 24, gap: 16 },
-  title: { fontSize: 26, fontWeight: "600" },
-  body: { fontSize: 17, lineHeight: 26 },
-  button: { minHeight: 48, justifyContent: "center", paddingVertical: 4 },
-});

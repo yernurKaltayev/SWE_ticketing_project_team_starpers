@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { useTheme } from "@react-navigation/native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ApiError } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { session } from "../session";
+import { color, radius, raised, type } from "../theme";
+import { Action, Body, Callout, Input, Label, Muted, Pill, Sheet, Title } from "../ui";
 import { checkInCopy } from "./copy";
 import { fromFailure, fromVerify, paths } from "./model";
 import type { Attendee, AttendeePage, Outcome, VerifyOut } from "./model";
 import { ResultCard } from "./Result";
-import { Action, Body, Heading, Sheet, styles as ui, useBorderColor } from "./ui";
 
 const PAGE = 25;
 const DEBOUNCE_MS = 350;
@@ -34,8 +34,6 @@ export function AttendeeSearch({
   onUndo: (attendee: Attendee) => void;
 }) {
   const t = checkInCopy[locale];
-  const { colors } = useTheme();
-  const border = useBorderColor();
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<Attendee[]>([]);
   const [total, setTotal] = useState(0);
@@ -79,10 +77,8 @@ export function AttendeeSearch({
 
   return (
     <View style={local.wrap}>
-      <Text nativeID="attendee-search-label" style={[ui.body, { color: colors.text }]}>
-        {t.searchLabel}
-      </Text>
-      <TextInput
+      <Label nativeID="attendee-search-label">{t.searchLabel}</Label>
+      <Input
         accessibilityLabel={t.searchLabel}
         accessibilityLabelledBy="attendee-search-label"
         accessibilityHint={t.searchHint}
@@ -92,17 +88,18 @@ export function AttendeeSearch({
         autoCorrect={false}
         returnKeyType="search"
         maxLength={100}
-        style={[ui.input, { color: colors.text, borderColor: border, backgroundColor: colors.card }]}
       />
-      <Text style={[ui.muted, { color: colors.text }]}>{t.searchHint}</Text>
+      <Muted>{t.searchHint}</Muted>
       {failed ? (
-        <View style={local.wrap}>
-          <Body live="assertive">{t.loadFailed}</Body>
-          <Action title={t.reload} onPress={() => void load(0)} />
-        </View>
+        <>
+          <Callout tone="danger" alert>
+            {t.loadFailed}
+          </Callout>
+          <Action title={t.reload} variant="primary" onPress={() => void load(0)} />
+        </>
       ) : null}
       {!loading && !failed && items.length === 0 ? (
-        <Body live="polite">{t.noResults}</Body>
+        <Muted live="polite">{t.noResults}</Muted>
       ) : null}
       {items.map((attendee) => (
         <Pressable
@@ -110,21 +107,23 @@ export function AttendeeSearch({
           accessibilityRole="button"
           accessibilityLabel={`${attendee.full_name}, ${t.status[attendee.ticket_status] ?? attendee.ticket_status}`}
           onPress={() => setSelected(attendee)}
-          style={({ pressed }) => [
-            ui.card,
-            { borderColor: border, backgroundColor: pressed ? colors.border : colors.card },
-          ]}
+          style={({ pressed }) => [local.row, pressed && local.rowPressed]}
         >
-          <Text style={[local.name, { color: colors.text }]}>{attendee.full_name}</Text>
-          <Text style={[ui.muted, { color: colors.text }]}>{attendee.email}</Text>
-          <Text style={[ui.muted, { color: colors.text }]}>
-            {attendee.ticket_type}
-            {attendee.ticket_number ? ` · ${attendee.ticket_number}` : ""}
-          </Text>
-          <StatusPill status={attendee.ticket_status} label={t.status[attendee.ticket_status] ?? attendee.ticket_status} />
+          <View style={local.rowText}>
+            <Text style={local.name}>{attendee.full_name}</Text>
+            <Muted>{attendee.email}</Muted>
+            <Muted>
+              {attendee.ticket_type}
+              {attendee.ticket_number ? ` · ${attendee.ticket_number}` : ""}
+            </Muted>
+          </View>
+          <StatusPill
+            status={attendee.ticket_status}
+            label={t.status[attendee.ticket_status] ?? attendee.ticket_status}
+          />
         </Pressable>
       ))}
-      {loading ? <Body live="polite">{t.loading}</Body> : null}
+      {loading ? <Muted live="polite">{t.loading}</Muted> : null}
       {!loading && items.length < total ? (
         <Action title={t.loadMore} onPress={() => void load(items.length)} />
       ) : null}
@@ -147,16 +146,11 @@ export function AttendeeSearch({
 }
 
 function StatusPill({ status, label }: { status: string; label: string }) {
-  const palette =
-    status === "checked_in"
-      ? { bg: "#0B6B3A", fg: "#FFFFFF" }
-      : status === "valid"
-        ? { bg: "#1F4E79", fg: "#FFFFFF" }
-        : { bg: "#A4161A", fg: "#FFFFFF" };
   return (
-    <View style={[local.pill, { backgroundColor: palette.bg }]}>
-      <Text style={[local.pillText, { color: palette.fg }]}>{label}</Text>
-    </View>
+    <Pill
+      label={label}
+      tone={status === "checked_in" ? "success" : status === "valid" ? "neutral" : "danger"}
+    />
   );
 }
 
@@ -212,19 +206,23 @@ function ManualSheet({
     <Sheet visible={attendee !== null} onClose={onClose}>
       {attendee ? (
         <>
-          <Heading>{attendee.full_name}</Heading>
-          <Body>{attendee.email}</Body>
-          <Body>
-            {attendee.ticket_type}
-            {attendee.ticket_number ? ` · ${attendee.ticket_number}` : ""}
-          </Body>
-          <Body>{t.status[attendee.ticket_status] ?? attendee.ticket_status}</Body>
+          <Title subtitle={attendee.email}>{attendee.full_name}</Title>
+          <View style={local.ticket}>
+            <Body>
+              {attendee.ticket_type}
+              {attendee.ticket_number ? ` · ${attendee.ticket_number}` : ""}
+            </Body>
+            <StatusPill
+              status={attendee.ticket_status}
+              label={t.status[attendee.ticket_status] ?? attendee.ticket_status}
+            />
+          </View>
           {outcome ? (
             <ResultCard outcome={outcome} locale={locale} />
           ) : canCheckIn ? (
             <>
-              <Body style={local.strong}>{t.manualTitle}</Body>
-              <Body>{t.manualExplain}</Body>
+              <Text style={local.name}>{t.manualTitle}</Text>
+              <Muted>{t.manualExplain}</Muted>
               <Action
                 title={t.manualConfirm}
                 variant="primary"
@@ -234,9 +232,7 @@ function ManualSheet({
               />
             </>
           ) : null}
-          {!outcome && canUndo ? (
-            <Action title={t.undo} variant="danger" onPress={() => onUndo(attendee)} />
-          ) : null}
+          {!outcome && canUndo ? <Action title={t.undo} onPress={() => onUndo(attendee)} /> : null}
           <Action title={t.close} disabled={busy} onPress={onClose} />
         </>
       ) : null}
@@ -246,8 +242,24 @@ function ManualSheet({
 
 const local = StyleSheet.create({
   wrap: { gap: 12 },
-  name: { fontSize: 18, fontWeight: "700" },
-  strong: { fontWeight: "700" },
-  pill: { alignSelf: "flex-start", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
-  pillText: { fontSize: 14, fontWeight: "700" },
+  row: {
+    gap: 8,
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderWidth: StyleSheet.hairlineWidth * 2,
+    borderRadius: radius.card,
+    padding: 16,
+    ...raised,
+  },
+  rowPressed: { backgroundColor: color.canvas },
+  rowText: { gap: 2 },
+  name: { ...type.heading, fontSize: 17, color: color.ink },
+  ticket: {
+    gap: 8,
+    backgroundColor: color.surface,
+    borderColor: color.line,
+    borderWidth: StyleSheet.hairlineWidth * 2,
+    borderRadius: radius.card,
+    padding: 16,
+  },
 });
