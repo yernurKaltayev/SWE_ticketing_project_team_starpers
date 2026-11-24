@@ -1,6 +1,6 @@
 import { CalendarActions } from "../calendar/CalendarActions";
 import { ReportEvent } from "../insights/ReportEvent";
-import { SupportLink } from "../support/ui";
+import { supportLink } from "../support/model";
 import { PromotionBanner } from "../promotions/Banner";
 import { checkoutLink } from "../promotions/model";
 import { seatingCopy } from "../seating/copy";
@@ -90,14 +90,6 @@ function EventContent({
   return (
     <>
       <PromotionBanner locale={locale} />
-      {!preview && event.status === "published" && event.visibility !== "private" && (
-        <ReportEvent id={event.id} locale={locale} />
-      )}
-      {!preview && (
-        <p>
-          <SupportLink locale={locale} context={{ event_id: event.id }} />
-        </p>
-      )}
       {preview && <Status>{t.previewHint}</Status>}
       <header className="detail-header">
         <h1>{event.title}</h1>
@@ -183,25 +175,28 @@ function EventContent({
             {!tickets.data && !tickets.error && <Status>{t.loading}</Status>}
             {tickets.data?.length === 0 && <p>{t.ticketEmpty}</p>}
             <ul className="ticket-list">
-              {tickets.data?.map((ticket) => (
-                <li key={ticket.ticket_type_id}>
-                  <strong>{ticket.name}</strong>
-                  <span className="price">
-                    {ticket.price_amount === 0
-                      ? t.free
-                      : formatMoney(ticket.price_amount, locale)}
-                  </span>
-                  <span className="availability">
-                    {t.available}: {ticket.available}
-                  </span>
-                  <span
-                    className="status-badge"
-                    data-tone={toneFor(salesState(event, ticket))}
-                  >
-                    {t[salesState(event, ticket)]}
-                  </span>
-                </li>
-              ))}
+              {tickets.data?.map((ticket) => {
+                const state = salesState(event, ticket);
+                return (
+                  <li key={ticket.ticket_type_id}>
+                    <strong>{ticket.name}</strong>
+                    <span className="price">
+                      {ticket.price_amount === 0
+                        ? t.free
+                        : formatMoney(ticket.price_amount, locale)}
+                    </span>
+                    {/* Closed tickets report 0, which is not a real count. */}
+                    {state === "onSale" || state === "soldOut" ? (
+                      <span className="availability">
+                        {t.available}: {ticket.available}
+                      </span>
+                    ) : null}
+                    <span className="status-badge" data-tone={toneFor(state)}>
+                      {t[state]}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
             {!preview && event.status === "published" && (
               <Link
@@ -224,6 +219,21 @@ function EventContent({
           )}
           {!preview && (
             <CalendarActions event={event} venue={venue.data} locale={locale} />
+          )}
+          {!preview && (
+            <section className="panel help-panel" aria-labelledby="event-help-title">
+              <h2 id="event-help-title">{t.helpTitle}</h2>
+              <p>{t.helpHint}</p>
+              <Link
+                className="action-link ghost"
+                to={supportLink({ event_id: event.id })}
+              >
+                {t.helpSupport}
+              </Link>
+              {event.status === "published" && event.visibility !== "private" && (
+                <ReportEvent id={event.id} locale={locale} />
+              )}
+            </section>
           )}
         </aside>
       </div>

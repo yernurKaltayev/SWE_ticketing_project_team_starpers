@@ -259,7 +259,13 @@ export function salesState(
 ) {
   if (event.status !== "published")
     return event.status === "cancelled" ? "cancelled" : "unavailable";
-  if (Date.parse(event.ends_at) <= now) return "ended";
+  // Registration closes when the event starts. Check every reason a ticket is off sale before
+  // "sold out": public availability reports 0 for any ticket that is not on sale.
+  if (
+    Date.parse(event.ends_at) <= now ||
+    (event.starts_at && Date.parse(event.starts_at) <= now)
+  )
+    return "ended";
   if (
     event.registration_opens_at &&
     Date.parse(event.registration_opens_at) > now
@@ -270,10 +276,10 @@ export function salesState(
     Date.parse(event.registration_closes_at) <= now
   )
     return "ended";
-  if (ticket.available <= 0) return "soldOut";
   if (ticket.price_amount > 0 && event.paid_sales_status !== "active")
     return "paidBlocked";
-  return ticket.on_sale ? "onSale" : "unavailable";
+  if (!ticket.on_sale) return "unavailable";
+  return ticket.available <= 0 ? "soldOut" : "onSale";
 }
 
 /** Exact display value for editable KZT amounts, including the safe integer boundary. */
