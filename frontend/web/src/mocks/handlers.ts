@@ -33,6 +33,7 @@ export const user: components["schemas"]["UserOut"] = {
   phone: null,
   role: "organizer",
   email_verified_at: "2026-01-01T00:00:00Z",
+  phone_verified_at: null,
 };
 const event: components["schemas"]["EventOut"] = {
   id: "04e1dfa3-c0a1-43d7-a774-32c7dc9fb419",

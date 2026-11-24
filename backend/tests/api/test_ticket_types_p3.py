@@ -2,6 +2,9 @@
 
 from uuid import UUID
 
+from sqlalchemy import select
+
+from app.models.audit import AuditLog
 from app.models.event import EventStatus
 from app.services.ticket_type_service import (
     check_in_inventory,
@@ -155,3 +158,32 @@ async def test_paid_reservations_remain_blocked_until_p6_activation(client, db):
     with pytest.raises(ConflictError):
         await reserve_inventory(db, event.id, UUID(created.json()["id"]), 1)
     await db.rollback()
+
+
+async def test_changing_price_is_audited_without_crashing(client, db):
+    owner, profile = await make_organizer(db)
+    event = await make_event(db, profile, capacity=20)
+    created = await client.post(
+        f"{PREFIX}/events/{event.id}/ticket-types",
+        headers=auth_header(owner),
+        json=payload(price_amount="10000", is_free=False),
+    )
+    assert created.status_code == 201, created.text
+    ticket_id = created.json()["id"]
+    response = await client.patch(
+        f"{PREFIX}/events/{event.id}/ticket-types/{ticket_id}",
+        headers=auth_header(owner),
+        json={"price_amount": "20000", "quantity_total": 15},
+    )
+    assert response.status_code == 200, response.text
+    entry = await db.scalar(
+        select(AuditLog).where(
+            AuditLog.action_type == "ticket_type_updated",
+            AuditLog.entity_id == ticket_id,
+        )
+    )
+    assert entry is not None
+    assert entry.meta["changes"] == {
+        "price_amount": {"from": 10000, "to": 20000},
+        "quantity_total": {"from": 10, "to": 15},
+    }

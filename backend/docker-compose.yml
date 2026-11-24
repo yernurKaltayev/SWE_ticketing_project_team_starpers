@@ -20,6 +20,9 @@ x-app: &app
     PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8000}
     # Web refresh cookie. Set false only to demo over plain HTTP on a non-localhost address.
     AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-true}
+    # Phone verification bot (see "Verify phones with Telegram" in the README). Off when empty.
+    TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+    TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
     S3_ENDPOINT_URL: http://minio:9000
     S3_ACCESS_KEY: ${MINIO_ROOT_USER:-biletflow}
     S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-biletflow-dev}

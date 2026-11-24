@@ -14,6 +14,7 @@ class UserOut(OrmModel):
     phone: str | None
     role: str
     email_verified_at: datetime | None
+    phone_verified_at: datetime | None
 
 
 def _reject_null[T](value: T | None) -> T:
@@ -25,6 +26,15 @@ def _reject_null[T](value: T | None) -> T:
 # For PATCH bodies, where an omitted field is left unchanged. Defaults skip validators, so `None`
 # here means "omitted" and an explicit null is refused: the column behind the field is required.
 NotNull = AfterValidator(_reject_null)
+
+
+class PhoneVerificationStatusOut(BaseModel):
+    available: bool
+
+
+class PhoneVerificationStartOut(BaseModel):
+    link: str
+    expires_at: datetime
 
 
 class UserUpdate(BaseModel):

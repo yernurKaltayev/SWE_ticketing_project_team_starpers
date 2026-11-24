@@ -9,7 +9,7 @@ Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max
 Phone = Annotated[str, StringConstraints(strip_whitespace=True, max_length=32)]
 
 
-def _kazakhstan_phone(value: str) -> str:
+def normalize_kazakhstan_phone(value: str) -> str:
     """Accept the ways people type a Kazakhstan number and store one format: +77012345678.
 
     "+7 701 234 56 78", "+7 (701) 234-56-78", "87012345678", "77012345678" and "7012345678"
@@ -26,7 +26,7 @@ def _kazakhstan_phone(value: str) -> str:
 
 
 KazakhstanPhone = Annotated[
-    str, StringConstraints(max_length=32), AfterValidator(_kazakhstan_phone)
+    str, StringConstraints(max_length=32), AfterValidator(normalize_kazakhstan_phone)
 ]
 
 

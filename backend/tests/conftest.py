@@ -33,6 +33,16 @@ from app.main import create_app
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 
 
+@pytest.fixture(autouse=True)
+def _no_real_telegram_bot(monkeypatch):
+    """A developer's .env may configure a real bot; tests opt in with their own fake one."""
+    from app.core.config import get_settings
+
+    settings = get_settings()
+    monkeypatch.setattr(settings, "telegram_bot_token", None)
+    monkeypatch.setattr(settings, "telegram_bot_username", None)
+
+
 @pytest.fixture(scope="session")
 async def engine():
     database = make_url(TEST_DATABASE_URL).database or ""

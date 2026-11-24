@@ -39,6 +39,7 @@ function account(
     phone: null,
     role,
     email_verified_at: verified ? "2026-01-01T00:00:00Z" : null,
+    phone_verified_at: null,
   };
   return {
     user,
@@ -299,6 +300,25 @@ export const authHandlers = [
     return entry instanceof Response
       ? entry
       : HttpResponse.json(entry.user, { headers });
+  }),
+  // Development fixture: a bot is "configured", but nothing ever verifies the phone.
+  http.get("*/api/v1/me/phone-verification", ({ request }) => {
+    const entry = current(request);
+    return entry instanceof Response
+      ? entry
+      : HttpResponse.json({ available: true }, { headers });
+  }),
+  http.post("*/api/v1/me/phone-verification", ({ request }) => {
+    const entry = current(request);
+    if (entry instanceof Response) return entry;
+    if (!entry.user.phone) return error(409, "phone_missing");
+    return HttpResponse.json(
+      {
+        link: "https://t.me/biletflow_mock_bot?start=mock",
+        expires_at: new Date(Date.now() + 15 * 60_000).toISOString(),
+      },
+      { status: 201, headers },
+    );
   }),
   http.patch("*/api/v1/me", async ({ request }) => {
     const entry = current(request);

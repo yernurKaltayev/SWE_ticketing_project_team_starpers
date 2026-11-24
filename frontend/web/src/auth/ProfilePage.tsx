@@ -9,9 +9,17 @@ import { fieldErrors, kazakhstanPhone, validEmail, validName } from "./helpers";
 import { useSession } from "./session";
 import { Field, FormError, Status } from "./ui";
 import { toneFor } from "../tone";
+import { PhoneVerification } from "./PhoneVerification";
 
 type OrganizerProfile = components["schemas"]["OrganizerProfileOut"];
-export function ProfilePage({ locale }: { locale: Locale }) {
+export function ProfilePage({
+  locale,
+  pollMs,
+}: {
+  locale: Locale;
+  /** How often to re-read the account while a Telegram verification is open. */
+  pollMs?: number;
+}) {
   const { user, controller } = useSession();
   const t = authCopy[locale];
   const [name, setName] = useState(user?.full_name ?? "");
@@ -102,6 +110,7 @@ export function ProfilePage({ locale }: { locale: Locale }) {
               setSaved(false);
             }}
           />
+          <PhoneVerification locale={locale} phoneDraft={phone} pollMs={pollMs} />
           <button type="submit">{busy ? t.saving : t.save}</button>
         </fieldset>
       </form>

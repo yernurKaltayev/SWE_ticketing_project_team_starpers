@@ -28,7 +28,27 @@ export function EventError({
     invalid_event_status: t.statusError,
     event_has_orders: t.hasOrders,
     event_cancellation_requires_refund_flow: t.hasOrders,
+    invalid_sales_window: t.salesWindowError,
+    capacity_exceeded: t.ticketCapacityError,
+    quantity_below_allocated: t.quantityAllocated,
+    price_locked: t.priceLocked,
+    invalid_quantity: t.quantityError,
+    invalid_ticket_update: t.ticketInvalid,
+    sales_closed: t.salesClosed,
+    event_cancelled: t.eventCancelled,
+    event_seating_locked: t.seatingLocked,
   };
+  // Only a request that never reached the server is a connection problem. A server error says
+  // so, and any other rejection shows the server's own reason rather than blaming the network.
+  const apiMessage = (e: ApiError) =>
+    codes[e.code] ??
+    ([403, 404].includes(e.status)
+      ? t.denied
+      : e.code === "network_error"
+        ? t.error
+        : e.status >= 500
+          ? t.serverError
+          : e.message || t.error);
   const fields =
     error instanceof ApiError && Array.isArray(error.details)
       ? error.details
@@ -49,8 +69,7 @@ export function EventError({
         {error instanceof InputError
           ? t.invalid
           : error instanceof ApiError
-            ? (codes[error.code] ??
-              ([403, 404].includes(error.status) ? t.denied : t.error))
+            ? apiMessage(error)
             : t.error}
       </p>
       {fields.length > 0 && (
@@ -145,7 +164,6 @@ function useImageVisibility(src: string) {
   return [failed === src, () => setFailed(src)] as const;
 }
 
-
 const kazakhMonths = [
   "Қаң",
   "Ақп",
@@ -203,7 +221,6 @@ export function CoverArt({ event, locale }: { event: Event; locale: Locale }) {
     </div>
   );
 }
-
 
 /** The organizer's refund terms as buyers see them; nothing when none are set. */
 export function RefundPolicy({

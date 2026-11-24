@@ -99,6 +99,22 @@ const en = {
   capacityError: "Capacity must cover the total ticket quantities.",
   verified: "Verify your email before publishing.",
   statusError: "The event status has changed. Reload and review it.",
+  salesWindowError:
+    "Ticket sales must start and end before the event ends. Check the sales dates.",
+  ticketCapacityError:
+    "Ticket quantities add up to more than the event capacity. Lower a quantity or raise the capacity.",
+  quantityAllocated:
+    "The quantity cannot go below tickets already reserved or sold.",
+  priceLocked:
+    "The price cannot change after tickets have been reserved or sold.",
+  quantityError: "Enter a quantity greater than zero.",
+  ticketInvalid:
+    "Check the ticket fields: price, quantity, limit and sales dates.",
+  salesClosed: "Sales for this ticket are closed.",
+  eventCancelled: "This event is cancelled and can no longer be changed.",
+  seatingLocked: "Seating can no longer be changed for this event.",
+  serverError:
+    "Something went wrong on the server. Try again; if it keeps happening, share the ID below.",
   hasOrders: "This event has orders. Use the cancellation and refund workflow.",
   helpTitle: "Need help?",
   helpHint: "Questions about tickets, payment or the event itself.",
@@ -223,6 +239,21 @@ const ru: Copy = {
   capacityError: "Вместимость должна покрывать общее количество билетов.",
   verified: "Подтвердите email перед публикацией.",
   statusError: "Статус изменился. Обновите данные.",
+  salesWindowError:
+    "Продажи билетов должны начинаться и заканчиваться до окончания мероприятия. Проверьте даты продаж.",
+  ticketCapacityError:
+    "Сумма билетов превышает вместимость мероприятия. Уменьшите количество или увеличьте вместимость.",
+  quantityAllocated:
+    "Количество не может быть меньше уже забронированных или проданных билетов.",
+  priceLocked: "Цену нельзя менять после бронирования или продажи билетов.",
+  quantityError: "Укажите количество больше нуля.",
+  ticketInvalid:
+    "Проверьте поля билета: цену, количество, лимит и даты продаж.",
+  salesClosed: "Продажи этого билета закрыты.",
+  eventCancelled: "Мероприятие отменено, его нельзя изменить.",
+  seatingLocked: "Рассадку для этого мероприятия уже нельзя изменить.",
+  serverError:
+    "На сервере произошла ошибка. Повторите попытку; если ошибка повторяется, сообщите ID ниже.",
   hasOrders: "Есть заказы. Используйте отмену с возвратом.",
   helpTitle: "Нужна помощь?",
   helpHint: "Вопросы о билетах, оплате или самом событии.",
@@ -347,6 +378,21 @@ const kk: Copy = {
   capacityError: "Сыйымдылық билеттердің жалпы санын қамтуы керек.",
   verified: "Жарияламас бұрын email-ді растаңыз.",
   statusError: "Күй өзгерді. Деректерді жаңартыңыз.",
+  salesWindowError:
+    "Билет сатылымы іс-шара аяқталғанға дейін басталып, аяқталуы керек. Сату күндерін тексеріңіз.",
+  ticketCapacityError:
+    "Билеттер саны іс-шараның сыйымдылығынан асады. Санды азайтыңыз немесе сыйымдылықты көбейтіңіз.",
+  quantityAllocated:
+    "Сан брондалған немесе сатылған билеттерден аз бола алмайды.",
+  priceLocked: "Билеттер брондалған не сатылған соң бағаны өзгертуге болмайды.",
+  quantityError: "Нөлден үлкен санды енгізіңіз.",
+  ticketInvalid:
+    "Билет өрістерін тексеріңіз: баға, сан, шектеу және сату күндері.",
+  salesClosed: "Бұл билеттің сатылымы жабық.",
+  eventCancelled: "Іс-шара тоқтатылған, оны өзгертуге болмайды.",
+  seatingLocked: "Бұл іс-шараның орын орналасуын енді өзгертуге болмайды.",
+  serverError:
+    "Серверде қате орын алды. Қайталап көріңіз; қате қайталанса, төмендегі ID-ді жіберіңіз.",
   hasOrders: "Тапсырыстар бар. Бас тарту және қайтару үдерісін қолданыңыз.",
   helpTitle: "Көмек керек пе?",
   helpHint: "Билеттер, төлем немесе іс-шараның өзі туралы сұрақтар.",
