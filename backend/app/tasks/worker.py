@@ -16,6 +16,7 @@ from app.core.logging import configure_logging
 from app.tasks.expire_orders import expire_orders_job
 from app.tasks.payouts import payouts_job
 from app.tasks.send_emails import send_emails_job
+from app.tasks.telegram_updates import telegram_updates_job
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,8 @@ JOBS: list[tuple[Callable[[], Awaitable[None]], int]] = [
     (expire_orders_job, 60),
     (payouts_job, 3600),
     (send_emails_job, 30),
+    # A no-op unless a Telegram bot is configured.
+    (telegram_updates_job, 3),
 ]
 
 
