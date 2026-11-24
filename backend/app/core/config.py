@@ -71,6 +71,14 @@ class Settings(BaseSettings):
     # P9: the worker retries a notification email this many times before marking it failed.
     notification_max_email_attempts: int = 5
 
+    # P1 phone verification. A bot made with @BotFather; without both, the feature is off.
+    telegram_bot_token: SecretStr | None = None
+    telegram_bot_username: str | None = None
+
+    @property
+    def telegram_enabled(self) -> bool:
+        return bool(self.telegram_bot_token and self.telegram_bot_username)
+
     s3_endpoint_url: str = "http://localhost:9000"
     s3_access_key: str = "biletflow"
     s3_secret_key: SecretStr = SecretStr("biletflow-dev")

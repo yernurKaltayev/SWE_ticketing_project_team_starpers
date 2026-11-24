@@ -14,6 +14,7 @@ class UserOut(OrmModel):
     phone: str | None
     role: str
     email_verified_at: datetime | None
+    phone_verified_at: datetime | None
 
 
 def _reject_null[T](value: T | None) -> T:

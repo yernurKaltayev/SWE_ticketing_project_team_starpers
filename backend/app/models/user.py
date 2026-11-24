@@ -4,7 +4,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import BigInteger, UniqueConstraint
 from sqlalchemy.dialects.postgresql import CITEXT
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -42,6 +42,10 @@ class User(UUIDPrimaryKey, Timestamps, Base):
     password_hash: Mapped[str]
     full_name: Mapped[str]
     phone: Mapped[str | None]
+    # Set by the Telegram bot when the user shares their own contact with this number.
+    phone_verified_at: Mapped[datetime | None]
+    # The user's chat with the bot, kept for later Telegram notifications. Never exposed.
+    telegram_chat_id: Mapped[int | None] = mapped_column(BigInteger)
     role: Mapped[UserRole] = mapped_column(
         pg_enum(UserRole, "user_role"), default=UserRole.attendee, server_default="attendee"
     )
@@ -67,6 +71,18 @@ class EmailToken(UUIDPrimaryKey, Timestamps, Base):
         pg_enum(EmailTokenPurpose, "email_token_purpose")
     )
     token_hash: Mapped[str] = mapped_column(unique=True)
+    expires_at: Mapped[datetime]
+    used_at: Mapped[datetime | None]
+
+
+class PhoneVerification(UUIDPrimaryKey, Timestamps, Base):
+    """A pending Telegram phone check: the single-use deep-link token, then its chat."""
+
+    __tablename__ = "phone_verifications"
+
+    user_id: Mapped[uuid.UUID] = fk("users.id")
+    token_hash: Mapped[str] = mapped_column(unique=True)
+    telegram_chat_id: Mapped[int | None] = mapped_column(BigInteger)
     expires_at: Mapped[datetime]
     used_at: Mapped[datetime | None]
 

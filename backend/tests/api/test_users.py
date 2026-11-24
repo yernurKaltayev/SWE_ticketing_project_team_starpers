@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, datetime
 
 import pytest
 from sqlalchemy import select
@@ -21,6 +22,36 @@ async def test_get_me(client, db):
     assert response.status_code == 200
     assert response.json()["phone"] == "+77011234567"
     assert "password_hash" not in response.json()
+
+
+async def test_me_reports_phone_verification(client, db):
+    user = await make_user(db, phone="+77011234567", phone_verified_at=datetime.now(UTC))
+
+    response = await client.get(f"{PREFIX}/me", headers=auth_header(user))
+
+    assert response.json()["phone_verified_at"] is not None
+
+
+async def test_changing_the_phone_clears_its_verification(client, db):
+    user = await make_user(db, phone="+77011234567", phone_verified_at=datetime.now(UTC))
+
+    response = await client.patch(
+        f"{PREFIX}/me", json={"phone": "+7 702 000 00 00"}, headers=auth_header(user)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["phone"] == "+77020000000"
+    assert response.json()["phone_verified_at"] is None
+
+
+async def test_saving_the_same_phone_keeps_its_verification(client, db):
+    user = await make_user(db, phone="+77011234567", phone_verified_at=datetime.now(UTC))
+
+    response = await client.patch(
+        f"{PREFIX}/me", json={"phone": "8 (701) 123-45-67"}, headers=auth_header(user)
+    )
+
+    assert response.json()["phone_verified_at"] is not None
 
 
 async def test_patch_me_changes_only_what_was_sent(client, db):
