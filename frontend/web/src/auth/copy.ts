@@ -52,6 +52,16 @@ const en = {
   passwordsMismatch: "Passwords must match.",
   phoneInvalid: "Enter a Kazakhstan phone number, e.g. +7 701 234 56 78.",
   phoneHint: "Kazakhstan number, e.g. +7 701 234 56 78.",
+  phoneVerified: "Phone verified",
+  phoneUnverified: "Phone not verified",
+  verifyTelegram: "Verify with Telegram",
+  verifyTelegramHelp:
+    "Confirm this number by sharing your contact with the BiletFlow Telegram bot.",
+  openTelegram: "Open Telegram",
+  waitingTelegram:
+    "In Telegram, press Start and share your number. This page updates by itself.",
+  telegramExpired: "The link expired. Start again.",
+  phoneSaveFirst: "Save the new phone number first, then verify it.",
   formError: "Check the highlighted fields.",
   unknown: "The request could not be completed. Try again.",
   network: "Unable to connect. Check your connection and try again.",
@@ -158,6 +168,16 @@ export const authCopy: Record<Locale, Copy> = {
     passwordsMismatch: "Құпиясөздер сәйкес келуі керек.",
     phoneInvalid: "Қазақстан нөмірін енгізіңіз, мысалы +7 701 234 56 78.",
     phoneHint: "Қазақстандағы нөмір, мысалы +7 701 234 56 78.",
+    phoneVerified: "Телефон расталды",
+    phoneUnverified: "Телефон расталмаған",
+    verifyTelegram: "Telegram арқылы растау",
+    verifyTelegramHelp:
+      "Бұл нөмірді BiletFlow Telegram ботына контактіңізді бөлісу арқылы растаңыз.",
+    openTelegram: "Telegram-ды ашу",
+    waitingTelegram:
+      "Telegram-да Start басып, нөміріңізді бөлісіңіз. Бұл бет өзі жаңарады.",
+    telegramExpired: "Сілтеменің мерзімі өтті. Қайта бастаңыз.",
+    phoneSaveFirst: "Алдымен жаңа нөмірді сақтаңыз, содан кейін растаңыз.",
     formError: "Белгіленген өрістерді тексеріңіз.",
     unknown: "Сұрауды орындау мүмкін болмады. Қайталап көріңіз.",
     network: "Қосылу мүмкін болмады. Байланысты тексеріп, қайталап көріңіз.",
@@ -264,6 +284,16 @@ export const authCopy: Record<Locale, Copy> = {
     passwordsMismatch: "Пароли должны совпадать.",
     phoneInvalid: "Введите казахстанский номер, например +7 701 234 56 78.",
     phoneHint: "Номер в Казахстане, например +7 701 234 56 78.",
+    phoneVerified: "Телефон подтверждён",
+    phoneUnverified: "Телефон не подтверждён",
+    verifyTelegram: "Подтвердить через Telegram",
+    verifyTelegramHelp:
+      "Подтвердите номер, поделившись контактом с Telegram-ботом BiletFlow.",
+    openTelegram: "Открыть Telegram",
+    waitingTelegram:
+      "В Telegram нажмите Start и поделитесь номером. Страница обновится сама.",
+    telegramExpired: "Срок ссылки истёк. Начните заново.",
+    phoneSaveFirst: "Сначала сохраните новый номер, затем подтвердите его.",
     formError: "Проверьте выделенные поля.",
     unknown: "Не удалось выполнить запрос. Повторите попытку.",
     network:

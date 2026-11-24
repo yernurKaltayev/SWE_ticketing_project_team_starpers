@@ -86,6 +86,7 @@ const attendee: components["schemas"]["UserOut"] = {
   phone: null,
   role: "attendee",
   email_verified_at: "2026-01-01T00:00:00Z",
+  phone_verified_at: null,
 };
 describe("hasRole", () => {
   it("requires a signed-in user and an explicitly allowed global role", () => {
