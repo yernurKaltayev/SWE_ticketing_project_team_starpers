@@ -90,16 +90,6 @@ function EventContent({
   return (
     <>
       <PromotionBanner locale={locale} />
-      {!preview &&
-        event.status === "published" &&
-        event.visibility !== "private" && (
-          <ReportEvent id={event.id} locale={locale} />
-        )}
-      {!preview && (
-        <p>
-          <SupportLink locale={locale} context={{ event_id: event.id }} />
-        </p>
-      )}
       {preview && <Status>{t.previewHint}</Status>}
       <header className="detail-header">
         <h1>{event.title}</h1>
