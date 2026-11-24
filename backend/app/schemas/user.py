@@ -28,6 +28,15 @@ def _reject_null[T](value: T | None) -> T:
 NotNull = AfterValidator(_reject_null)
 
 
+class PhoneVerificationStatusOut(BaseModel):
+    available: bool
+
+
+class PhoneVerificationStartOut(BaseModel):
+    link: str
+    expires_at: datetime
+
+
 class UserUpdate(BaseModel):
     full_name: Annotated[Name | None, NotNull] = None
     phone: KazakhstanPhone | None = None
