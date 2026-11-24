@@ -59,7 +59,7 @@ const en = {
     "Confirm this number by sharing your contact with the BiletFlow Telegram bot.",
   openTelegram: "Open Telegram",
   waitingTelegram:
-    "In Telegram, press Start and share your number. This page updates by itself.",
+    "In Telegram, press Start, then tap “Share my number”. Telegram asks you to confirm: the number is only compared with the one on this account. This page updates by itself.",
   telegramExpired: "The link expired. Start again.",
   phoneSaveFirst: "Save the new phone number first, then verify it.",
   formError: "Check the highlighted fields.",
@@ -83,8 +83,7 @@ const en = {
   home: "Home",
   notFound: "Page not found",
   homeDescription: "Manage your account and organizer contact details.",
-  sessionNote:
-    "You stay signed in on this browser until you sign out.",
+  sessionNote: "You stay signed in on this browser until you sign out.",
   organizationName: "Organization name",
   contactEmail: "Contact email",
   contactPhone: "Contact phone",
@@ -175,7 +174,7 @@ export const authCopy: Record<Locale, Copy> = {
       "Бұл нөмірді BiletFlow Telegram ботына контактіңізді бөлісу арқылы растаңыз.",
     openTelegram: "Telegram-ды ашу",
     waitingTelegram:
-      "Telegram-да Start басып, нөміріңізді бөлісіңіз. Бұл бет өзі жаңарады.",
+      "Telegram-да Start басып, «Нөмірімді бөлісу» батырмасын басыңыз. Telegram растауды сұрайды: нөмір тек осы тіркелгідегі нөмірмен салыстырылады. Бұл бет өзі жаңарады.",
     telegramExpired: "Сілтеменің мерзімі өтті. Қайта бастаңыз.",
     phoneSaveFirst: "Алдымен жаңа нөмірді сақтаңыз, содан кейін растаңыз.",
     formError: "Белгіленген өрістерді тексеріңіз.",
@@ -202,8 +201,7 @@ export const authCopy: Record<Locale, Copy> = {
     notFound: "Бет табылмады",
     homeDescription:
       "Тіркелгіңізді және ұйымдастырушының байланыс деректерін басқарыңыз.",
-    sessionNote:
-      "Жүйеден шыққанша осы браузерде кірген күйде қаласыз.",
+    sessionNote: "Жүйеден шыққанша осы браузерде кірген күйде қаласыз.",
     organizationName: "Ұйым атауы",
     contactEmail: "Байланыс поштасы",
     contactPhone: "Байланыс телефоны",
@@ -291,7 +289,7 @@ export const authCopy: Record<Locale, Copy> = {
       "Подтвердите номер, поделившись контактом с Telegram-ботом BiletFlow.",
     openTelegram: "Открыть Telegram",
     waitingTelegram:
-      "В Telegram нажмите Start и поделитесь номером. Страница обновится сама.",
+      "В Telegram нажмите Start, затем «Поделиться номером». Telegram попросит подтвердить: номер только сверяется с номером этого аккаунта. Страница обновится сама.",
     telegramExpired: "Срок ссылки истёк. Начните заново.",
     phoneSaveFirst: "Сначала сохраните новый номер, затем подтвердите его.",
     formError: "Проверьте выделенные поля.",
@@ -317,8 +315,7 @@ export const authCopy: Record<Locale, Copy> = {
     home: "Главная",
     notFound: "Страница не найдена",
     homeDescription: "Управляйте аккаунтом и контактными данными организатора.",
-    sessionNote:
-      "Вы останетесь в аккаунте в этом браузере, пока не выйдете.",
+    sessionNote: "Вы останетесь в аккаунте в этом браузере, пока не выйдете.",
     organizationName: "Название организации",
     contactEmail: "Контактная почта",
     contactPhone: "Контактный телефон",

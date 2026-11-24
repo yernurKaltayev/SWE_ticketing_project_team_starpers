@@ -47,9 +47,15 @@ async def start(db: AsyncSession, user: User, settings: Settings) -> tuple[str, 
 # What the bot says, kk / ru / en on three lines (the bot cannot know the user's language).
 MESSAGES: dict[str, tuple[str, str, str]] = {
     "ask_contact": (
-        "BiletFlow телефонын растау үшін төмендегі «Нөмірімді бөлісу» батырмасын басыңыз.",
-        "Чтобы подтвердить телефон в BiletFlow, нажмите кнопку «Поделиться номером» ниже.",
-        "Tap “Share my number” below to verify your BiletFlow phone.",
+        "BiletFlow телефонын растау үшін төмендегі «Нөмірімді бөлісу» батырмасын басыңыз. "
+        "Telegram нөміріңізді бөлісуді растауды сұрайды: біз оны тек BiletFlow тіркелгісіндегі "
+        "телефонмен салыстыру үшін қолданамыз. Нөмірді қолмен жазудың қажеті жоқ.",
+        "Чтобы подтвердить телефон в BiletFlow, нажмите кнопку «Поделиться номером» ниже. "
+        "Telegram попросит подтвердить отправку номера: мы используем его только для сверки "  # noqa: RUF001 - Cyrillic text
+        "с телефоном в аккаунте BiletFlow. Вводить номер вручную не нужно.",  # noqa: RUF001 - Cyrillic text
+        "Tap “Share my number” below to verify your BiletFlow phone. Telegram will ask you to "
+        "confirm sharing it: we only use it to check it matches the phone on your BiletFlow "
+        "account. No need to type the number.",
     ),
     "verified": (
         "Телефоныңыз расталды. BiletFlow-қа орала аласыз.",
