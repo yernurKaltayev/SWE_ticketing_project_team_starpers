@@ -4903,6 +4903,10 @@ components:
         order_number:
           title: Order Number
           type: string
+        event_id:
+          format: uuid
+          title: Event Id
+          type: string
         status:
           title: Status
           type: string
@@ -4937,6 +4941,7 @@ components:
       required:
       - id
       - order_number
+      - event_id
       - status
       - subtotal
       - discount_amount

@@ -91,7 +91,7 @@ export function FormError({
           ))}
         </ul>
       ) : null}
-      {error instanceof ApiError && error.requestId ? (
+      {error instanceof ApiError && error.status >= 500 && error.requestId ? (
         <p className="field-hint">
           {t.requestId}: {error.requestId}
         </p>

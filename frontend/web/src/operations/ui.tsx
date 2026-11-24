@@ -28,7 +28,7 @@ export function OperationError({
   return (
     <div role="alert" tabIndex={-1} ref={ref} className="form-error">
       <p>{message}</p>
-      {error instanceof ApiError && error.requestId && <p>{error.requestId}</p>}
+      {error instanceof ApiError && error.status >= 500 && error.requestId && <p>{error.requestId}</p>}
       {retry && <button onClick={retry}>{t.refresh}</button>}
     </div>
   );

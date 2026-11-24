@@ -83,7 +83,7 @@ export function EventError({
           ))}
         </ul>
       )}
-      {error instanceof ApiError && error.requestId && (
+      {error instanceof ApiError && error.status >= 500 && error.requestId && (
         <p>ID: {error.requestId}</p>
       )}
       {retry && (

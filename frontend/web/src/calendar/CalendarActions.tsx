@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ApiError } from "@biletflow/shared";
+import { ApiError, zoneLabel } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { useEventRequest } from "../events/data";
 import { CalendarIcon } from "../icons";
@@ -133,7 +133,7 @@ export function CalendarActions({
         </p>
       )}
       <p className="field-hint">
-        {t.zone(event.timezone)} {t.hint}
+        {t.zone(zoneLabel(event.timezone, locale))} {t.hint}
       </p>
     </section>
   );

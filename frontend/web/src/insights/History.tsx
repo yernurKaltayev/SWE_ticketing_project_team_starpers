@@ -7,6 +7,8 @@ import { parseEvent } from "../events/contracts";
 import { useLiveQuery } from "../support/data";
 import { dateQuery, parseHistory, categories } from "./model";
 import { label } from "./copy";
+import { actionLabel } from "./actions";
+import { useSession } from "../auth/session";
 import { eventCopy } from "../events/copy";
 import { DateFields, Failure, Pager } from "./ui";
 export default function History({
@@ -18,6 +20,7 @@ export default function History({
       eventId = ""
     } = useParams(),
     t = (s: string) => label(locale, s);
+  const { user } = useSession();
   const root = `/api/v1/events/${encodeURIComponent(eventId)}`;
   const event = useLiveQuery(root, parseEvent, 30000);
   const [params, setParams] = useSearchParams(),
@@ -121,9 +124,7 @@ export default function History({
   </p>}
   {data && <>
     <p>
-      {t(data.lifecycle)}
-       ·
-      {t(data.event_status)}
+      {t(data.lifecycle)} · {t(data.event_status)}
     </p>
     {!data.items.length && <p>
       {t("empty")}
@@ -133,28 +134,16 @@ export default function History({
         <time dateTime={row.occurred_at}>
           {formatEventDateTime(row.occurred_at, event.data?.timezone ?? "UTC", locale)}
         </time>
-        <h3>
-          {row.action_type}
+        <h3 title={row.action_type}>
+          {actionLabel(row.action_type, locale)}
         </h3>
         <p>
-          {t("actor_id")}
-          :
-          {row.actor_id ?? t("none")}
-           ·
-          {t(row.actor_role)}
+          {row.actor_id && row.actor_id === user?.id ? t("you") : t(row.actor_role)}
         </p>
-        <p>
-          {t("entity_type")}
-          :
-          {row.entity_type}
-           ·
-          {t("entity_id")}
-          :
-          {row.entity_id}
-        </p>
-        <p>
+        {/* Descriptions are stored in English; other locales rely on the label above. */}
+        {locale === "en" && row.description && <p>
           {row.description}
-        </p>
+        </p>}
       </li>)}
     </ol>
     <Pager locale={locale} offset={filter.offset ?? 0} total={data.total} onChange={n => {

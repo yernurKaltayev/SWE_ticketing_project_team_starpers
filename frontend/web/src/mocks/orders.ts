@@ -155,6 +155,7 @@ export const orderHandlers = [
     const value: Order = {
       id,
       order_number: `MOCK-${orders.size + 1}`,
+      event_id: body.event_id,
       status: "free_confirmed",
       subtotal: 0,
       discount_amount: 0,

@@ -610,7 +610,7 @@ function OrganizerNav({
           icon: <BellIcon />,
         },
         { to: `${base}/activation`, label: pay.activation, icon: <BoltIcon /> },
-        { to: `${base}/financials`, label: pay.finances, icon: <ChartIcon /> },
+        { to: `${base}/financials`, label: pay.eventFinances, icon: <ChartIcon /> },
         {
           to: `${base}/staff`,
           label: staffCopy[locale].link,

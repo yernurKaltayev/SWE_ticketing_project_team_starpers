@@ -28,7 +28,7 @@ export function SupportError({ error, t }: { error: unknown; t: SupportCopy }) {
               ? t.invalidAssignee
               : t.error}
       </p>
-      {error instanceof ApiError && error.requestId && <p>{error.requestId}</p>}
+      {error instanceof ApiError && error.status >= 500 && error.requestId && <p>{error.requestId}</p>}
     </div>
   );
 }
@@ -42,7 +42,6 @@ export function ContextDetails({
   return (
     <div className="support-context">
       <h2>{t.context}</h2>
-      <p>{t.contextHint}</p>
       <dl>
         {(["event_id", "order_id", "ticket_id"] as const)
           .filter((k) => context[k])

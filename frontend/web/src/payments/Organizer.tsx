@@ -434,7 +434,7 @@ export function FinancialsPage({ locale }: { locale: Locale }) {
   return (
     <section>
       <Link to="/organizer/events">{t.events}</Link>
-      <h1>{t.finances}</h1>
+      <h1>{t.eventFinances}</h1>
       {event.data && <h2>{event.data.title}</h2>}
       <p className="notice">{t.demo}</p>
       <nav className="controls">

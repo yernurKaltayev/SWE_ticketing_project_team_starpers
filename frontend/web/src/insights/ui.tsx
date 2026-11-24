@@ -23,7 +23,7 @@ export function Failure({
   <p>
     {label(locale, error instanceof ApiError && [401, 403, 404].includes(error.status) ? "denied" : "error")}
   </p>
-  {error instanceof ApiError && error.requestId && <p>
+  {error instanceof ApiError && error.status >= 500 && error.requestId && <p>
     {error.requestId}
   </p>}
 </div>;

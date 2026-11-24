@@ -252,7 +252,9 @@ it("renders a read-only actor/entity timeline and applies action/category filter
   await mount(`${path}/history`);
   await screen.findByText("Sandbox failed");
   expect(screen.getByText("Venue corrected")).toBeTruthy();
-  expect(screen.getAllByText(new RegExp(user.id))).toHaveLength(2);
+  // The signed-in organizer is shown as "You", not a raw user ID.
+  expect(screen.getAllByText("You")).toHaveLength(2);
+  expect(screen.queryByText(new RegExp(user.id))).toBeNull();
   fireEvent.change(screen.getByLabelText("Activity category"), {
     target: {
       value: "payment"

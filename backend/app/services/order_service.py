@@ -105,6 +105,7 @@ async def to_order_out(db: AsyncSession, order: Order) -> OrderOut:
     return OrderOut(
         id=order.id,
         order_number=order.order_number,
+        event_id=order.event_id,
         status=order.status.value,
         subtotal=order.subtotal,
         discount_amount=order.discount_amount,

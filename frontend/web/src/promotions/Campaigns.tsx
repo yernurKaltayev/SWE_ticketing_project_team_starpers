@@ -99,7 +99,7 @@ function Workspace({ eventId, locale }: { eventId: string; locale: Locale }) {
                 ? t.denied
                 : t.error}
           </p>
-          {error instanceof ApiError && error.requestId && (
+          {error instanceof ApiError && error.status >= 500 && error.requestId && (
             <p>{error.requestId}</p>
           )}
         </div>

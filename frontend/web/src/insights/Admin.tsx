@@ -346,9 +346,9 @@ function DataTable({
     <tbody>
       {rows.map(r => <tr key={String(r.id ?? r.campaign_id)}>
         {columns[section].map((c, i) => i === 0 ? <th scope="row" key={c}>
-          {c === "event_id" && typeof r[c] === "string" ? <EventName id={r[c]} /> : <Value field={c} value={r[c]} locale={locale} />}
+          {c === "event_id" && typeof r[c] === "string" ? <EventName id={r[c]} /> : <Cell field={c} value={r[c]} locale={locale} />}
         </th> : <td key={c}>
-          <Value field={c} value={r[c]} locale={locale} />
+          <Cell field={c} value={r[c]} locale={locale} />
         </td>)}
         <td>
           {select ? <button className="secondary" onClick={() => select(r)}>
@@ -607,4 +607,20 @@ function EventName({
   return <span title={id}>
     {query.data ?? <span className="commerce-identifier">{id.slice(0, 8)}…</span>}
   </span>;
+}
+
+/** Table cells: other records' IDs are shortened; full values stay in the details panel. */
+function Cell({
+  field,
+  value,
+  locale
+}: {
+  field: string;
+  value: unknown;
+  locale: Locale;
+}) {
+  if (field.endsWith("_id") && typeof value === "string" && value.length > 12) return <span className="commerce-identifier" title={value}>
+    {value.slice(0, 8)}…
+  </span>;
+  return <Value field={field} value={value} locale={locale} />;
 }

@@ -58,6 +58,8 @@ class OrderItemOut(BaseModel):
 class OrderOut(BaseModel):
     id: UUID
     order_number: str
+    # Lets clients name the event before any ticket exists (pending/failed orders).
+    event_id: UUID
     status: str
     subtotal: int
     discount_amount: int

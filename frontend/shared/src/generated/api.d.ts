@@ -2708,6 +2708,11 @@ export interface components {
             id: string;
             /** Order Number */
             order_number: string;
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
             /** Status */
             status: string;
             /** Subtotal */

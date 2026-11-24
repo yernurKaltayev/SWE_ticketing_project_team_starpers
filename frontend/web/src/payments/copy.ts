@@ -2,6 +2,7 @@ import type { Locale } from "@biletflow/shared";
 const en = {
   activation: "Activate paid sales",
   finances: "Finances and payouts",
+  eventFinances: "Event revenue",
   accounts: "Payout accounts",
   demo: "Simulation only. No real money is charged or transferred. Do not enter real card details.",
   eventOnly:
@@ -109,6 +110,7 @@ type Copy = {
 const ru: Copy = {
   activation: "Включить платные продажи",
   finances: "Финансы и выплаты",
+  eventFinances: "Доходы мероприятия",
   accounts: "Счета для выплат",
   demo: "Только симуляция. Реальные деньги не списываются и не переводятся. Не вводите данные реальной карты.",
   eventOnly:
@@ -207,6 +209,7 @@ const ru: Copy = {
 const kk: Copy = {
   activation: "Ақылы сатуды іске қосу",
   finances: "Қаржы және төлемдер",
+  eventFinances: "Іс-шара табысы",
   accounts: "Қаражат алу шоттары",
   demo: "Тек симуляция. Нақты ақша алынбайды және аударылмайды. Нақты карта деректерін енгізбеңіз.",
   eventOnly:

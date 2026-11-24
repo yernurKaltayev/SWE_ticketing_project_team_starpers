@@ -13,6 +13,7 @@ const body: OrderBody = {
 const order: Order = {
   id: "order",
   order_number: "O1",
+  event_id: "event",
   status: "free_confirmed",
   subtotal: 0,
   discount_amount: 0,
