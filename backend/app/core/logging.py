@@ -57,6 +57,9 @@ def configure_logging(level: str = "INFO", *, json_output: bool = True) -> None:
         logging.getLogger(name).handlers.clear()
         logging.getLogger(name).propagate = True
     logging.getLogger("uvicorn.access").disabled = True
+    # httpx logs every request URL at INFO, and the Telegram bot token is part of that URL.
+    for name in ("httpx", "httpcore"):
+        logging.getLogger(name).setLevel(logging.WARNING)
 
 
 class RequestContextMiddleware:

@@ -52,6 +52,16 @@ const en = {
   passwordsMismatch: "Passwords must match.",
   phoneInvalid: "Enter a Kazakhstan phone number, e.g. +7 701 234 56 78.",
   phoneHint: "Kazakhstan number, e.g. +7 701 234 56 78.",
+  phoneVerified: "Phone verified",
+  phoneUnverified: "Phone not verified",
+  verifyTelegram: "Verify with Telegram",
+  verifyTelegramHelp:
+    "Confirm this number by sharing your contact with the BiletFlow Telegram bot.",
+  openTelegram: "Open Telegram",
+  waitingTelegram:
+    "In Telegram, press Start, then tap “Share my number”. Telegram asks you to confirm: the number is only compared with the one on this account. This page updates by itself.",
+  telegramExpired: "The link expired. Start again.",
+  phoneSaveFirst: "Save the new phone number first, then verify it.",
   formError: "Check the highlighted fields.",
   unknown: "The request could not be completed. Try again.",
   network: "Unable to connect. Check your connection and try again.",
@@ -73,8 +83,7 @@ const en = {
   home: "Home",
   notFound: "Page not found",
   homeDescription: "Manage your account and organizer contact details.",
-  sessionNote:
-    "You stay signed in on this browser until you sign out.",
+  sessionNote: "You stay signed in on this browser until you sign out.",
   organizationName: "Organization name",
   contactEmail: "Contact email",
   contactPhone: "Contact phone",
@@ -158,6 +167,16 @@ export const authCopy: Record<Locale, Copy> = {
     passwordsMismatch: "Құпиясөздер сәйкес келуі керек.",
     phoneInvalid: "Қазақстан нөмірін енгізіңіз, мысалы +7 701 234 56 78.",
     phoneHint: "Қазақстандағы нөмір, мысалы +7 701 234 56 78.",
+    phoneVerified: "Телефон расталды",
+    phoneUnverified: "Телефон расталмаған",
+    verifyTelegram: "Telegram арқылы растау",
+    verifyTelegramHelp:
+      "Бұл нөмірді BiletFlow Telegram ботына контактіңізді бөлісу арқылы растаңыз.",
+    openTelegram: "Telegram-ды ашу",
+    waitingTelegram:
+      "Telegram-да Start басып, «Нөмірімді бөлісу» батырмасын басыңыз. Telegram растауды сұрайды: нөмір тек осы тіркелгідегі нөмірмен салыстырылады. Бұл бет өзі жаңарады.",
+    telegramExpired: "Сілтеменің мерзімі өтті. Қайта бастаңыз.",
+    phoneSaveFirst: "Алдымен жаңа нөмірді сақтаңыз, содан кейін растаңыз.",
     formError: "Белгіленген өрістерді тексеріңіз.",
     unknown: "Сұрауды орындау мүмкін болмады. Қайталап көріңіз.",
     network: "Қосылу мүмкін болмады. Байланысты тексеріп, қайталап көріңіз.",
@@ -182,8 +201,7 @@ export const authCopy: Record<Locale, Copy> = {
     notFound: "Бет табылмады",
     homeDescription:
       "Тіркелгіңізді және ұйымдастырушының байланыс деректерін басқарыңыз.",
-    sessionNote:
-      "Жүйеден шыққанша осы браузерде кірген күйде қаласыз.",
+    sessionNote: "Жүйеден шыққанша осы браузерде кірген күйде қаласыз.",
     organizationName: "Ұйым атауы",
     contactEmail: "Байланыс поштасы",
     contactPhone: "Байланыс телефоны",
@@ -264,6 +282,16 @@ export const authCopy: Record<Locale, Copy> = {
     passwordsMismatch: "Пароли должны совпадать.",
     phoneInvalid: "Введите казахстанский номер, например +7 701 234 56 78.",
     phoneHint: "Номер в Казахстане, например +7 701 234 56 78.",
+    phoneVerified: "Телефон подтверждён",
+    phoneUnverified: "Телефон не подтверждён",
+    verifyTelegram: "Подтвердить через Telegram",
+    verifyTelegramHelp:
+      "Подтвердите номер, поделившись контактом с Telegram-ботом BiletFlow.",
+    openTelegram: "Открыть Telegram",
+    waitingTelegram:
+      "В Telegram нажмите Start, затем «Поделиться номером». Telegram попросит подтвердить: номер только сверяется с номером этого аккаунта. Страница обновится сама.",
+    telegramExpired: "Срок ссылки истёк. Начните заново.",
+    phoneSaveFirst: "Сначала сохраните новый номер, затем подтвердите его.",
     formError: "Проверьте выделенные поля.",
     unknown: "Не удалось выполнить запрос. Повторите попытку.",
     network:
@@ -287,8 +315,7 @@ export const authCopy: Record<Locale, Copy> = {
     home: "Главная",
     notFound: "Страница не найдена",
     homeDescription: "Управляйте аккаунтом и контактными данными организатора.",
-    sessionNote:
-      "Вы останетесь в аккаунте в этом браузере, пока не выйдете.",
+    sessionNote: "Вы останетесь в аккаунте в этом браузере, пока не выйдете.",
     organizationName: "Название организации",
     contactEmail: "Контактная почта",
     contactPhone: "Контактный телефон",

@@ -10,6 +10,7 @@ const user = {
   phone: null,
   role: "organizer",
   email_verified_at: "2026-11-05T00:00:00Z",
+  phone_verified_at: null,
 };
 const tokens = {
   access_token: "access-1",

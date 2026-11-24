@@ -87,6 +87,22 @@ Only STARTTLS is supported, so use port 587, not 465. Keep credentials in `.env`
 committed. A failed delivery does not fail the request: look for `email delivery failed` in the
 API logs.
 
+## Verify phones with Telegram
+
+Accounts can verify their phone by sharing their Telegram contact with a BiletFlow bot. It is
+off until a bot is configured; nothing else depends on it.
+
+1. In Telegram, open @BotFather, send `/newbot` and follow the steps. Keep the token secret.
+2. In `.env` set `TELEGRAM_BOT_TOKEN` to the token and `TELEGRAM_BOT_USERNAME` to the bot's
+   username without `@`, then `docker compose up -d`.
+3. On the web account page, "Verify with Telegram" opens the bot. Press Start, then share the
+   contact. The worker checks it every 3 seconds; the page shows "Verified" when the number
+   matches the account phone.
+
+The worker reads the bot with `getUpdates`, so do not also set a webhook for the same bot.
+Telegram failures are logged as `telegram getUpdates failed` / `telegram sendMessage failed`
+in the worker logs, without the token.
+
 ## Backups
 
 `docker compose --profile ops up -d backup` takes a `pg_dump` at start and then daily, into

@@ -28,3 +28,19 @@ def test_json_formatter_includes_the_traceback():
     except ValueError:
         entry = json.loads(JsonFormatter().format(_record(exc_info=sys.exc_info())))
     assert "ValueError: boom" in entry["exception"]
+
+
+def test_http_client_request_lines_are_not_logged():
+    # httpx logs every request URL at INFO; the Telegram bot token is part of that URL.
+    from app.core.logging import configure_logging
+
+    root = logging.getLogger()
+    saved = root.handlers[:], root.level
+    try:
+        configure_logging("INFO")
+        assert not logging.getLogger("httpx").isEnabledFor(logging.INFO)
+        assert not logging.getLogger("httpcore").isEnabledFor(logging.INFO)
+        assert logging.getLogger("httpx").isEnabledFor(logging.WARNING)
+    finally:
+        root.handlers[:], level = saved
+        root.setLevel(level)

@@ -13,7 +13,14 @@ from app.models.setting import EventReport, PlatformSetting
 from app.models.support import SupportCase, SupportMessage
 from app.models.ticket import Ticket
 from app.models.ticket_type import TicketType
-from app.models.user import EmailToken, OrganizerProfile, RefreshToken, StaffAssignment, User
+from app.models.user import (
+    EmailToken,
+    OrganizerProfile,
+    PhoneVerification,
+    RefreshToken,
+    StaffAssignment,
+    User,
+)
 from app.models.venue import Seat, Venue, VenueLayout, VenueRow, VenueSection
 
 __all__ = [
@@ -31,6 +38,7 @@ __all__ = [
     "Payment",
     "Payout",
     "PayoutAccount",
+    "PhoneVerification",
     "PlatformSetting",
     "PromoCode",
     "PromoRedemption",

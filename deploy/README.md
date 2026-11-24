@@ -92,6 +92,13 @@ ssh -L 8025:127.0.0.1:8025 ubuntu@<server>
 For real email, fill in the `SMTP_*` lines in `.env` (see "Send real email" in
 `backend/README.md`) and run `docker compose up -d`.
 
+## Telegram phone verification
+
+Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_BOT_USERNAME` in `.env` (see "Verify phones with
+Telegram" in `backend/README.md`) and run `docker compose up -d`. Without them the account page
+hides the action. Use a different bot for local development than for the server: two workers
+polling one bot would take each other's messages.
+
 ## Continuous deployment
 
 `.github/workflows/deploy.yml` deploys every master commit once all CI that ran for it

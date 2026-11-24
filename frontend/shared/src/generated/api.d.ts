@@ -1119,6 +1119,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/phone-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Whether phone verification through Telegram is available
+         * @description Owner: P1. Access: any signed-in user. available is false when the server has no Telegram bot configured; the web hides the action then.
+         */
+        get: operations["get_me_phone_verification"];
+        put?: never;
+        /**
+         * Start verifying the account phone through the Telegram bot
+         * @description Owner: P1. Access: any signed-in user. Returns a single-use t.me deep link valid for 15 minutes; a new request replaces the open one. The user presses Start and shares their own contact; the worker then sets phone_verified_at when the number matches the account phone. 409 phone_missing without a phone; 503 telegram_unavailable without a bot.
+         */
+        post: operations["post_me_phone_verification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/staff-events": {
         parameters: {
             query?: never;
@@ -2905,6 +2929,21 @@ export interface components {
             /** Is Simulated */
             is_simulated: boolean;
         };
+        /** PhoneVerificationStartOut */
+        PhoneVerificationStartOut: {
+            /** Link */
+            link: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /** PhoneVerificationStatusOut */
+        PhoneVerificationStatusOut: {
+            /** Available */
+            available: boolean;
+        };
         /** PayoutOut */
         PayoutOut: {
             /**
@@ -3487,6 +3526,11 @@ export interface components {
             role: string;
             /** Email Verified At */
             email_verified_at: string | null;
+            /**
+             * Phone Verified At
+             * @description Set when the user shared their own Telegram contact with this number; cleared when the phone changes.
+             */
+            phone_verified_at: string | null;
         };
         /**
          * UserUpdate
@@ -5628,6 +5672,52 @@ export interface operations {
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
             422: components["responses"]["Error"];
+        };
+    };
+    get_me_phone_verification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhoneVerificationStatusOut"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+        };
+    };
+    post_me_phone_verification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhoneVerificationStartOut"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            503: components["responses"]["Error"];
         };
     };
     get_me_staff_events: {

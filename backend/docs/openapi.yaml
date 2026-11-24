@@ -2052,6 +2052,53 @@ paths:
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
+  /me/phone-verification:
+    get:
+      tags:
+      - users
+      summary: Whether phone verification through Telegram is available
+      description: 'Owner: P1. Access: any signed-in user. available is false when the server has
+        no Telegram bot configured; the web hides the action then.'
+      operationId: get_me_phone_verification
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneVerificationStatusOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+    post:
+      tags:
+      - users
+      summary: Start verifying the account phone through the Telegram bot
+      description: 'Owner: P1. Access: any signed-in user. Returns a single-use t.me deep link valid
+        for 15 minutes; a new request replaces the open one. The user presses Start and shares
+        their own contact; the worker then sets phone_verified_at when the number matches the
+        account phone. 409 phone_missing without a phone; 503 telegram_unavailable without a bot.'
+      operationId: post_me_phone_verification
+      security:
+      - bearerAuth: []
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneVerificationStartOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+        '503':
+          $ref: '#/components/responses/Error'
   /me/staff-events:
     get:
       tags:
@@ -5364,6 +5411,29 @@ components:
       - is_simulated
       title: PayoutAccountOut
       type: object
+    PhoneVerificationStartOut:
+      properties:
+        link:
+          title: Link
+          type: string
+        expires_at:
+          format: date-time
+          title: Expires At
+          type: string
+      required:
+      - link
+      - expires_at
+      title: PhoneVerificationStartOut
+      type: object
+    PhoneVerificationStatusOut:
+      properties:
+        available:
+          title: Available
+          type: boolean
+      required:
+      - available
+      title: PhoneVerificationStatusOut
+      type: object
     PayoutOut:
       properties:
         id:
@@ -6236,6 +6306,14 @@ components:
             type: string
           - type: 'null'
           title: Email Verified At
+        phone_verified_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Phone Verified At
+          description: Set when the user shared their own Telegram contact with this number;
+            cleared when the phone changes.
       required:
       - id
       - email
@@ -6243,6 +6321,7 @@ components:
       - phone
       - role
       - email_verified_at
+      - phone_verified_at
       title: UserOut
       type: object
     UserUpdate:

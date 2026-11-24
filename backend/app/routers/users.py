@@ -5,12 +5,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
+from app.core.config import get_settings
 from app.core.deps import CurrentUser, DbSession, require_event_access, require_role
 from app.models.event import Event
 from app.models.user import OrganizerProfile, StaffAssignment, StaffRole, User, UserRole
 from app.schemas.user import (
     OrganizerProfileOut,
     OrganizerProfileUpdate,
+    PhoneVerificationStartOut,
+    PhoneVerificationStatusOut,
     StaffAssignIn,
     StaffAssignmentOut,
     StaffEventOut,
@@ -18,7 +21,7 @@ from app.schemas.user import (
     UserOut,
     UserUpdate,
 )
-from app.services import user_service
+from app.services import phone_verification, user_service
 
 router = APIRouter(tags=["users"])
 
@@ -35,6 +38,21 @@ async def get_me(user: CurrentUser) -> User:
 @router.patch("/me", response_model=UserOut)
 async def update_me(data: UserUpdate, user: CurrentUser, db: DbSession) -> User:
     return await user_service.update_user(db, user, data)
+
+
+@router.get("/me/phone-verification", response_model=PhoneVerificationStatusOut)
+async def phone_verification_status(_user: CurrentUser) -> PhoneVerificationStatusOut:
+    return PhoneVerificationStatusOut(available=get_settings().telegram_enabled)
+
+
+@router.post(
+    "/me/phone-verification",
+    response_model=PhoneVerificationStartOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def start_phone_verification(user: CurrentUser, db: DbSession) -> PhoneVerificationStartOut:
+    link, expires_at = await phone_verification.start(db, user, get_settings())
+    return PhoneVerificationStartOut(link=link, expires_at=expires_at)
 
 
 @router.get("/me/staff-events", response_model=list[StaffEventOut])

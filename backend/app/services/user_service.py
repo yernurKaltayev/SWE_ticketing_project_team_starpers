@@ -21,7 +21,11 @@ from app.services.audit_service import audit
 
 
 async def update_user(db: AsyncSession, user: User, data: UserUpdate) -> User:
-    for field, value in data.model_dump(exclude_unset=True).items():
+    changes = data.model_dump(exclude_unset=True)
+    # A verification proves ownership of one number; a different number starts unverified.
+    if "phone" in changes and changes["phone"] != user.phone:
+        user.phone_verified_at = None
+    for field, value in changes.items():
         setattr(user, field, value)
     await db.commit()
     return user
