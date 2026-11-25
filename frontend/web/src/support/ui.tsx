@@ -43,6 +43,10 @@ export function ContextDetails({
   context: Context;
   t: SupportCopy;
 }) {
+  // Nothing attached (e.g. a case opened from the Support nav link): skip
+  // the card instead of rendering a heading over an empty list.
+  if (!(["event_id", "order_id", "ticket_id"] as const).some((k) => context[k]))
+    return null;
   return (
     <div className="support-context">
       <h2>{t.context}</h2>
