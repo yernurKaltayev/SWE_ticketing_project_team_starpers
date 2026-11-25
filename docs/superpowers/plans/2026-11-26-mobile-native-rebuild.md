@@ -36,7 +36,8 @@
 - Not moved (browser-bound, stay in web): `checkout/attempt.ts` (sessionStorage), `support/data.ts`, `operations/data.ts`, every `data.ts`.
 - **Deferred to F0.2:** the `KeyValueStore` interface in shared (`get/set/remove: Promise`, `localStorage` on web, SecureStore on mobile) and the query-key factories. Both are needed only once mobile has a data layer, and F0.1 was kept a pure move with no behaviour change.
 
-### F0.2 Data layer on mobile — size M
+### F0.2 Data layer on mobile — size M — **done** (`docs/superpowers/plans/2026-11-26-f11-f0-2-data-layer.md`)
+- As built: synchronous `KeyValueStore` (Storage-shaped; SecureStore has sync get/set, removal overwrites with "" then deletes in the background; keys escaped to SecureStore's alphabet). `CheckoutCoordinator` in `shared/src/features/checkout/attempt.ts`, web keeps only its `localStorage` factory. `shared/src/features/query-keys.ts` returns the exact web key arrays; web call sites not migrated yet (no-op later). Mobile: `src/query-client.ts` (cleared by session `onClear`), `src/data.ts` (`useAuthedQuery`, `useAuthedMutation`, `bindAppFocus`); the Tickets list uses it.
 - Add `KeyValueStore` to shared (see F0.1 deferral); web implements it with `localStorage`, mobile with SecureStore; `checkout/attempt.ts` logic that does not touch storage moves to shared on top of it.
 - Move the web query keys (e.g. `["f3", user?.id, path]` in `web/src/checkout/data.ts`) into key factories in `shared/src/features/<area>/keys.ts`; web `data.ts` files use them.
 - Add `@tanstack/react-query` to mobile with one `QueryClient`; `queryClient.clear()` on sign-out (session `onClear`).
