@@ -43,10 +43,11 @@ const moved = [
   "insights/copy",
   "checkout/attempt",
   "query-keys",
+  "events/cover",
 ];
 
 /** Shared modules whose web path is not a plain stub (web keeps a browser-only factory there) or that have no web path. */
-const stubExempt = new Set(["checkout/attempt", "query-keys"]);
+const stubExempt = new Set(["checkout/attempt", "query-keys", "events/cover"]);
 
 describe("shared feature modules", () => {
   it.each(moved)("exposes %s through the package path", async (path) => {
