@@ -50,7 +50,8 @@
 - Deep links use `linkingConfig()` built from the same map; in Expo Go: `exp://<ip>:8081/--/account/tickets`. `scheme: "biletflow"` registered for later builds.
 - **Rule for every WP:** the WP is done when its screens are in `nativeRoutes` (and `goNative` in App.tsx / `tabScreens` in `linking.ts` know the target).
 
-### F0.4 Native UI kit additions — size M
+### F0.4 Native UI kit additions — size M — **done** (`docs/superpowers/plans/2026-11-26-f11-f0-4-ui-kit.md`)
+- As built: `mobile/src/kit` (FormField, Select, DateTimeField in the event zone via shared `toInstant`, MoneyInput in tiyn via shared `parsePrice`, ImageField with shared `coverProblem`, ConfirmSheet, EmptyState/ErrorState, ListScreen) and `mobile/src/files.ts` `downloadAndShare` (PDF/CSV/ICS/PNG). Cover image rules now live in `shared/src/features/events/cover.ts`, used by web too. Dev-only "UI kit" gallery under Settings for phone checks.
 In `mobile/src/ui.tsx` (or `ui/` folder): `FormField` (label, hint, error), `Select` (bottom-sheet list), `DateTimeField` (datetimepicker, shows event time zone), `MoneyInput` (KZT, stores tiyn), `ImageField` (expo-image-picker → presigned upload helper), `ConfirmSheet`, `EmptyState`, `ErrorState` (retry), `ListScreen` (FlatList + pull-to-refresh + pagination), `Tabs/Segmented` (exists), `Badge/Pill` (exists).
 - `mobile/src/files.ts`: `downloadAndShare(path, filename, mime)` for PDF / CSV / ICS through the session (bearer) → expo-file-system → expo-sharing.
 
