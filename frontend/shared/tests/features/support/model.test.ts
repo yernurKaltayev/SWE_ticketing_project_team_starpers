@@ -11,8 +11,8 @@ import {
   parseNotice,
   readMessages,
   supportLink,
-} from "./model";
-import type { Case, Message, Request } from "./model";
+} from "@biletflow/shared/features/support/model";
+import type { Case, Message, Request } from "@biletflow/shared/features/support/model";
 const id = "11111111-1111-4111-8111-111111111111";
 const c: Case = {
   id,

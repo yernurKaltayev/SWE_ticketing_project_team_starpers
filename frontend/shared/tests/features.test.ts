@@ -25,6 +25,22 @@ const moved = [
   "staff/copy",
   "auth/copy",
   "auth/helpers",
+  "events/model",
+  "events/categories",
+  "events/discoveryCopy",
+  "events/offerLabel",
+  "events/contracts",
+  "events/copy",
+  "support/model",
+  "support/copy",
+  "payments/model",
+  "payments/copy",
+  "promotions/model",
+  "promotions/copy",
+  "operations/model",
+  "operations/copy",
+  "insights/model",
+  "insights/copy",
 ];
 
 describe("shared feature modules", () => {

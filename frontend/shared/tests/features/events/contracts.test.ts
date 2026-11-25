@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { parseTicketTypes, parseVenues } from "./contracts";
+import { parseTicketTypes, parseVenues } from "@biletflow/shared/features/events/contracts";
 const venue = { id: "venue", name: "Hall", address: "1 Abay", city: "Almaty" };
 it("accepts live venue arrays and paginated fixtures without offering another page of a complete array", () => {
   const values = Array.from({ length: 101 }, (_, i) => ({

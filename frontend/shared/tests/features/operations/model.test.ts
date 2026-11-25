@@ -12,8 +12,8 @@ import {
   parseRefund,
   resolved,
   safeOffset,
-} from "./model";
-import type { Order, Request, Action } from "./model";
+} from "@biletflow/shared/features/operations/model";
+import type { Order, Request, Action } from "@biletflow/shared/features/operations/model";
 const order: Order = {
   id: "a",
   order_number: "ORDER-A",

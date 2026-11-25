@@ -13,8 +13,8 @@ import {
   ticketBody,
   toInstant,
   zonedInput,
-} from "./model";
-import type { Event, Availability } from "./model";
+} from "@biletflow/shared/features/events/model";
+import type { Event, Availability } from "@biletflow/shared/features/events/model";
 function form(values: Record<string, string | undefined>) {
   const f = new FormData();
   for (const [k, v] of Object.entries(values)) {
