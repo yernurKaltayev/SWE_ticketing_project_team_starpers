@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
 // Per-weight entry points: importing the package index would bundle all 18 Inter files.
@@ -23,7 +24,12 @@ import SessionPanel from "./src/SessionPanel";
 import { CheckInScreen } from "./src/checkin/CheckInScreen";
 import { EventsScreen } from "./src/checkin/EventsScreen";
 import { checkInCopy } from "./src/checkin/copy";
-import { Brand } from "./src/icons";
+import { Brand, TabIcon } from "./src/icons";
+import { TicketsScreen } from "./src/tickets/TicketsScreen";
+import { TicketDetail } from "./src/tickets/TicketDetail";
+import { ticketsCopy } from "./src/tickets/copy";
+import { WebScreen } from "./src/web/WebScreen";
+import { webCopy } from "./src/web/copy";
 import { color, navigationTheme } from "./src/theme";
 import {
   Action,
@@ -40,12 +46,15 @@ import {
 } from "./src/ui";
 
 type Screens = {
-  Home: undefined;
+  Tabs: undefined;
+  TicketDetail: { ticketId: string; eventTitle: string | null };
   CheckIn: { eventId: string; title: string };
   Settings: undefined;
   Connection: undefined;
 };
+type TabScreens = { Web: undefined; Tickets: undefined; Home: undefined };
 const Stack = createNativeStackNavigator<Screens>();
+const Tab = createBottomTabNavigator<TabScreens>();
 const navigation = createNavigationContainerRef<Screens>();
 
 export default function App() {
@@ -64,8 +73,8 @@ export default function App() {
   // Sign-out or session expiry anywhere returns to the sign-in screen; nothing event-specific
   // stays on screen for the next person holding the phone.
   useEffect(() => {
-    if (!signedIn && navigation.isReady() && navigation.getCurrentRoute()?.name !== "Home")
-      navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+    if (!signedIn && navigation.isReady() && !["Web", "Tickets", "Home"].includes(navigation.getCurrentRoute()?.name ?? ""))
+      navigation.reset({ index: 0, routes: [{ name: "Tabs" }] });
   }, [signedIn]);
 
   // The bundled Inter files load in milliseconds; a failed load falls back to the system face.
@@ -99,21 +108,70 @@ export default function App() {
           }}
         >
           <Stack.Screen
-            name="Home"
+            name="Tabs"
             options={({ navigation: nav }) => ({
-              headerRight: signedIn
-                ? () => <HeaderAction title={c.settings} onPress={() => nav.navigate("Settings")} />
-                : undefined,
+              headerRight: () => <HeaderAction title={c.settings} onPress={() => nav.navigate("Settings")} />,
             })}
           >
-            {(props: NativeStackScreenProps<Screens, "Home">) =>
+            {() => (
+              <Tab.Navigator
+                screenOptions={{
+                  headerShown: false,
+                  tabBarActiveTintColor: color.primary,
+                  tabBarInactiveTintColor: color.muted,
+                  tabBarStyle: { backgroundColor: color.surface, borderTopColor: color.line },
+                }}
+              >
+                <Tab.Screen
+                  name="Web"
+                  options={{
+                    title: webCopy[locale].tab,
+                    tabBarIcon: ({ color: tint }) => <TabIcon glyph="web" tint={tint} />,
+                  }}
+                >
+                  {() => <WebScreen locale={locale} />}
+                </Tab.Screen>
+                <Tab.Screen
+                  name="Tickets"
+                  options={{
+                    title: ticketsCopy[locale].tab,
+                    tabBarIcon: ({ color: tint }) => <TabIcon glyph="tickets" tint={tint} />,
+                  }}
+                >
+                  {() =>
+                    signedIn ? (
+                      <SafeAreaView edges={["left", "right"]} style={ui.fill}>
+                        <TicketsScreen
+                          key={snapshot.user?.id}
+                          locale={locale}
+                          onOpen={(ticket, eventTitle) =>
+                            navigation.navigate("TicketDetail", { ticketId: ticket.id, eventTitle })
+                          }
+                        />
+                      </SafeAreaView>
+                    ) : (
+                      <Screen>
+                  <SessionPanel locale={locale} />
+                  {language}
+                </Screen>
+                    )
+                  }
+                </Tab.Screen>
+                <Tab.Screen
+                  name="Home"
+                  options={{
+                    title: c.tab,
+                    tabBarIcon: ({ color: tint }) => <TabIcon glyph="scan" tint={tint} />,
+                  }}
+                >
+                  {() =>
               signedIn ? (
-                <SafeAreaView edges={["bottom", "left", "right"]} style={ui.fill}>
+                <SafeAreaView edges={["left", "right"]} style={ui.fill}>
                   <EventsScreen
                     key={snapshot.user?.id}
                     locale={locale}
                     onOpen={(event) =>
-                      props.navigation.navigate("CheckIn", {
+                      navigation.navigate("CheckIn", {
                         eventId: event.event_id,
                         title: event.title,
                       })
@@ -129,12 +187,25 @@ export default function App() {
                     <Muted>{t.foundationDescription}</Muted>
                     <Action
                       title={t.checkApi}
-                      onPress={() => props.navigation.navigate("Connection")}
+                      onPress={() => navigation.navigate("Connection")}
                     />
                   </Card>
                 </Screen>
               )
             }
+                </Tab.Screen>
+              </Tab.Navigator>
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="TicketDetail">
+            {(props: NativeStackScreenProps<Screens, "TicketDetail">) => (
+              <TicketDetail
+                key={`${snapshot.user?.id}:${props.route.params.ticketId}`}
+                ticketId={props.route.params.ticketId}
+                eventTitle={props.route.params.eventTitle}
+                locale={locale}
+              />
+            )}
           </Stack.Screen>
           <Stack.Screen name="CheckIn">
             {(props: NativeStackScreenProps<Screens, "CheckIn">) => (
