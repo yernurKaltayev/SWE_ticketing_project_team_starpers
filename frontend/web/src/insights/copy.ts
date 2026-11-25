@@ -3,7 +3,7 @@ const words: Record<string, [string, string, string]> = {
   analytics: ["Analytics", "Аналитика", "Талдау"],
   history: ["Activity history", "История действий", "Әрекеттер тарихы"],
   archive: ["Events by lifecycle", "Мероприятия по этапам", "Кезеңдер бойынша іс-шаралар"],
-  admin: ["Platform administration", "Администрирование платформы", "Платформаны басқару"],
+  admin: ["Admin", "Админ-панель", "Әкімші панелі"],
   upcoming: ["Upcoming", "Предстоящие", "Алдағы"],
   active: ["Active", "Активные", "Белсенді"],
   completed: ["Completed", "Завершённые", "Аяқталған"],

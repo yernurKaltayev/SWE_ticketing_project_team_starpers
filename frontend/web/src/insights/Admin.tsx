@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { retryRead, readDelay, useVisible } from "../support/data";
 import { useMemo, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { formatMoney } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { useSession } from "../auth/session";
@@ -37,26 +37,42 @@ export default function Admin({
       user
     } = useSession(),
     t = (s: string) => label(locale, s);
+  const navigate = useNavigate();
   if (user?.role !== "platform_admin") return <p role="alert">
   {t("denied")}
 </p>;
   const valid = [...sections, "disputes", "settings", "exports"].includes(section);
-  return <section className="insights">
+  const all = [...sections, "disputes", "settings", "exports"];
+  return <div className="workspace">
+  <nav className="workspace-nav admin-nav" aria-label={t("admin")}>
+    <ul>
+      {all.map(s => <li key={s}>
+        <Link to={`/admin/${s}`} aria-current={s === section ? "page" : undefined}>
+          {t(s)}
+        </Link>
+      </li>)}
+    </ul>
+  </nav>
+  <section className="insights workspace-main">
   <h1>
     {t("admin")}
   </h1>
-  <nav className="insights-nav" aria-label={t("admin")}>
-    {[...sections, "disputes", "settings", "exports"].map(s => <Link key={s} to={`/admin/${s}`} aria-current={s === section ? "page" : undefined}>
-      {t(s)}
-    </Link>)}
-  </nav>
+  <div className="field admin-section-select">
+    <label htmlFor="admin-section" className="visually-hidden">{t("admin")}</label>
+    <select id="admin-section" value={valid ? section : ""} onChange={e => navigate(`/admin/${e.target.value}`)}>
+      {all.map(s => <option key={s} value={s}>
+        {t(s)}
+      </option>)}
+    </select>
+  </div>
   <p className="notice">
     {t("demo")}
   </p>
   {!valid ? <p>
     {t("empty")}
   </p> : section === "settings" ? <SettingsPage locale={locale} /> : section === "exports" ? <Exports locale={locale} /> : section === "disputes" ? <Disputes locale={locale} /> : <Search key={`${user.id}:${section}`} locale={locale} section={section as AdminSection} />}
-</section>;
+</section>
+  </div>;
 }
 function Search({
   section,
@@ -123,9 +139,14 @@ function Search({
     setSelected(null);
   }
   return <>
+  <header className="title-row spread">
   <h2>
     {t(section)}
   </h2>
+  <button className="secondary" disabled={query.isFetching || write.busy} onClick={() => void refresh()}>
+    {t("refresh")}
+  </button>
+  </header>
   <form key={params.toString()} className="insights-filters" noValidate onSubmit={e => {
       e.preventDefault();
       const p = new URLSearchParams();
@@ -203,9 +224,6 @@ function Search({
     {t("invalid")}
   </p>}
   <Failure error={query.error ?? write.error} locale={locale} />
-  <button className="secondary" disabled={query.isFetching || write.busy} onClick={() => void refresh()}>
-    {t("refresh")}
-  </button>
   {write.saved && <p role="status">
     {t("saved")}
   </p>}
@@ -375,9 +393,6 @@ function Disputes({
   <h2>
     {t("disputes")}
   </h2>
-  <p>
-    {t("disputesHint")}
-  </p>
   <Failure error={query.error} locale={locale} />
   <button className="secondary" onClick={() => void query.refetch()}>
     {t("refresh")}
@@ -429,9 +444,6 @@ function SettingsPage({
   <h2>
     {t("settings")}
   </h2>
-  <p>
-    {t("unitsHint")}
-  </p>
   <Failure error={query.error ?? write.error} locale={locale} />
   {invalid && <p role="alert">
     {t("noChanges")}
@@ -532,9 +544,6 @@ function Exports({
   <h2>
     {t("exports")}
   </h2>
-  <p>
-    {t("exportHint")}
-  </p>
   <Failure error={error} locale={locale} />
   <form className="insights-filters" noValidate onSubmit={e => {
       e.preventDefault();
@@ -622,5 +631,8 @@ function Cell({
   if (field.endsWith("_id") && typeof value === "string" && value.length > 12) return <span className="commerce-identifier" title={value}>
     {value.slice(0, 8)}…
   </span>;
+  if (field === "is_suspended" && typeof value === "boolean") return value ? <span className="status-badge" data-tone="danger">
+    <Value field={field} value={value} locale={locale} />
+  </span> : <span aria-label={label(locale, "no")}>—</span>;
   return <Value field={field} value={value} locale={locale} />;
 }

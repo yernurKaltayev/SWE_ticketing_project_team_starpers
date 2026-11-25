@@ -225,12 +225,16 @@ export function AccountsPage({ locale }: { locale: Locale }) {
           )}
           <ul className="payout-accounts">
             {query.data.map((a) => (
-              <li key={a.id}>
-                <strong>
-                  {a.bank_name} · •••• {a.iban_last4}
-                </strong>
-                <p>{a.holder_name}</p>
-                <p>{a.is_verified ? t.verified : t.unverified}</p>
+              <li key={a.id} className="payout-account-row">
+                <div>
+                  <strong>
+                    {a.bank_name} · •••• {a.iban_last4}
+                  </strong>
+                  <p>{a.holder_name}</p>
+                </div>
+                <span className="status-badge" data-tone={a.is_verified ? "success" : "warning"}>
+                  {a.is_verified ? t.verified : t.unverified}
+                </span>
                 <div className="controls">
                   <button
                     className="secondary"

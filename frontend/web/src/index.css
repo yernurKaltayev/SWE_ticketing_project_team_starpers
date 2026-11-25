@@ -2372,3 +2372,38 @@ a.chip-link:hover {
 .seating-row input {
   width: 100%;
 }
+
+.payout-account-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+.payout-account-row > div:first-child {
+  flex: 1 1 14rem;
+}
+.payout-account-row p {
+  margin: 0.15rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+.payout-account-row .controls {
+  margin: 0;
+}
+
+/* Admin: sections in the sidebar on desktop, a dropdown on phones. */
+.admin-section-select {
+  display: none;
+}
+@media (max-width: 900px) {
+  .admin-nav {
+    display: none;
+  }
+  .admin-section-select {
+    display: grid;
+    margin-bottom: 1rem;
+  }
+}
+.title-row :is(h1, h2) {
+  margin-block: 0;
+}
