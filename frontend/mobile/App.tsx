@@ -37,6 +37,7 @@ import { TicketsScreen } from "./src/tickets/TicketsScreen";
 import { TicketDetail } from "./src/tickets/TicketDetail";
 import { ticketsCopy } from "./src/tickets/copy";
 import { WebScreen } from "./src/web/WebScreen";
+import { KitGallery } from "./src/kit/Gallery";
 import { webCopy } from "./src/web/copy";
 import { color, navigationTheme } from "./src/theme";
 import {
@@ -59,6 +60,7 @@ type Screens = {
   CheckIn: { eventId: string; title: string };
   Settings: undefined;
   Connection: undefined;
+  KitGallery: undefined;
 };
 type TabScreens = { Web: undefined; Tickets: undefined; Home: undefined };
 const Stack = createNativeStackNavigator<Screens>();
@@ -262,9 +264,21 @@ export default function App() {
                   title={c.connection}
                   onPress={() => props.navigation.navigate("Connection")}
                 />
+                {__DEV__ ? (
+                  <Action title="UI kit" onPress={() => props.navigation.navigate("KitGallery")} />
+                ) : null}
               </Screen>
             )}
           </Stack.Screen>
+          {__DEV__ ? (
+            <Stack.Screen name="KitGallery">
+              {() => (
+                <SafeAreaView edges={["bottom", "left", "right"]} style={ui.fill}>
+                  <KitGallery locale={locale} />
+                </SafeAreaView>
+              )}
+            </Stack.Screen>
+          ) : null}
           <Stack.Screen name="Connection">{() => <Connection locale={locale} />}</Stack.Screen>
         </Stack.Navigator>
       </NavigationContainer>
