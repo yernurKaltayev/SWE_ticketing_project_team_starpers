@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { noFinalDot } from "../auth/helpers";
 import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Locale } from "@biletflow/shared";
@@ -393,7 +394,7 @@ function Metadata({
             </option>
           ))}
         </select>
-        <p className="field-hint">{t.rosterHint}</p>
+        <p className="field-hint">{noFinalDot(t.rosterHint)}</p>
         <button>{busy ? t.working : t.save}</button>
       </fieldset>
     </form>

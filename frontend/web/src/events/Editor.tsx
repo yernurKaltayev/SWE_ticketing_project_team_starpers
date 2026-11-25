@@ -1,4 +1,5 @@
 import { DuplicateEvent } from "../insights/DuplicateEvent";
+import { noFinalDot } from "../auth/helpers";
 import { SupportLink } from "../support/ui";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -724,7 +725,7 @@ function RefundEditor({
     <section>
       <h2>{t.refund}</h2>
       {!event.refund_policy && !saved && (
-        <p className="field-hint">{t.policyEmpty}</p>
+        <p className="field-hint">{noFinalDot(t.policyEmpty)}</p>
       )}
       <EventError error={error} t={t} />
       {saved && <Status>{t.policySaved}</Status>}

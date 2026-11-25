@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { noFinalDot } from "../auth/helpers";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, formatMoney, formatEventDateTime } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
@@ -371,7 +372,7 @@ function CampaignForm({
         <p>{zone}</p>
         <fieldset disabled={!!initial}>
           <legend>{t.eligibility}</legend>
-          <p className="field-hint">{t.allTypes}</p>
+          <p className="field-hint">{noFinalDot(t.allTypes)}</p>
           {types.map((type) => (
             <label className="promo-check" key={type.id}>
               <input

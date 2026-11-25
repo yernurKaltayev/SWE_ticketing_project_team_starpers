@@ -266,7 +266,7 @@ it("labels invalid attendee fields and does not submit an order", async () => {
     "true",
   );
   expect(
-    screen.getByText("Enter a full name (1–200 characters)."),
+    screen.getByText("Enter a full name (1–200 characters)"),
   ).toBeDefined();
   expect(writes).toBe(0);
 });

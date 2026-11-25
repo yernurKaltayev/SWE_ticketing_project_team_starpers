@@ -1,4 +1,5 @@
 import { CalendarActions } from "../calendar/CalendarActions";
+import { noFinalDot } from "../auth/helpers";
 import { SupportLink } from "../support/ui";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -199,7 +200,7 @@ function OrderContent({
             <p className="notice">{t.simulated}</p>
           )}
           {order.subtotal > 0 && <OrderTotals order={order} locale={locale} />}
-          {confirmed && <p className="field-hint">{t.emailNote}</p>}
+          {confirmed && <p className="field-hint">{noFinalDot(t.emailNote)}</p>}
           {preparing && <Status>{t.preparing}</Status>}
           {order.status === "pending" && (
             <Status>{paymentCopy[locale].pending}</Status>

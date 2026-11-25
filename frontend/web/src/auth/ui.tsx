@@ -4,7 +4,7 @@ import { ApiError } from "@biletflow/shared";
 import { AlertIcon } from "../icons";
 import type { Locale } from "@biletflow/shared";
 import { authCopy } from "./copy";
-import { errorMessage } from "./helpers";
+import { errorMessage, noFinalDot } from "./helpers";
 
 export function Field({
   label,
@@ -31,12 +31,12 @@ export function Field({
       {input}
       {hint && !error ? (
         <p className="field-hint" id={`${id}-hint`}>
-          {hint}
+          {noFinalDot(hint)}
         </p>
       ) : null}
       {error ? (
         <p className="field-error" id={`${id}-error`}>
-          {error}
+          {noFinalDot(error)}
         </p>
       ) : null}
     </div>

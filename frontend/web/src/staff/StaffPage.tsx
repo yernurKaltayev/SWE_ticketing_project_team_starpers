@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { noFinalDot } from "../auth/helpers";
 import type { FormEvent } from "react";
 import { useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -102,7 +103,7 @@ function StaffContent({ eventId, locale }: { eventId: string; locale: Locale }) 
       <h1>{t.title}</h1>
       {event.data ? <p className="event-heading">{event.data.title}</p> : null}
       <p>{t.intro}</p>
-      <p className="field-hint">{t.appHint}</p>
+      <p className="field-hint">{noFinalDot(t.appHint)}</p>
       {notice ? <Status>{notice}</Status> : null}
       {actionError ? (
         <div className="form-error" role="alert" tabIndex={-1} ref={errorRef}>

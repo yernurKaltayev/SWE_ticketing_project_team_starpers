@@ -91,7 +91,7 @@ it("validates the email before calling the server", async () => {
   await screen.findByText("No staff assigned yet.");
   await user.type(screen.getByLabelText("Account email"), "not-an-email");
   await user.click(screen.getByRole("button", { name: "Add to staff" }));
-  expect(await screen.findByText("Enter a valid email address.")).toBeTruthy();
+  expect(await screen.findByText("Enter a valid email address")).toBeTruthy();
   expect(screen.getByText("No staff assigned yet.")).toBeTruthy();
 });
 

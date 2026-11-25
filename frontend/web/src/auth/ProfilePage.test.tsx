@@ -113,6 +113,6 @@ it("asks to save a changed phone before verifying it", async () => {
     target: { value: "+7 702 000 00 00" },
   });
 
-  expect(screen.getByText(t.phoneSaveFirst)).toBeTruthy();
+  expect(screen.getByText(t.phoneSaveFirst.replace(/\.$/, ""))).toBeTruthy();
   expect(screen.queryByRole("button", { name: t.verifyTelegram })).toBeNull();
 });
