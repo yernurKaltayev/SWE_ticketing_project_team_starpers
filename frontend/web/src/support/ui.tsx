@@ -12,7 +12,11 @@ export function SupportLink({
   locale: Locale;
   context?: Context;
 }) {
-  return <Link to={supportLink(context)}>{supportCopy[locale].title}</Link>;
+  return (
+    <Link className="action-link ghost" to={supportLink(context)}>
+      {supportCopy[locale].contact}
+    </Link>
+  );
 }
 export function SupportError({ error, t }: { error: unknown; t: SupportCopy }) {
   if (!error) return null;

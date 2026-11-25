@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import type { Locale } from "@biletflow/shared";
 import type { components } from "@biletflow/shared/api";
 import { authCopy } from "./copy";
-import { fieldErrors, kazakhstanPhone, validEmail, validName } from "./helpers";
+import { fieldErrors, kazakhstanPhone, validEmail, validName, noFinalDot } from "./helpers";
 import { useSession } from "./session";
 import { Field, FormError, Status } from "./ui";
 import { toneFor } from "../tone";
@@ -260,7 +260,7 @@ function OrganizerForm({
           {verification}
         </span>
       </p>
-      <p className="field-hint">{t.organizerVerificationNote}</p>
+      <p className="field-hint">{noFinalDot(t.organizerVerificationNote)}</p>
       <FormError error={error} fields={errors} locale={locale} />
       {saved ? <Status>{t.saved}</Status> : null}
       <form

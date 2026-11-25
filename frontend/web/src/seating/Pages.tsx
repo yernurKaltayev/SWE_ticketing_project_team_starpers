@@ -6,6 +6,7 @@ import { parseEvent, parseTicketTypes } from "../events/contracts";
 import { seatingCopy } from "./copy";
 import { parseLayouts } from "./model";
 import { SeatPicker } from "./SeatPicker";
+import { BackLink } from "../BackLink";
 export function SeatPage({ locale }: { locale: Locale }) {
   const { eventId = "" } = useParams();
   const request = useEventRequest();
@@ -32,9 +33,7 @@ export function SeatingSetup({ locale }: { locale: Locale }) {
   );
   return (
     <>
-      <Link to={`/organizer/events/${encodeURIComponent(eventId)}/edit`}>
-        {t.back}
-      </Link>
+      <BackLink to={`/organizer/events/${encodeURIComponent(eventId)}/edit`}>{t.back}</BackLink>
       <h1>{t.setup}</h1>
       {event.error ? (
         <p role="alert">

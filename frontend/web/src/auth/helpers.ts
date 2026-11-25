@@ -122,3 +122,8 @@ export const validName = (value: string) =>
   value.trim().length > 0 && value.trim().length <= 200;
 export const validPassword = (value: string) =>
   value.length >= 8 && value.length <= 128;
+
+/** Short helper lines under a field read as labels, not sentences. */
+export function noFinalDot(text: string) {
+  return text.replace(/\.\s*$/, "");
+}

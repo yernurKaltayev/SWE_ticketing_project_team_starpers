@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { noFinalDot } from "../auth/helpers";
 import { formatMoney } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { promoCopy, reasonText } from "./copy";
@@ -93,7 +94,7 @@ export function PromoEntry({
                   locale,
                 )}
               </p>
-              <p className="field-hint">{t.previewHint}</p>
+              <p className="field-hint">{noFinalDot(t.previewHint)}</p>
             </div>
           )}
         </>

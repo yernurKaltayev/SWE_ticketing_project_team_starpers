@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { noFinalDot } from "../auth/helpers";
 import type { FormEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, formatDateTime } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
@@ -16,6 +17,8 @@ import {
   validStaffEmail,
 } from "./model";
 import type { StaffMember, StaffRole } from "./model";
+import { BackLink } from "../BackLink";
+import { eventCopy } from "../events/copy";
 
 export default function StaffPage({ locale }: { locale: Locale }) {
   const { eventId = "" } = useParams();
@@ -94,11 +97,13 @@ function StaffContent({ eventId, locale }: { eventId: string; locale: Locale }) 
 
   return (
     <section>
-      <Link to="/organizer/events">{t.events}</Link>
+      <BackLink to={`/organizer/events/${encodeURIComponent(eventId)}/edit`}>
+        {eventCopy[locale].backToEvent}
+      </BackLink>
       <h1>{t.title}</h1>
       {event.data ? <p className="event-heading">{event.data.title}</p> : null}
       <p>{t.intro}</p>
-      <p className="field-hint">{t.appHint}</p>
+      <p className="field-hint">{noFinalDot(t.appHint)}</p>
       {notice ? <Status>{notice}</Status> : null}
       {actionError ? (
         <div className="form-error" role="alert" tabIndex={-1} ref={errorRef}>

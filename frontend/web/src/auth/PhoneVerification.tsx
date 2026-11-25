@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Locale } from "@biletflow/shared";
 import type { components } from "@biletflow/shared/api";
 import { authCopy } from "./copy";
-import { kazakhstanPhone } from "./helpers";
+import { kazakhstanPhone, noFinalDot } from "./helpers";
 import { useSession } from "./session";
 import { FormError, Status } from "./ui";
 
@@ -91,7 +91,7 @@ export function PhoneVerification({
       </p>
       {!verified && saved && available ? (
         unsaved ? (
-          <p className="field-hint">{t.phoneSaveFirst}</p>
+          <p className="field-hint">{noFinalDot(t.phoneSaveFirst)}</p>
         ) : pending ? (
           <>
             {/* A link, not window.open: browsers block windows opened after a request. */}

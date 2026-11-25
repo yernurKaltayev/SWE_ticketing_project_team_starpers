@@ -128,6 +128,6 @@ it("explains a phone that is not a Kazakhstan number before sending anything", a
   );
   open("/register", "register");
   fillRegistration("12345");
-  expect((await screen.findAllByText(authCopy.en.phoneInvalid)).length).toBeGreaterThan(0);
+  expect((await screen.findAllByText(authCopy.en.phoneInvalid.replace(/\.$/, ""))).length).toBeGreaterThan(0);
   expect(requests).toBe(0);
 });

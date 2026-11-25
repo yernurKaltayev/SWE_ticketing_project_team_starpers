@@ -22,7 +22,42 @@ const headerCopy: Record<
   kk: { menu: "Тіркелгі мәзірі", hideNotice: "Демо хабарламасын жасыру" },
 };
 
-/** Compact language switch: globe + code, full names in the list. */
+const localeCodes: Record<Locale, string> = { en: "EN", ru: "RU", kk: "KZ" };
+
+/** Close a popover on outside click, Escape (returning focus) and navigation. */
+function usePopover() {
+  const location = useLocation();
+  const [openOn, setOpenOn] = useState<string | null>(null);
+  const open = openOn === location.pathname;
+  const root = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (event: PointerEvent) => {
+      if (!root.current?.contains(event.target as Node)) setOpenOn(null);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpenOn(null);
+        button.current?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  return {
+    open,
+    setOpen: (value: boolean) => setOpenOn(value ? location.pathname : null),
+    root,
+    button,
+  };
+}
+
+/** Language switch: globe + short code; a menu lists the full names. */
 export function LanguagePicker({
   locale,
   onChange,
@@ -30,23 +65,45 @@ export function LanguagePicker({
   locale: Locale;
   onChange: (next: Locale) => void;
 }) {
+  const { open, setOpen, root, button } = usePopover();
+  const menuId = useId();
   return (
-    <label className="language-control" title={messages[locale].language}>
-      <GlobeIcon size={18} />
-      <span className="visually-hidden">{messages[locale].language}</span>
-      <select
-        value={locale}
-        onChange={(event) => {
-          if (isLocale(event.target.value)) onChange(event.target.value);
-        }}
+    <div className="language-menu" ref={root}>
+      <button
+        ref={button}
+        type="button"
+        className="language-trigger"
+        aria-expanded={open}
+        aria-controls={menuId}
+        aria-label={`${messages[locale].language}: ${localeLabels[locale]}`}
+        onClick={() => setOpen(!open)}
       >
-        {locales.map((code) => (
-          <option key={code} value={code}>
-            {localeLabels[code]}
-          </option>
-        ))}
-      </select>
-    </label>
+        <GlobeIcon size={18} />
+        <span aria-hidden="true">{localeCodes[locale]}</span>
+        <ChevronDownIcon size={14} />
+      </button>
+      <div className="language-panel" id={menuId} hidden={!open}>
+        <ul aria-label={messages[locale].language}>
+          {locales.map((code) => (
+            <li key={code}>
+              <button
+                type="button"
+                lang={code}
+                aria-pressed={code === locale}
+                onClick={() => {
+                  setOpen(false);
+                  button.current?.focus();
+                  if (isLocale(code) && code !== locale) onChange(code);
+                }}
+              >
+                <span>{localeLabels[code]}</span>
+                <span className="language-code">{localeCodes[code]}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }
 
@@ -83,32 +140,9 @@ export function AccountMenu({
   busy: boolean;
   onLogout: () => void;
 }) {
-  const location = useLocation();
   // The menu belongs to the page it was opened on, so navigating closes it.
-  const [openOn, setOpenOn] = useState<string | null>(null);
-  const open = openOn === location.pathname;
-  const setOpen = (value: boolean) => setOpenOn(value ? location.pathname : null);
-  const root = useRef<HTMLDivElement>(null);
-  const button = useRef<HTMLButtonElement>(null);
+  const { open, setOpen, root, button } = usePopover();
   const menuId = useId();
-  useEffect(() => {
-    if (!open) return;
-    const onPointer = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) setOpenOn(null);
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpenOn(null);
-        button.current?.focus();
-      }
-    };
-    document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
   const icons = {
     events: GridIcon,
     tickets: TicketIcon,

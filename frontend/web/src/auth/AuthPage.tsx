@@ -320,7 +320,6 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
                 }
                 maxLength={128}
                 required
-                hint={kind === "login" ? undefined : t.passwordHint}
                 value={values.password}
                 error={errors.password ?? errors.new_password}
                 onChange={(e) => change("password", e.target.value)}
@@ -372,15 +371,16 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
       {emailConfirmed || confirming ? null : (
         <nav className="auth-links" aria-label={titles[kind]}>
           {kind !== "login" ? (
-            <Link to={`/login${suffix}`}>{t.login}</Link>
+            <Link className="action-link ghost" to={`/login${suffix}`}>{t.login}</Link>
           ) : (
             <>
-              <Link to={`/register${suffix}`}>{t.register}</Link>
-              <Link to={`/forgot-password${suffix}`}>{t.forgot}</Link>
+              <Link className="action-link ghost" to={`/register${suffix}`}>{t.register}</Link>
+              <Link className="action-link ghost" to={`/forgot-password${suffix}`}>{t.forgot}</Link>
             </>
           )}
           {kind !== "verify-email" || hasTokenForm ? (
             <Link
+              className="action-link ghost"
               to={`/verify-email${suffix}`}
               onClick={() => {
                 setToken("");
@@ -393,7 +393,7 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
             </Link>
           ) : null}
           {kind === "reset-password" ? (
-            <Link to={`/forgot-password${suffix}`}>{t.sendReset}</Link>
+            <Link className="action-link ghost" to={`/forgot-password${suffix}`}>{t.sendReset}</Link>
           ) : null}
         </nav>
       )}

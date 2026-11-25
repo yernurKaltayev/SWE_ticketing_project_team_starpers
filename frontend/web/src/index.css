@@ -230,9 +230,14 @@ textarea {
 }
 select {
   width: auto;
+}
+select,
+.field select,
+.operations select,
+.seating select {
   appearance: none;
   padding-right: 2.25rem;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2366758a' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 4.5 3 3 3-3'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 12 12' fill='none' stroke='%23475569' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 4.5 3 3 3-3'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.85rem center;
   cursor: pointer;
@@ -387,20 +392,34 @@ label {
   background: var(--color-primary);
 }
 .form-error {
-  border: 1px solid var(--color-danger-line);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  border: 0;
+  border-left: 3px solid var(--color-danger);
   background: var(--color-danger-soft);
   color: var(--color-danger-ink);
   border-radius: var(--radius-control);
-  padding: 1rem 1.15rem;
-  margin-block: 1.25rem;
+  padding: 0.75rem 1rem;
+  margin-block: 1rem;
+  font-size: 0.9rem;
   overflow-wrap: anywhere;
+}
+.form-error > svg {
+  flex: none;
+  margin-top: 0.05rem;
+  color: var(--color-danger);
+}
+.form-error > div {
+  min-width: 0;
 }
 .form-error:focus {
   outline: 2px solid var(--color-danger);
   outline-offset: 2px;
 }
 .form-error p {
-  font-weight: 600;
+  font-weight: 500;
+  margin: 0;
 }
 .form-error p:last-child {
   margin-bottom: 0;
@@ -790,11 +809,12 @@ main:focus {
   width: 100%;
 }
 .auth-links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 1.25rem;
-  font-size: 0.9rem;
+  display: grid;
+  gap: 0.5rem;
+}
+.auth-links .action-link {
+  justify-content: center;
+  width: 100%;
 }
 
 /* ---------- Events ---------- */
@@ -1682,7 +1702,7 @@ nav.controls:has(> a[aria-current]) > a[aria-current] {
 }
 .discovery-intro p {
   margin: 0 0 1.5rem;
-  max-width: 46rem;
+  max-width: 62rem;
   color: var(--color-muted);
   font-size: 1.0625rem;
 }
@@ -2058,32 +2078,6 @@ button.link-button:hover {
 }
 
 /* Password fields: show/hide toggle inside the input. */
-.password-input {
-  position: relative;
-}
-.password-input input {
-  padding-right: 3rem;
-}
-button.password-toggle {
-  position: absolute;
-  top: 50%;
-  right: 0.25rem;
-  transform: translateY(-50%);
-  width: 40px;
-  min-height: 40px;
-  padding: 0;
-  display: grid;
-  place-items: center;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  color: var(--color-muted);
-}
-button.password-toggle:hover,
-button.password-toggle[aria-pressed="true"] {
-  background: transparent;
-  color: var(--color-primary);
-}
 .empty-state button,
 .empty-state .action-link {
   margin-top: 0.75rem;
@@ -2116,4 +2110,139 @@ button.password-toggle[aria-pressed="true"] {
 .ticket-table td,
 .ticket-table th {
   padding-inline: 0.75rem;
+}
+
+/* Wide screens: the search spans the hero and the filters share one stretched
+   row, instead of everything stopping at ~1270px with an empty right side. */
+@media (min-width: 1100px) {
+  .discovery-hero .hero-search {
+    max-width: none;
+  }
+  .discovery-filters {
+    flex-wrap: nowrap;
+  }
+  .discovery-filters > .field:not(.date-chips) {
+    flex: 1 1 0;
+    min-width: 12rem;
+  }
+  .discovery-filters > .date-chips {
+    flex: 0 0 auto;
+  }
+  .discovery-filters > .custom-dates {
+    flex: 0 0 auto;
+    align-self: flex-end;
+  }
+  .discovery-filters > .custom-dates summary {
+    min-height: 42px;
+  }
+  /* Open custom dates drop below the row instead of squeezing it. */
+  .discovery-filters:has(.custom-dates[open]) {
+    flex-wrap: wrap;
+  }
+  .discovery-filters > .custom-dates[open] {
+    flex-basis: 100%;
+  }
+}
+
+/* Language menu: same pill as the account trigger, list of full names. */
+.language-menu {
+  position: relative;
+}
+button.language-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 40px;
+  padding: 0 0.6rem 0 0.7rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-chip);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  box-shadow: none;
+}
+button.language-trigger svg {
+  color: var(--color-muted);
+}
+button.language-trigger:hover,
+button.language-trigger[aria-expanded="true"] {
+  background: var(--color-canvas);
+  border-color: var(--color-line-hover);
+}
+.language-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  z-index: 30;
+  min-width: 12rem;
+  padding: 0.4rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-raise);
+}
+.language-panel[hidden] {
+  display: none;
+}
+.language-panel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.language-panel button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 0.7rem;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--color-ink);
+  font-size: 0.9rem;
+  font-weight: 550;
+  box-shadow: none;
+}
+.language-panel button:hover {
+  background: var(--color-canvas);
+}
+.language-panel button[aria-pressed="true"] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 650;
+}
+.language-code {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.language-panel button[aria-pressed="true"] .language-code {
+  color: var(--color-primary);
+}
+
+/* Secondary actions inside cards: small outlined pills, not bare links. */
+.card-links {
+  gap: 0.4rem;
+}
+a.chip-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 0.8rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-chip);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+a.chip-link:hover {
+  border-color: var(--color-line-hover);
+  background: var(--color-canvas);
 }

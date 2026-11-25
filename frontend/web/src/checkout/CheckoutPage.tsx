@@ -1,4 +1,5 @@
 import { PromoEntry } from "../promotions/PromoEntry";
+import { noFinalDot } from "../auth/helpers";
 import { usePromotion } from "../promotions/usePromotion";
 import { validatePromo, selectedCart } from "../promotions/model";
 import { promoCopy, reasonText } from "../promotions/copy";
@@ -74,7 +75,7 @@ export default function CheckoutPage({ locale }: { locale: Locale }) {
                 void venue.refetch();
               }}
             />
-            <p className="field-hint">{t.snapshot}</p>
+            <p className="field-hint">{noFinalDot(t.snapshot)}</p>
             {event.data.refund_policy?.summary && (
               <p className="notice">{event.data.refund_policy.summary}</p>
             )}

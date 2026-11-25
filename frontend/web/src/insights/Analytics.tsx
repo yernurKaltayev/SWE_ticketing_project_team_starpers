@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { BackLink } from "../BackLink";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { formatMoney } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { useSession } from "../auth/session";
@@ -55,9 +56,7 @@ function Content({
   const report = useLiveQuery(filter.query !== undefined ? `${root}/analytics?${filter.query}` : "", parseAnalytics, 30000, !event.isError);
   const data = report.isError || event.isError ? undefined : report.data;
   return <section className="insights">
-  <Link className="back-link" to="/organizer/events">
-    {eventCopy[locale].back}
-  </Link>
+  <BackLink to="/organizer/events">{eventCopy[locale].back}</BackLink>
   <h1>
     {t("analytics")}
   </h1>

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { BackLink } from "../BackLink";
+import { useNavigate } from "react-router-dom";
 import type { Locale } from "@biletflow/shared";
 import { useSession } from "../auth/session";
 import { parseEvent } from "../events/contracts";
@@ -39,9 +40,7 @@ export function DuplicateEvent({
     <p role="alert">
       {t("unknown")}
     </p>
-    <Link className="back-link" to="/organizer/events">
-      {eventCopy[locale].back}
-    </Link>
+    <BackLink to="/organizer/events">{eventCopy[locale].back}</BackLink>
     <button type="button" disabled={checking} onClick={() => {
         setChecking(true);
         void allEvents(controller.request).then(() => setRead(true)).catch(() => setRead(false)).finally(() => setChecking(false));
