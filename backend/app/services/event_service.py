@@ -21,6 +21,7 @@ from app.models.ticket_type import TicketType
 from app.models.user import OrganizerProfile, User
 from app.models.venue import Venue, VenueLayout
 from app.schemas.event import EventCreate, EventOut, EventUpdate
+from app.services import storage_service
 from app.services.audit_service import audit
 
 _EDITABLE_FIELDS = (
@@ -411,4 +412,89 @@ async def cancel_event(db: AsyncSession, event_id: uuid.UUID, user: User) -> Eve
         metadata=settled,
     )
     await db.commit()
+    return _out(event, reveal_token=True)
+
+
+# --- Cover image (P2) -------------------------------------------------------------------
+
+MAX_IMAGE_BYTES = 5 * 1024 * 1024
+IMAGE_URL_PREFIX = "/api/v1/event-images"
+_IMAGE_TYPES = {"jpg": "image/jpeg", "png": "image/png", "webp": "image/webp"}
+
+
+def image_kind(data: bytes) -> str | None:
+    """Sniff the real format; the browser-sent content type is not trusted."""
+    if data.startswith(b"\xff\xd8\xff"):
+        return "jpg"
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+    if len(data) >= 12 and data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "webp"
+    return None
+
+
+def image_content_type(name: str) -> str | None:
+    return _IMAGE_TYPES.get(name.rsplit(".", 1)[-1])
+
+
+def _object_key(url: str) -> str | None:
+    prefix = f"{IMAGE_URL_PREFIX}/"
+    return f"events/{url[len(prefix) :]}" if url.startswith(prefix) else None
+
+
+async def set_cover_image(
+    db: AsyncSession, event_id: uuid.UUID, user: User, data: bytes
+) -> EventOut:
+    """Store `data` as the event's single cover image, replacing any previous one."""
+    if len(data) > MAX_IMAGE_BYTES:
+        raise UnprocessableError("The image is larger than 5 MB.", code="image_too_large")
+    kind = image_kind(data)
+    if kind is None:
+        raise UnprocessableError("Upload a JPEG, PNG or WebP image.", code="invalid_image_type")
+    event = await _locked_event(db, event_id)
+    if event.status == EventStatus.cancelled:
+        raise ConflictError("Cancelled events cannot be edited.", code="event_cancelled")
+    name = f"{uuid.uuid4().hex}.{kind}"
+    await storage_service.put_object(f"events/{event_id}/{name}", data, _IMAGE_TYPES[kind])
+    previous = list(event.image_urls or [])
+    event.image_urls = [f"{IMAGE_URL_PREFIX}/{event_id}/{name}"]
+    audit(
+        db,
+        action_type="event_updated",
+        entity_type="event",
+        entity_id=event.id,
+        event_id=event.id,
+        actor=user,
+        description="Updated event cover image",
+        metadata={"fields": ["images"]},
+    )
+    await db.commit()
+    for url in previous:
+        if key := _object_key(url):
+            await storage_service.delete_object(key)
+    return _out(event, reveal_token=True)
+
+
+async def remove_cover_image(db: AsyncSession, event_id: uuid.UUID, user: User) -> EventOut:
+    event = await _locked_event(db, event_id)
+    if event.status == EventStatus.cancelled:
+        raise ConflictError("Cancelled events cannot be edited.", code="event_cancelled")
+    previous = list(event.image_urls or [])
+    if not previous:
+        return _out(event, reveal_token=True)
+    event.image_urls = []
+    audit(
+        db,
+        action_type="event_updated",
+        entity_type="event",
+        entity_id=event.id,
+        event_id=event.id,
+        actor=user,
+        description="Removed event cover image",
+        metadata={"fields": ["images"]},
+    )
+    await db.commit()
+    for url in previous:
+        if key := _object_key(url):
+            await storage_service.delete_object(key)
     return _out(event, reveal_token=True)

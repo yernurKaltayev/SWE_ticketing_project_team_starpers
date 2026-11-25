@@ -87,16 +87,6 @@ class EventOut(EventCreate):
     refund_policy: RefundPolicyOut | None = None
 
 
-class ImageUploadIn(BaseModel):
-    filename: str
-    content_type: str
-
-
-class ImageUploadOut(BaseModel):
-    upload_url: str
-    image_url: str
-
-
 class RefundPolicyIn(BaseModel):
     summary: str = Field(min_length=1, max_length=2000)
     refundable_until: datetime | None = None

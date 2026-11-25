@@ -86,13 +86,18 @@ export function FeaturedCarousel({
   locale: Locale;
 }) {
   const d = discoveryCopy[locale];
-  const query = new URLSearchParams({ limit: "5", offset: "0" });
+  const query = new URLSearchParams({ limit: "20", offset: "0" });
   if (city) query.set("city", city);
   const { data } = useResource<Page<Event>>(
     `/api/v1/events?${query}`,
     parseEvents,
   );
-  const slides = data?.items ?? [];
+  // Soonest events with a cover photo first; generated covers only fill the gaps.
+  const upcoming = data?.items ?? [];
+  const slides = [
+    ...upcoming.filter((e) => e.images.length > 0),
+    ...upcoming.filter((e) => e.images.length === 0),
+  ].slice(0, 5);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [drag, setDrag] = useState<{ x: number; dx: number } | null>(null);

@@ -788,8 +788,10 @@ paths:
     post:
       tags:
       - events
-      summary: Get a presigned upload URL for an event image
-      description: 'Owner: P2. Access: event owner, platform admin, or staff (manager).'
+      summary: Upload the event cover image
+      description: 'Owner: P2. Access: event owner, platform admin, or staff (manager).
+        Multipart upload of one JPEG, PNG or WebP file (at most 5 MB); the format is
+        checked from the file content. Replaces any previous cover image.'
       operationId: post_events_event_id_images
       parameters:
       - name: event_id
@@ -803,23 +805,99 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
-              $ref: '#/components/schemas/ImageUploadIn'
+              type: object
+              required:
+              - file
+              properties:
+                file:
+                  type: string
+                  format: binary
       responses:
-        '201':
+        '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ImageUploadOut'
+                $ref: '#/components/schemas/EventOut'
         '401':
           $ref: '#/components/responses/Error'
         '403':
           $ref: '#/components/responses/Error'
         '404':
           $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
         '422':
+          $ref: '#/components/responses/Error'
+    delete:
+      tags:
+      - events
+      summary: Remove the event cover image
+      description: 'Owner: P2. Access: event owner, platform admin, or staff (manager).'
+      operationId: delete_events_event_id_images
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+  /event-images/{event_id}/{name}:
+    get:
+      tags:
+      - events
+      summary: Event image file
+      description: 'Owner: P2. Access: public. Names are random and immutable, so the
+        response is cacheable indefinitely.'
+      operationId: get_event_images_event_id_name
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The image
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        '404':
           $ref: '#/components/responses/Error'
   /venues:
     get:
@@ -4687,32 +4765,6 @@ components:
       - hold_ids
       - expires_at
       title: HoldOut
-      type: object
-    ImageUploadIn:
-      properties:
-        filename:
-          title: Filename
-          type: string
-        content_type:
-          title: Content Type
-          type: string
-      required:
-      - filename
-      - content_type
-      title: ImageUploadIn
-      type: object
-    ImageUploadOut:
-      properties:
-        upload_url:
-          title: Upload Url
-          type: string
-        image_url:
-          title: Image Url
-          type: string
-      required:
-      - upload_url
-      - image_url
-      title: ImageUploadOut
       type: object
     LayoutOut:
       properties:

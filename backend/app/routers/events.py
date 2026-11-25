@@ -1,10 +1,11 @@
 """P2 Events: public discovery, organizer management, and publication lifecycle."""
 
+import re
 import uuid
 from datetime import datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, Response, UploadFile, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.deps import (
@@ -13,14 +14,14 @@ from app.core.deps import (
     require_event_access,
     require_role,
 )
-from app.core.errors import ForbiddenError, UnauthorizedError
+from app.core.errors import ForbiddenError, NotFoundError, UnauthorizedError
 from app.core.pagination import Page, Pagination
 from app.core.security import InvalidTokenError, decode_access_token
 from app.models.event import Event
 from app.models.user import StaffRole, User, UserRole
 from app.schemas.admin import EventReportIn, EventReportOut
 from app.schemas.event import EventCreate, EventOut, EventUpdate
-from app.services import admin_service, event_service
+from app.services import admin_service, event_service, storage_service
 
 router = APIRouter(tags=["events"])
 Organizer = Annotated[User, Depends(require_role(UserRole.organizer))]
@@ -133,3 +134,45 @@ async def duplicate_event(event: ManagedEvent, user: CurrentUser, db: DbSession)
 @router.post("/events/{event_id}/cancel", response_model=EventOut)
 async def cancel_event(event: ManagedEvent, user: CurrentUser, db: DbSession) -> EventOut:
     return await event_service.cancel_event(db, event.id, user)
+
+
+_IMAGE_NAME = re.compile(r"^[0-9a-f]{32}\.(jpg|png|webp)$")
+
+
+@router.post("/events/{event_id}/images", response_model=EventOut)
+async def upload_event_image(
+    event: ManagedEvent,
+    user: CurrentUser,
+    db: DbSession,
+    file: Annotated[UploadFile, File(description="JPEG, PNG or WebP, at most 5 MB.")],
+) -> EventOut:
+    """Set the event's cover image (replaces the previous one)."""
+    data = await file.read(event_service.MAX_IMAGE_BYTES + 1)
+    return await event_service.set_cover_image(db, event.id, user, data)
+
+
+@router.delete("/events/{event_id}/images", response_model=EventOut)
+async def delete_event_image(event: ManagedEvent, user: CurrentUser, db: DbSession) -> EventOut:
+    return await event_service.remove_cover_image(db, event.id, user)
+
+
+@router.get(
+    "/event-images/{event_id}/{name}",
+    response_class=Response,
+    responses={200: {"content": {"image/jpeg": {}, "image/png": {}, "image/webp": {}}}},
+)
+async def event_image(event_id: uuid.UUID, name: str) -> Response:
+    """Public: names are random and immutable, so browsers may cache them for good."""
+    content_type = event_service.image_content_type(name)
+    found = (
+        await storage_service.get_object(f"events/{event_id}/{name}")
+        if _IMAGE_NAME.match(name) and content_type
+        else None
+    )
+    if found is None:
+        raise NotFoundError("The image was not found.", code="image_not_found")
+    return Response(
+        content=found[0],
+        media_type=content_type,
+        headers={"Cache-Control": "public, max-age=31536000, immutable"},
+    )

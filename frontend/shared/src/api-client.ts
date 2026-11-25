@@ -110,11 +110,15 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       const token = await options.getAccessToken?.();
       if (token) headers.set("Authorization", `Bearer ${token}`);
 
-      const body =
-        requestOptions.body === undefined
+      // File uploads pass FormData through; the browser sets the multipart boundary.
+      const multipart =
+        typeof FormData !== "undefined" && requestOptions.body instanceof FormData;
+      const body = multipart
+        ? (requestOptions.body as FormData)
+        : requestOptions.body === undefined
           ? undefined
           : JSON.stringify(requestOptions.body);
-      if (body !== undefined && !headers.has("Content-Type")) {
+      if (body !== undefined && !multipart && !headers.has("Content-Type")) {
         headers.set("Content-Type", "application/json");
       }
 

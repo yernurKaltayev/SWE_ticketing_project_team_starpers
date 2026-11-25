@@ -1,4 +1,5 @@
 import { DuplicateEvent } from "../insights/DuplicateEvent";
+import { CoverEditor } from "./CoverEditor";
 import { noFinalDot } from "../auth/helpers";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -25,7 +26,7 @@ import {
   priceInput,
 } from "./model";
 import type { Event, Page, Ticket, Venue } from "./model";
-import { EventError, Image, SelectField, TextArea } from "./ui";
+import { EventError, SelectField, TextArea } from "./ui";
 import { ArrowLeftIcon } from "../icons";
 import {
   parseEvent,
@@ -461,6 +462,12 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
               </button>
             </div>
           </dialog>
+          <CoverEditor
+            event={event}
+            locale={locale}
+            locked={pending || event.status === "cancelled"}
+            onChange={setEvent}
+          />
           <TicketEditor
             event={event}
             locale={locale}
@@ -471,16 +478,6 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
             locale={locale}
             locked={pending || dirty || event.status === "cancelled"}
           />
-          {event.images.length > 0 && (
-            <>
-              <h2>{t.images}</h2>
-              <div className="event-grid">
-                {event.images.map((src) => (
-                  <Image key={src} src={src} title={event.title} />
-                ))}
-              </div>
-            </>
-          )}
           {event.status !== "cancelled" && (
             // Kept apart from publish/duplicate so a slip cannot cancel an event.
             <section className="danger-zone" aria-labelledby="danger-title">
