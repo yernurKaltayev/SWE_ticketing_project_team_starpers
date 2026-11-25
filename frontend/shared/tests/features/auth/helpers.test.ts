@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "@biletflow/shared";
 import type { components } from "@biletflow/shared/api";
-import { authCopy } from "./copy";
-import { fieldErrors, hasRole, kazakhstanPhone, safeReturnTo } from "./helpers";
+import { authCopy } from "@biletflow/shared/features/auth/copy";
+import { fieldErrors, hasRole, kazakhstanPhone, safeReturnTo } from "@biletflow/shared/features/auth/helpers";
 
 describe("kazakhstanPhone", () => {
   it("accepts the ways people type a Kazakhstan number and returns one format", () => {

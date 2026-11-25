@@ -8,8 +8,8 @@ import {
   registrationOpen,
   ticketPath,
   validateBinary,
-} from "./model";
-import type { Choice, Event } from "./model";
+} from "@biletflow/shared/features/checkout/model";
+import type { Choice, Event } from "@biletflow/shared/features/checkout/model";
 const choice: Choice = {
   id: "free",
   name: "Free",

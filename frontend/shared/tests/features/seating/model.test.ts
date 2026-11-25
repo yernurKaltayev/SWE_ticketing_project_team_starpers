@@ -7,8 +7,8 @@ import {
   parseHold,
   remainingSeconds,
   selection,
-} from "./model";
-import type { Request, SeatMap, SeatOffer, Hold } from "./model";
+} from "@biletflow/shared/features/seating/model";
+import type { Request, SeatMap, SeatOffer, Hold } from "@biletflow/shared/features/seating/model";
 const map: SeatMap = {
   event_id: "event",
   venue_id: "venue",

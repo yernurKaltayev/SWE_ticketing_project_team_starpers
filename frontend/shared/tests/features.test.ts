@@ -14,7 +14,18 @@ function sources(dir: string): string[] {
 }
 
 /** Moved web logic, reachable as @biletflow/shared/features/<area>/<file>. */
-const moved = ["calendar/copy"];
+const moved = [
+  "calendar/copy",
+  "calendar/model",
+  "checkout/copy",
+  "checkout/model",
+  "seating/copy",
+  "seating/model",
+  "staff/model",
+  "staff/copy",
+  "auth/copy",
+  "auth/helpers",
+];
 
 describe("shared feature modules", () => {
   it.each(moved)("exposes %s through the package path", async (path) => {
