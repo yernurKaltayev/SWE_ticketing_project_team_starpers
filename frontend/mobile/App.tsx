@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./src/query-client";
+import { bindAppFocus } from "./src/data";
 import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -70,6 +73,8 @@ export default function App() {
   const snapshot = useSessionSnapshot();
   const signedIn = snapshot.user !== null;
 
+  useEffect(() => bindAppFocus(), []);
+
   // Sign-out or session expiry anywhere returns to the sign-in screen; nothing event-specific
   // stays on screen for the next person holding the phone.
   useEffect(() => {
@@ -93,6 +98,7 @@ export default function App() {
   );
 
   return (
+    <QueryClientProvider client={queryClient}>
     <SafeAreaProvider>
       <NavigationContainer theme={navigationTheme} ref={navigation}>
         <StatusBar style="dark" />
@@ -234,6 +240,7 @@ export default function App() {
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
+    </QueryClientProvider>
   );
 }
 

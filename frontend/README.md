@@ -132,6 +132,8 @@ The mobile skeleton has native Home → Connection navigation, theme/safe-area h
 
 DOM-free logic and kk/ru/en copy for every web area live in `shared/src/features/<area>/<file>.ts` and are imported as `@biletflow/shared/features/<area>/<file>` by both the web and the mobile app. The old `web/src/<area>/<file>.ts` paths are one-line re-exports kept for existing imports; edit the shared file, never the stub. Nothing in `shared/src` may use browser or React APIs: `shared/tests/features.test.ts` enforces it. Logic tests for moved modules live in `shared/tests/features/<area>/`.
 
+Data loading (F0.2): mobile screens use `useAuthedQuery(key, path)` / `useAuthedMutation` from `mobile/src/data.ts` with keys from `@biletflow/shared/features/query-keys` (the same arrays the web builds). The mobile query cache is cleared on every sign-out and session expiry and refetches when the app returns to the foreground. Storage that shared logic needs is passed in as a `KeyValueStore` (`localStorage` on web, `createSecureKeyValueStore(SecureStore)` on mobile). Metro must keep package exports enabled (the SDK default) for `@biletflow/shared/features/*` to resolve.
+
 ## Tooling
 
 Application workspaces use template-compatible TypeScript 6. Root code generation uses TypeScript 5.9 because the current `openapi-typescript` peer range requires TypeScript 5; npm resolves these through one lockfile. Review dependency advisories with `npm audit` rather than forcing breaking Expo/schema-tool changes.

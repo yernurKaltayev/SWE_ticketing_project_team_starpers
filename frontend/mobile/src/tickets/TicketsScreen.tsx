@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
+import { useQueries } from "@tanstack/react-query";
+import { queryKeys } from "@biletflow/shared/features/query-keys";
 import { ApiError } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
-import { session } from "../session";
+import { useAuthedQuery } from "../data";
+import { session, useSessionSnapshot } from "../session";
 import { color, type } from "../theme";
 import { Action, Body, Callout, Card, Muted, Pill, styles as ui, Title } from "../ui";
 import { ticketsCopy } from "./copy";
@@ -17,7 +20,7 @@ export function seatText(ticket: MyTicket): string | null {
   return seat ? `${seat.section_name} · ${seat.row_label} · ${seat.seat_number}` : null;
 }
 
-/** The signed-in account's tickets, newest page from the server on every visit. */
+/** The signed-in account's tickets: cached per account, re-read from the server on every visit. */
 export function TicketsScreen({
   locale,
   onOpen,
@@ -27,49 +30,46 @@ export function TicketsScreen({
 }) {
   const t = ticketsCopy[locale];
   const focused = useIsFocused();
-  const [tickets, setTickets] = useState<MyTicket[] | null>(null);
-  const [events, setEvents] = useState<Record<string, EventSummary>>({});
-  const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState<string | null>(null);
-  const active = useRef<AbortController | null>(null);
+  const userId = useSessionSnapshot().user?.id ?? null;
+  const list = useAuthedQuery<TicketPage>(
+    queryKeys.commerce(userId, ticketPaths.mine()),
+    ticketPaths.mine(),
+  );
+  const tickets = list.data?.items ?? null;
+  const failed = list.error ? (list.error instanceof ApiError ? list.error.code : "unexpected") : null;
+  const [pulling, setPulling] = useState(false);
+
+  // Event titles are a nicety: a missing or private event never hides the ticket.
+  const eventIds = [...new Set((tickets ?? []).map((ticket) => ticket.event_id))];
+  const eventQueries = useQueries({
+    queries: eventIds.map((id) => ({
+      queryKey: queryKeys.commerce(userId, ticketPaths.event(id)),
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        session!.request<EventSummary>(ticketPaths.event(id), { signal }),
+      retry: 0,
+      staleTime: 5 * 60_000,
+    })),
+  });
+  const events: Record<string, EventSummary> = {};
+  eventIds.forEach((id, index) => {
+    const event = eventQueries[index]?.data;
+    if (event) events[id] = event;
+  });
+
+  // Every return to this tab asks the server again (a refund may have happened elsewhere).
+  const { refetch } = list;
+  useEffect(() => {
+    if (focused) void refetch({ cancelRefetch: false });
+  }, [focused, refetch]);
 
   const load = useCallback(async () => {
-    if (!session) return;
-    active.current?.abort();
-    const controller = new AbortController();
-    active.current = controller;
-    setLoading(true);
-    setFailed(null);
+    setPulling(true);
     try {
-      const page = await session.request<TicketPage>(ticketPaths.mine(), {
-        signal: controller.signal,
-      });
-      if (controller.signal.aborted) return;
-      setTickets(page.items);
-      // Event titles are a nicety: a missing or private event never hides the ticket.
-      const ids = [...new Set(page.items.map((ticket) => ticket.event_id))];
-      const found = await Promise.all(
-        ids.map((id) =>
-          session!
-            .request<EventSummary>(ticketPaths.event(id), { signal: controller.signal })
-            .then((event) => [id, event] as const)
-            .catch(() => null),
-        ),
-      );
-      if (!controller.signal.aborted)
-        setEvents(Object.fromEntries(found.filter((entry) => entry !== null)));
-    } catch (error) {
-      if (!controller.signal.aborted)
-        setFailed(error instanceof ApiError ? error.code : "unexpected");
+      await refetch();
     } finally {
-      if (!controller.signal.aborted) setLoading(false);
+      setPulling(false);
     }
-  }, []);
-
-  useEffect(() => {
-    if (focused) void load();
-  }, [focused, load]);
-  useEffect(() => () => active.current?.abort(), []);
+  }, [refetch]);
 
   return (
     <FlatList
@@ -79,7 +79,7 @@ export function TicketsScreen({
       contentContainerStyle={ui.content}
       refreshControl={
         <RefreshControl
-          refreshing={loading}
+          refreshing={pulling}
           onRefresh={() => void load()}
           tintColor={color.primary}
           colors={[color.primary]}

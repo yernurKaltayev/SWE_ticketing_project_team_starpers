@@ -4,6 +4,8 @@ export type {
   ApiClientOptions,
   ApiRequestOptions,
 } from "./api-client";
+export { createMemoryKeyValueStore } from "./key-value-store";
+export type { KeyValueStore } from "./key-value-store";
 export { createMemoryTokenStore } from "./token-store";
 export type { TokenPair, TokenStore } from "./token-store";
 export { createSession } from "./session";

@@ -1,8 +1,8 @@
 import { expect, it, vi } from "vitest";
 import { ApiError } from "@biletflow/shared";
 import type { Session } from "@biletflow/shared";
-import { CheckoutCoordinator } from "./attempt";
-import type { Order, OrderBody } from "./model";
+import { CheckoutCoordinator } from "@biletflow/shared/features/checkout/attempt";
+import type { Order, OrderBody } from "@biletflow/shared/features/checkout/model";
 const body: OrderBody = {
   event_id: "event",
   items: [{ ticket_type_id: "ticket", quantity: 1, seat_ids: [] }],
@@ -166,4 +166,12 @@ it("requires a confirmed server result before starting another registration", as
   request.mockResolvedValueOnce(order);
   await coordinator.startAnother("event");
   expect(coordinator.recovery("event")).toBeNull();
+});
+
+it("uses the injected id generator for the idempotency key (no global crypto needed)", async () => {
+  const { request, session, store, storage } = setup();
+  const coordinator = new CheckoutCoordinator(session, store, () => "injected-key");
+  request.mockResolvedValue(order);
+  await coordinator.submit(body);
+  expect([...storage.values()].join()).toContain("injected-key");
 });

@@ -3,6 +3,7 @@ import * as SecureStore from "expo-secure-store";
 import { createApiClient, createSession } from "@biletflow/shared";
 import type { ApiClient, Session, SessionSnapshot } from "@biletflow/shared";
 import { createNativeTokenStore } from "./token-store";
+import { clearQueries } from "./query-client";
 
 export const tokenStore = createNativeTokenStore(SecureStore);
 export const apiOrigin = process.env.EXPO_PUBLIC_API_ORIGIN;
@@ -19,6 +20,7 @@ try {
       baseUrl: apiOrigin,
       tokenStore,
       readRefreshToken: tokenStore.getRefreshToken,
+      onClear: clearQueries,
     });
   }
 } catch {

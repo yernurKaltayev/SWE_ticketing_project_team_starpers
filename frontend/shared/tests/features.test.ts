@@ -41,7 +41,12 @@ const moved = [
   "operations/copy",
   "insights/model",
   "insights/copy",
+  "checkout/attempt",
+  "query-keys",
 ];
+
+/** Shared modules whose web path is not a plain stub (web keeps a browser-only factory there) or that have no web path. */
+const stubExempt = new Set(["checkout/attempt", "query-keys"]);
 
 describe("shared feature modules", () => {
   it.each(moved)("exposes %s through the package path", async (path) => {
@@ -55,6 +60,7 @@ describe("shared feature modules", () => {
     const webSrc = join(sharedSrc, "..", "..", "web", "src");
     const wrong = featureFiles
       .map((file) => file.slice(join(sharedSrc, "features").length + 1).split(sep).join("/").replace(/\.ts$/, ""))
+      .filter((path) => !stubExempt.has(path))
       .filter((path) => {
         const stub = readFileSync(join(webSrc, `${path}.ts`), "utf8").trim();
         return stub !== `export * from "@biletflow/shared/features/${path}";`;
