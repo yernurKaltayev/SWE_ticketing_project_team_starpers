@@ -94,10 +94,15 @@ For real email, fill in the `SMTP_*` lines in `.env` (see "Send real email" in
 
 ## Telegram phone verification
 
-Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_BOT_USERNAME` in `.env` (see "Verify phones with
-Telegram" in `backend/README.md`) and run `docker compose up -d`. Without them the account page
-hides the action. Use a different bot for local development than for the server: two workers
-polling one bot would take each other's messages.
+Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_BOT_USERNAME` in **`deploy/.env`** (see "Verify phones
+with Telegram" in `backend/README.md`), then from `deploy/` run
+`docker compose up -d --force-recreate api worker`. `backend/.env` is not read on the server:
+Compose takes every value from `deploy/.env`, and `.env` is kept out of the image. Without the
+two values the account page hides the action.
+
+Only one worker may poll a bot at a time; two take each other's messages. Use a separate bot
+for local development, or stop the local worker (`docker compose stop worker` in `backend/`)
+while the server uses the bot.
 
 ## Continuous deployment
 
