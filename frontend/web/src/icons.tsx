@@ -161,6 +161,12 @@ export const ChevronDownIcon = (p: P) => (
     <path d="m6.5 9.5 5.5 5.5 5.5-5.5" />
   </Icon>
 );
+export const AlertIcon = (p: P) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7.5v5.5M12 16.5h.01" />
+  </Icon>
+);
 export const CloseIcon = (p: P) => (
   <Icon {...p}>
     <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />

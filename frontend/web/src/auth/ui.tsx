@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { ComponentProps, ReactNode } from "react";
 import { ApiError } from "@biletflow/shared";
+import { AlertIcon } from "../icons";
 import type { Locale } from "@biletflow/shared";
 import { authCopy } from "./copy";
 import { errorMessage } from "./helpers";
@@ -28,7 +29,7 @@ export function Field({
     <div className="field">
       <label htmlFor={id}>{label}</label>
       {input}
-      {hint ? (
+      {hint && !error ? (
         <p className="field-hint" id={`${id}-hint`}>
           {hint}
         </p>
@@ -53,24 +54,25 @@ export function FormError({
   locale: Locale;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const hasFields = Object.keys(fields).length > 0;
   useEffect(() => {
-    if (error || hasFields) ref.current?.focus();
-  }, [error, hasFields, fields]);
-  if (!error && !hasFields) return null;
+    // Field problems are shown under each field; jump to the first one on
+    // screen instead of repeating them all in a summary box.
+    if (error) return ref.current?.focus();
+    const first = Object.keys(fields)
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null)
+      .sort((a, b) =>
+        a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1,
+      )[0];
+    first?.focus();
+  }, [error, fields]);
+  if (!error) return null;
   const t = authCopy[locale];
   return (
     <div className="form-error" role="alert" tabIndex={-1} ref={ref}>
-      <p>{error ? errorMessage(error, locale) : t.formError}</p>
-      {hasFields ? (
-        <ul>
-          {Object.entries(fields).map(([field, message]) => (
-            <li key={field}>
-              <a href={`#${field}`}>{message}</a>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <AlertIcon size={20} />
+      <div>
+      <p>{errorMessage(error, locale)}</p>
       {error instanceof ApiError && error.status >= 500 && error.requestId ? (
         <p className="field-hint">
           {t.requestId}: {error.requestId}
@@ -81,6 +83,7 @@ export function FormError({
           {t.retryAfter}: {error.retryAfter}
         </p>
       ) : null}
+      </div>
     </div>
   );
 }
