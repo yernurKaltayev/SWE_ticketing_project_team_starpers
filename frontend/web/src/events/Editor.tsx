@@ -31,6 +31,9 @@ import {
   parseTicketTypes,
 } from "./contracts";
 
+// Select value for "add a new venue"; never a real venue id.
+const NEW_VENUE = "__new__";
+
 export function EventEditor({ locale }: { locale: Locale }) {
   const { eventId } = useParams();
   const t = eventCopy[locale];
@@ -75,12 +78,9 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
     parseVenues,
   );
   const [venueOptions, setVenueOptions] = useState<Venue[]>([]);
-  // null until the organizer types: the field then shows the saved event's venue.
-  const [typedVenue, setTypedVenue] = useState<string | null>(null);
-  const savedVenue = venueOptions.find((v) => v.id === event?.venue_id);
-  const venueText = typedVenue ?? (savedVenue ? venueLabel(savedVenue) : "");
-  const newVenue =
-    venueText.trim() !== "" && !findVenue(venueOptions, venueText);
+  // A saved venue's id, NEW_VENUE while the organizer fills in a venue of their own, or "".
+  const [venueChoice, setVenueChoice] = useState<string>(initial?.venue_id ?? "");
+  const newVenue = venueChoice === NEW_VENUE;
   // Accumulating paginated remote results synchronizes the venue selector with the API.
   useEffect(() => {
     if (moreVenues.data)
@@ -178,18 +178,23 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
           let venueToCreate: { name: string; address: string; city: string } | null =
             null;
           try {
-            const typed = venueText.trim();
-            const match = findVenue(venueOptions, typed);
-            if (match) form.set("venue_id", match.id);
-            else if (typed) {
-              const address = String(form.get("venue_address") ?? "").trim();
-              const city = String(form.get("venue_city") ?? "").trim();
+            if (newVenue) {
+              const text = (key: string) => String(form.get(key) ?? "").trim();
+              const name = text("venue_new_name");
+              const address = text("venue_address");
+              const city = text("venue_city");
+              if (!name) throw new InputError("venue_new_name");
               if (!address) throw new InputError("venue_address");
               if (!city) throw new InputError("venue_city");
-              venueToCreate = { name: typed, address, city };
-              // Placeholder until the venue exists; replaced below before the event is sent.
-              form.set("venue_id", "new");
-            } else form.set("venue_id", "");
+              // The same hall already in the list is reused instead of sending a copy.
+              const match = findVenue(venueOptions, `${name} · ${city} · ${address}`);
+              if (match) form.set("venue_id", match.id);
+              else {
+                venueToCreate = { name, address, city };
+                // Placeholder until the venue exists; replaced below before the event is sent.
+                form.set("venue_id", "new");
+              }
+            }
             body = eventBody(form);
           } catch (err) {
             setError(err);
@@ -205,7 +210,7 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
                     setVenueOptions((old) =>
                       old.some((v) => v.id === venue.id) ? old : [...old, venue],
                     );
-                    setTypedVenue(venueLabel(venue));
+                    setVenueChoice(venue.id);
                     return venue.id;
                   })
               : Promise.resolve(body.venue_id)
@@ -265,23 +270,24 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
                 </option>
               ))}
             </datalist>
-            <Field
-              id="venue_id"
-              name="venue_name"
-              label={t.venue_id}
-              hint={t.venueHint}
-              list="venue-options"
-              autoComplete="off"
-              maxLength={200}
-              required
-              value={venueText}
-              onChange={(e) => setTypedVenue(e.target.value)}
-            />
-            <datalist id="venue-options">
-              {venueOptions.map((venue) => (
-                <option key={venue.id} value={venueLabel(venue)} />
-              ))}
-            </datalist>
+            <div className="field">
+              <label htmlFor="venue_id">{t.venue_id}</label>
+              <select
+                id="venue_id"
+                name="venue_id"
+                required
+                value={venueChoice}
+                onChange={(e) => setVenueChoice(e.target.value)}
+              >
+                <option value="">{t.venuePick}</option>
+                {venueOptions.map((venue) => (
+                  <option key={venue.id} value={venue.id}>
+                    {venueLabel(venue)}
+                  </option>
+                ))}
+                <option value={NEW_VENUE}>{t.venueAdd}</option>
+              </select>
+            </div>
           </div>
           {newVenue && (
             <p className="field-hint" role="status">
@@ -290,6 +296,12 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
           )}
           {newVenue && (
             <div className="event-form-grid">
+              <Field
+                name="venue_new_name"
+                label={t.venue_new_name}
+                maxLength={200}
+                required
+              />
               <Field
                 name="venue_address"
                 label={t.venue_address}

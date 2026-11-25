@@ -28,10 +28,9 @@ test("organizer creates a free event, corrects publication, previews, publishes,
     .getByLabel("Description", { exact: true })
     .fill("Demonstration free event.");
   await page.getByLabel("Category", { exact: true }).fill("student");
-  // Since PR #39 the venue is a text field with suggestions, not a <select>.
   await page
     .getByLabel("Venue", { exact: true })
-    .fill("Demo campus auditorium · Astana · Demo venue address");
+    .selectOption({ label: "Demo campus auditorium · Astana · Demo venue address" });
   await page.getByLabel("Starts", { exact: true }).fill("2027-02-01T18:00");
   await page.getByLabel("Ends", { exact: true }).fill("2027-02-01T20:00");
   await page.getByRole("button", { name: "Save draft / changes" }).click();

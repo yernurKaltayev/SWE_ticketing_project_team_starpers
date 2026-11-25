@@ -87,14 +87,10 @@ async function editor() {
   fill("Title", "Dias demonstration");
   fill("Description", "Free general admission");
   fill("Category", "student");
-  await waitFor(() =>
-    expect(
-      document.querySelector(
-        'option[value="Demo campus auditorium · Astana · Demo venue address"]',
-      ),
-    ).not.toBeNull(),
-  );
-  fill("Venue", "Demo campus auditorium · Astana · Demo venue address");
+  await screen.findByRole("option", {
+    name: "Demo campus auditorium · Astana · Demo venue address",
+  });
+  fill("Venue", "4aab9cc5-d54c-47e8-9b53-09085463ce4c");
   fill("Starts", "2027-02-01T18:00");
   fill("Ends", "2027-02-01T20:00");
   return { fill, session };
@@ -352,10 +348,11 @@ function recordPosts() {
   return posts;
 }
 
-it("creates a typed venue that is not in the list, then saves the event at it", async () => {
+it("creates a new venue chosen from the list, then saves the event at it", async () => {
   const posts = recordPosts();
   const { fill } = await editor();
-  fill("Venue", "Abay Opera House");
+  fill("Venue", "__new__");
+  fill("Venue name", "Abay Opera House");
   fill("Venue address", "Abay Ave 110");
   fill("Venue city", "Almaty");
   await userEvent.click(
@@ -373,18 +370,20 @@ it("creates a typed venue that is not in the list, then saves the event at it", 
   expect(created).not.toBe("new");
   await waitFor(() =>
     expect(
-      (screen.getByLabelText("Venue", { exact: true }) as HTMLInputElement)
-        .value,
+      (screen.getByLabelText("Venue", { exact: true }) as HTMLSelectElement)
+        .selectedOptions[0]?.textContent,
     ).toBe("Abay Opera House · Almaty · Abay Ave 110"),
   );
   server.events.removeAllListeners();
 });
 
-it("uses a saved venue typed by its bare name without creating a copy", async () => {
+it("reuses a saved venue entered again as new without creating a copy", async () => {
   const posts = recordPosts();
   const { fill } = await editor();
-  fill("Venue", "demo campus auditorium");
-  expect(screen.queryByLabelText("Venue address", { exact: true })).toBeNull();
+  fill("Venue", "__new__");
+  fill("Venue name", "demo campus auditorium");
+  fill("Venue address", "Demo venue address");
+  fill("Venue city", "astana");
   await userEvent.click(
     screen.getByRole("button", { name: "Save draft / changes" }),
   );
@@ -399,10 +398,11 @@ it("uses a saved venue typed by its bare name without creating a copy", async ()
 it("asks for the address and city of a new venue before sending anything", async () => {
   const posts = recordPosts();
   const { fill } = await editor();
-  fill("Venue", "Abay Opera House");
+  fill("Venue", "__new__");
+  fill("Venue name", "Abay Opera House");
   expect(
     screen.getByText(
-      "New venue. Add its address and city; it will be saved to the venue list.",
+      "New venue. Add its name, address and city; it will be saved to the venue list.",
     ),
   ).toBeTruthy();
   fireEvent.submit(

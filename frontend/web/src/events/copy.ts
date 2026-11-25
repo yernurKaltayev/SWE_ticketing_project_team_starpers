@@ -28,9 +28,11 @@ const en = {
   title: "Title",
   description: "Description",
   venue_id: "Venue",
-  venueHint: "Start typing to pick a saved venue, or enter a new one.",
+  venuePick: "Choose a venue",
+  venueAdd: "+ Add a new venue",
   venueNew:
-    "New venue. Add its address and city; it will be saved to the venue list.",
+    "New venue. Add its name, address and city; it will be saved to the venue list.",
+  venue_new_name: "Venue name",
   venue_address: "Venue address",
   venue_city: "Venue city",
   timezone: "Event time zone (IANA)",
@@ -169,10 +171,11 @@ const ru: Copy = {
   title: "Название",
   description: "Описание",
   venue_id: "Место проведения",
-  venueHint:
-    "Начните вводить, чтобы выбрать сохранённое место, или введите новое.",
+  venuePick: "Выберите место",
+  venueAdd: "+ Добавить новое место",
   venueNew:
-    "Новое место. Укажите адрес и город — оно будет сохранено в списке мест.",
+    "Новое место. Укажите название, адрес и город — оно будет сохранено в списке мест.",
+  venue_new_name: "Название места",
   venue_address: "Адрес места проведения",
   venue_city: "Город места проведения",
   timezone: "Часовой пояс (IANA)",
@@ -309,10 +312,11 @@ const kk: Copy = {
   title: "Атауы",
   description: "Сипаттамасы",
   venue_id: "Өтетін орын",
-  venueHint:
-    "Сақталған орынды таңдау үшін тере бастаңыз немесе жаңасын енгізіңіз.",
+  venuePick: "Орынды таңдаңыз",
+  venueAdd: "+ Жаңа орын қосу",
   venueNew:
-    "Жаңа орын. Мекенжайы мен қаласын көрсетіңіз — ол орындар тізіміне сақталады.",
+    "Жаңа орын. Атауын, мекенжайы мен қаласын көрсетіңіз — ол орындар тізіміне сақталады.",
+  venue_new_name: "Орынның атауы",
   venue_address: "Өтетін орынның мекенжайы",
   venue_city: "Өтетін орынның қаласы",
   timezone: "Уақыт белдеуі (IANA)",
