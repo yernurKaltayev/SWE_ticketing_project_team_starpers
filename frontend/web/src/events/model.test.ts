@@ -76,10 +76,15 @@ describe("F2 money, time and recovery inputs", () => {
         registration_closes_at: "2027-01-20T18:00",
       },
       { registration_closes_at: "2027-01-21T20:00" },
+      // Ticket sales stop when the event starts, so closing during the event is rejected.
+      { registration_closes_at: "2027-01-20T19:00" },
     ])
       expect(() => eventBody(form({ ...values, ...change }))).toThrow();
+    expect(
+      eventBody(form({ ...values, registration_closes_at: values.starts_at })),
+    ).toMatchObject({ registration_closes_at: "2027-01-20T13:00:00.000Z" });
   });
-  it("creates free/paid ticket inputs with hidden and sales-window semantics", () => {
+  it("creates free/paid ticket inputs and leaves the sales window to the event", () => {
     const input = {
       name: "General",
       price: "12.34",
@@ -88,18 +93,14 @@ describe("F2 money, time and recovery inputs", () => {
       sales_start: "2027-01-01T00:00",
       is_hidden: "on",
     };
-    expect(ticketBody(form(input), "Asia/Almaty")).toMatchObject({
+    expect(ticketBody(form(input))).toMatchObject({
       price_amount: 1234,
       quantity_total: 20,
       is_hidden: true,
-      sales_start: "2026-12-31T19:00:00.000Z",
+      // Per-ticket dates are cleared on save; the event's ticket sales window applies.
+      sales_start: null,
+      sales_end: null,
     });
-    expect(() =>
-      ticketBody(
-        form({ ...input, sales_end: "2026-12-01T00:00" }),
-        "Asia/Almaty",
-      ),
-    ).toThrow();
   });
   it("preserves filters safely and bounds offsets", () => {
     const q = new URLSearchParams(
@@ -220,6 +221,7 @@ describe("discovery helpers", () => {
       priceVaries: false,
       allFree: true,
       soldOut: false,
+      onSale: true,
       remaining: 50,
     });
     // Free and paid mixed: cards say "Free · from <cheapest paid>".
@@ -241,5 +243,10 @@ describe("discovery helpers", () => {
       minPrice: 500_000,
       soldOut: true,
     });
+    // Published but not on sale yet (sales not open, paid sales inactive): stock is real,
+    // so this is not "sold out".
+    expect(
+      offerSummary([{ ...row(500_000, 40), on_sale: false }]),
+    ).toMatchObject({ soldOut: false, onSale: false, remaining: 40 });
   });
 });

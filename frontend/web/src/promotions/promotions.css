@@ -40,7 +40,7 @@
 }
 .promo-code {
   letter-spacing: 0.08em;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .promo-entry {
   margin-block: 1rem;
@@ -59,7 +59,7 @@
 }
 .promotions p,
 .promotions dd {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 @media (max-width: 680px) {
   .promo-form-grid {

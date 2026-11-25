@@ -84,14 +84,14 @@
 }
 .support-body {
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .support-page p,
 .support-page dd,
 .support-page a,
 .support-page h1,
 .support-page h2 {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .support-page dd {
   margin-left: 0;

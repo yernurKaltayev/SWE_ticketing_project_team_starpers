@@ -152,6 +152,43 @@ async def test_unpublish_returns_event_to_draft(client, db):
     assert response.json()["status"] == "draft"
 
 
+async def test_ticket_sales_must_close_by_event_start(client, db):
+    owner, _ = await make_organizer(db)
+    venue = Venue(name="Test Hall", address="10 Example St", city="Astana")
+    db.add(venue)
+    await db.flush()
+    payload = event_payload(str(venue.id))
+    start = datetime.fromisoformat(payload["starts_at"])
+    # Between the start and the end: sales already stop at the start, so this is rejected.
+    payload["registration_closes_at"] = (start + timedelta(hours=1)).isoformat()
+    response = await client.post(f"{PREFIX}/events", json=payload, headers=auth_header(owner))
+    assert response.status_code == 422, response.text
+    payload["registration_closes_at"] = payload["starts_at"]
+    response = await client.post(f"{PREFIX}/events", json=payload, headers=auth_header(owner))
+    assert response.status_code == 201, response.text
+
+
+async def test_older_event_closing_after_start_stays_readable_and_editable(client, db):
+    # Saved before the "close by the start" rule: listing must not 500, and unrelated edits
+    # still work. Moving the close date is checked against the new rule.
+    owner, profile = await make_organizer(db)
+    event = await make_event(db, profile, status=EventStatus.published)
+    event.registration_closes_at = event.starts_at + (event.ends_at - event.starts_at) / 2
+    await db.flush()
+    listing = await client.get(f"{PREFIX}/events")
+    assert listing.status_code == 200, listing.text
+    renamed = await client.patch(
+        f"{PREFIX}/events/{event.id}", json={"title": "Renamed"}, headers=auth_header(owner)
+    )
+    assert renamed.status_code == 200, renamed.text
+    moved = await client.patch(
+        f"{PREFIX}/events/{event.id}",
+        json={"registration_closes_at": (event.ends_at - timedelta(minutes=1)).isoformat()},
+        headers=auth_header(owner),
+    )
+    assert moved.status_code == 422, moved.text
+
+
 async def test_patch_invalid_dates_returns_422_instead_of_500(client, db):
     owner, profile = await make_organizer(db)
     event = await make_event(db, profile)

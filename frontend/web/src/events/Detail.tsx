@@ -87,10 +87,9 @@ function EventContent({
     parsePublicAvailability,
   );
   const offer = tickets.data ? offerSummary(tickets.data) : null;
-  const registration = [
-    event.registration_opens_at,
-    event.registration_closes_at,
-  ].filter(Boolean);
+  // One sales window for the whole event. Without a close date, sales stop when the event
+  // starts (the backend enforces the same rule).
+  const salesCloseAt = event.registration_closes_at ?? event.starts_at;
   return (
     <>
       <PromotionBanner locale={locale} />
@@ -148,19 +147,27 @@ function EventContent({
                   </dd>
                 </div>
               )}
-              {registration.length > 0 && (
+              {event.status !== "cancelled" && (
                 <div>
                   <span className="fact-icon">
                     <ClockIcon />
                   </span>
-                  <dt>
-                    {t.registration_opens_at} / {t.registration_closes_at}
-                  </dt>
-                  {registration.map((date) => (
-                    <dd key={date}>
-                      {formatEventDateTime(date!, event.timezone, locale)}
+                  <dt>{t.salesWindow}</dt>
+                  {event.registration_opens_at && (
+                    <dd>
+                      {t.registration_opens_at}:{" "}
+                      {formatEventDateTime(
+                        event.registration_opens_at,
+                        event.timezone,
+                        locale,
+                      )}
                     </dd>
-                  ))}
+                  )}
+                  <dd>
+                    {t.registration_closes_at}:{" "}
+                    {formatEventDateTime(salesCloseAt, event.timezone, locale)}
+                    {!event.registration_closes_at && ` (${t.salesCloseAtStart})`}
+                  </dd>
                 </div>
               )}
             </dl>
@@ -191,8 +198,7 @@ function EventContent({
                         ? t.free
                         : formatPrice(ticket.price_amount, locale)}
                     </span>
-                    {/* Closed tickets report 0, which is not a real count. */}
-                    {state === "onSale" || state === "soldOut" ? (
+                    {state !== "ended" && state !== "cancelled" ? (
                       <span className="availability">
                         {t.available}: {ticket.available}
                       </span>

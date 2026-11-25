@@ -482,7 +482,7 @@ function PublicEventCard({
             {d.soldOut}
           </span>
         ) : (
-          offer &&
+          offer?.onSale &&
           offer.remaining <= LOW_STOCK && (
             <span className="status-badge cover-badge" data-tone="warning">
               {d.left}: {offer.remaining}
