@@ -7,6 +7,12 @@ import { color } from "../theme";
 import { Action, Callout, Screen } from "../ui";
 import { webCopy } from "./copy";
 import { handlesBack, isInternal, webOrigin, webSessionKey } from "./model";
+import { guardScript, nativePatternSources, parseGuardMessage } from "../navigation/guard";
+import { nativeRouteFor } from "../navigation/routes";
+import type { NativeTarget } from "../navigation/routes";
+
+// Built once: the page wraps history.pushState/replaceState with it before its own scripts run.
+const guard = guardScript(nativePatternSources());
 
 // The package's default generic (P = undefined) collapses its props to never under strict TS.
 const BrowserView = WebView<object>;
@@ -15,9 +21,17 @@ type BrowserView = WebView<object>;
 /**
  * The full BiletFlow web app inside the mobile app, for every screen that has no native
  * version yet. Its cookie session lasts while the same native account is signed in; links to
- * other sites open in the browser.
+ * other sites open in the browser; pages that have a native screen open natively.
  */
-export function WebScreen({ locale, userId }: { locale: Locale; userId: string | null }) {
+export function WebScreen({
+  locale,
+  userId,
+  onNativeRoute,
+}: {
+  locale: Locale;
+  userId: string | null;
+  onNativeRoute: (target: NativeTarget) => void;
+}) {
   const t = webCopy[locale];
   const focused = useIsFocused();
   const web = useRef<BrowserView>(null);
@@ -76,8 +90,19 @@ export function WebScreen({ locale, userId }: { locale: Locale; userId: string |
         allowsBackForwardNavigationGestures
         setSupportMultipleWindows={false}
         startInLoadingState
+        injectedJavaScriptBeforeContentLoaded={guard}
+        onMessage={(event) => {
+          const message = parseGuardMessage(event.nativeEvent.data);
+          const target = message ? nativeRouteFor(message.path, origin) : null;
+          if (target) onNativeRoute(target);
+        }}
         onNavigationStateChange={(state) => setCanGoBack(state.canGoBack)}
         onShouldStartLoadWithRequest={(request) => {
+          const target = nativeRouteFor(request.url, origin);
+          if (target) {
+            onNativeRoute(target);
+            return false;
+          }
           if (isInternal(request.url, origin)) return true;
           void Linking.openURL(request.url).catch(() => undefined);
           return false;

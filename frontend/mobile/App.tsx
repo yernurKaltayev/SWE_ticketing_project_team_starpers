@@ -3,7 +3,11 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./src/query-client";
 import { bindAppFocus } from "./src/data";
+import * as Linking from "expo-linking";
+import { linkingConfig } from "./src/navigation/linking";
+import type { NativeTarget } from "./src/navigation/routes";
 import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
+import type { NavigatorScreenParams } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -49,7 +53,7 @@ import {
 } from "./src/ui";
 
 type Screens = {
-  Tabs: undefined;
+  Tabs: NavigatorScreenParams<TabScreens> | undefined;
   TicketDetail: { ticketId: string; eventTitle: string | null };
   CheckIn: { eventId: string; title: string };
   Settings: undefined;
@@ -58,6 +62,14 @@ type Screens = {
 type TabScreens = { Web: undefined; Tickets: undefined; Home: undefined };
 const Stack = createNativeStackNavigator<Screens>();
 const Tab = createBottomTabNavigator<TabScreens>();
+const linking = { prefixes: [Linking.createURL("/")], config: linkingConfig() };
+
+/** Opens the native screen that replaces a web page (route map in src/navigation/routes.ts). */
+function goNative(target: NativeTarget) {
+  if (!navigation.isReady()) return;
+  if (target.screen === "Tickets") navigation.navigate("Tabs", { screen: "Tickets" });
+  else navigation.navigate("TicketDetail", { ticketId: target.params.ticketId, eventTitle: null });
+}
 const navigation = createNavigationContainerRef<Screens>();
 
 export default function App() {
@@ -100,7 +112,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
     <SafeAreaProvider>
-      <NavigationContainer theme={navigationTheme} ref={navigation}>
+      <NavigationContainer theme={navigationTheme} ref={navigation} linking={linking}>
         <StatusBar style="dark" />
         <Stack.Navigator
           screenOptions={{
@@ -135,7 +147,13 @@ export default function App() {
                     tabBarIcon: ({ color: tint }) => <TabIcon glyph="web" tint={tint} />,
                   }}
                 >
-                  {() => <WebScreen locale={locale} userId={snapshot.user?.id ?? null} />}
+                  {() => (
+                    <WebScreen
+                      locale={locale}
+                      userId={snapshot.user?.id ?? null}
+                      onNativeRoute={goNative}
+                    />
+                  )}
                 </Tab.Screen>
                 <Tab.Screen
                   name="Tickets"
