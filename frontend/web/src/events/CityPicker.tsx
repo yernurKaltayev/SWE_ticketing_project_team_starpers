@@ -1,20 +1,22 @@
-import { useId } from "react";
+import { useEffect, useId, useRef } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { Locale } from "@biletflow/shared";
 import { usePopover } from "../popover";
 import { ChevronDownIcon, PinIcon } from "../icons";
 import { useResource } from "./data";
-import { discoveryCopy } from "./discoveryCopy";
 import { eventCopy } from "./copy";
 import { readCity, writeCity } from "./city";
-import { cityLabel, parseVenueRefs } from "./venues";
+import { cityLabel, defaultCity, nearestCity, parseVenueRefs } from "./venues";
 import type { VenueRef } from "./venues";
 
 const discoveryPaths = new Set(["/", "/events"]);
 
-/** Header city switch (next to the logo); filters the event listing by city. */
+/**
+ * Header city switch (next to the logo); filters the event listing by city.
+ * With no city chosen yet, the browser is asked for the visitor's location once
+ * and the nearest city is picked (Almaty when location is refused).
+ */
 export function CityPicker({ locale }: { locale: Locale }) {
-  const d = discoveryCopy[locale];
   const { open, setOpen, root, button } = usePopover();
   const menuId = useId();
   const navigate = useNavigate();
@@ -31,6 +33,28 @@ export function CityPicker({ locale }: { locale: Locale }) {
         .map((c) => [c.toLowerCase(), c] as const),
     ).values(),
   ].sort((a, b) => cityLabel(a, locale).localeCompare(cityLabel(b, locale)));
+  const asked = useRef(false);
+  const ready = venues.data !== undefined;
+  useEffect(() => {
+    if (current || !ready || !cities.length || asked.current) return;
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    asked.current = true;
+    const apply = (city: string | undefined) => {
+      if (!city || readCity()) return;
+      writeCity(city);
+      if (!onDiscovery) return;
+      const next = new URLSearchParams(window.location.search);
+      if (next.get("city")) return;
+      next.set("city", city);
+      navigate(`${location.pathname}?${next}`, { replace: true });
+    };
+    navigator.geolocation.getCurrentPosition(
+      (pos) =>
+        apply(nearestCity(cities, pos.coords.latitude, pos.coords.longitude) ?? defaultCity(cities)),
+      () => apply(defaultCity(cities)),
+      { maximumAge: 3600_000, timeout: 10_000 },
+    );
+  });
   function choose(city: string) {
     setOpen(false);
     button.current?.focus();
@@ -50,23 +74,23 @@ export function CityPicker({ locale }: { locale: Locale }) {
         className="city-trigger"
         aria-expanded={open}
         aria-controls={menuId}
-        aria-label={`${eventCopy[locale].city}: ${current ? cityLabel(current, locale) : d.allCities}`}
+        aria-label={`${eventCopy[locale].city}: ${current ? cityLabel(current, locale) : ""}`}
         onClick={() => setOpen(!open)}
       >
         <PinIcon size={16} />
-        <span>{current ? cityLabel(current, locale) : d.allCities}</span>
+        <span>{current ? cityLabel(current, locale) : eventCopy[locale].city}</span>
         <ChevronDownIcon size={14} />
       </button>
       <div className="language-panel city-panel" id={menuId} hidden={!open}>
         <ul aria-label={eventCopy[locale].city}>
-          {["", ...cities].map((city) => (
-            <li key={city || "all"}>
+          {cities.map((city) => (
+            <li key={city}>
               <button
                 type="button"
                 aria-pressed={city.toLowerCase() === current.toLowerCase()}
                 onClick={() => choose(city)}
               >
-                <span>{city ? cityLabel(city, locale) : d.allCities}</span>
+                <span>{cityLabel(city, locale)}</span>
               </button>
             </li>
           ))}

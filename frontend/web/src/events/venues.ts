@@ -47,6 +47,49 @@ const aliases: Record<string, string> = {
 };
 
 export function cityLabel(city: string, locale: Locale): string {
+  return cityNames[cityKey(city)]?.[locale] ?? city.trim();
+}
+
+/** City centres for picking the visitor's nearest city from their location. */
+const cityCoords: Record<string, [number, number]> = {
+  almaty: [43.238, 76.946],
+  astana: [51.169, 71.449],
+  shymkent: [42.317, 69.596],
+  karaganda: [49.806, 73.085],
+  aktobe: [50.283, 57.167],
+  atyrau: [47.094, 51.924],
+  aktau: [43.651, 51.197],
+  pavlodar: [52.287, 76.967],
+  "ust-kamenogorsk": [49.948, 82.628],
+  kostanay: [53.214, 63.632],
+  taraz: [42.9, 71.367],
+  turkistan: [43.297, 68.252],
+};
+
+function cityKey(city: string) {
   const key = city.trim().toLowerCase();
-  return cityNames[aliases[key] ?? key]?.[locale] ?? city.trim();
+  return aliases[key] ?? key;
+}
+
+/** The listed city closest to a point; cities without known coordinates are skipped. */
+export function nearestCity(cities: string[], lat: number, lng: number): string | undefined {
+  let best: string | undefined;
+  let bestDistance = Infinity;
+  for (const city of cities) {
+    const coords = cityCoords[cityKey(city)];
+    if (!coords) continue;
+    const dLat = coords[0] - lat;
+    const dLng = (coords[1] - lng) * Math.cos((lat * Math.PI) / 180);
+    const distance = dLat * dLat + dLng * dLng;
+    if (distance < bestDistance) {
+      best = city;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
+/** Where to start when location is unavailable: Almaty if listed, else the first city. */
+export function defaultCity(cities: string[]): string | undefined {
+  return cities.find((c) => cityKey(c) === "almaty") ?? cities[0];
 }
