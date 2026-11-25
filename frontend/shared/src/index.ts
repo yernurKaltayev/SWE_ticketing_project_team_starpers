@@ -18,6 +18,7 @@ export {
   formatMoney,
   formatPrice,
   formatEventDateTime,
+  formatEventRange,
   zoneLabel,
 } from "./format";
 export type { DateTimeOptions } from "./format";

@@ -862,6 +862,11 @@ main:focus {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 0 1rem;
+  align-items: start;
+}
+.event-form-grid input,
+.event-form-grid select {
+  min-width: 0;
 }
 .results-meta {
   display: flex;
@@ -1087,6 +1092,9 @@ main:focus {
   border: 1px dashed var(--color-line-strong);
   border-radius: var(--radius-card);
   color: var(--color-muted);
+  max-width: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 .empty-state p {
   max-width: 40ch;
@@ -2262,4 +2270,57 @@ a.chip-link:hover {
 /* Account pages (orders, tickets) are lists and receipts: keep them at reading width. */
 .reading-page {
   max-width: 880px;
+}
+
+/* Organizer event list: one compact card per event. */
+.organizer-event-card {
+  display: grid;
+  gap: 0.5rem;
+}
+.organizer-event-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.organizer-event-head h3 {
+  margin: 0;
+}
+.organizer-event-head h3 a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.organizer-event-head h3 a:hover {
+  color: var(--color-primary);
+}
+.organizer-event-when {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+.organizer-event-card > .card-links,
+.organizer-event-card > div:last-child {
+  margin: 0;
+}
+.organizer-event-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.organizer-event-card > .organizer-event-head,
+.organizer-event-card > .organizer-event-when {
+  grid-column: 1 / -1;
+}
+.organizer-event-card > div:last-child > button.secondary {
+  min-height: 34px;
+  font-size: 0.8125rem;
+}
+
+/* A heading that opens a card or form sits on the card's own padding, never below an extra gap. */
+:is(form, fieldset, .panel, [class*="-card"], [class*="-form"], .support-context, .support-thread, .danger-zone)
+  > :is(h2, h3, legend):first-child {
+  margin-top: 0;
+}
+.page-subtitle {
+  margin: -0.25rem 0 1.25rem;
+  color: var(--color-muted);
+  font-weight: 600;
 }

@@ -365,7 +365,6 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
       <BackLink to={`/organizer/events/${encodeURIComponent(eventId)}/edit`}>{t.back}</BackLink>
       <h1>{t.title}</h1>
       {ev && <h2>{ev.title}</h2>}
-      <p>{t.readonly}</p>
       {ev?.status === "cancelled" && <p role="status">{t.cancelled}</p>}
       <OperationError
         error={error || event.error || orders.error}
@@ -420,7 +419,6 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
           </div>
           {view !== "refunds" && (
             <>
-              <p>{view === "orders" ? t.snapshot : t.exportHint}</p>
               <form
                 key={`${view}:${q}:${status}:${type}`}
                 className="operation-filters"
@@ -559,7 +557,7 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
           )}
           {view === "orders" && (
             <>
-              <div className="table-scroll">
+              {filtered.length > 0 && <div className="table-scroll">
                 <table>
                   <caption>{t.orders}</caption>
                   <thead>
@@ -588,8 +586,8 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
                     ))}
                   </tbody>
                 </table>
-              </div>
-              {!filtered.length && <p>{t.empty}</p>}
+              </div>}
+              {!filtered.length && <p className="empty-state">{t.empty}</p>}
               <Pager
                 offset={offset}
                 total={filtered.length}
@@ -608,7 +606,7 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
               {attendees.isPending && <p>{t.loading}</p>}
               {attendees.data && !attendees.isError && (
                 <>
-                  <div className="table-scroll">
+                  {attendees.data.items.length > 0 && <div className="table-scroll">
                     <table>
                       <caption>{t.attendees}</caption>
                       <thead>
@@ -640,8 +638,8 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
                         ))}
                       </tbody>
                     </table>
-                  </div>
-                  {!attendees.data.items.length && <p>{t.empty}</p>}
+                  </div>}
+                  {!attendees.data.items.length && <p className="empty-state">{t.empty}</p>}
                   <Pager
                     offset={offset}
                     total={attendees.data.total}
@@ -662,7 +660,7 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
               {refunds.isPending && <p>{t.loading}</p>}
               {refunds.data && !refunds.isError && (
                 <>
-                  <div className="table-scroll">
+                  {refunds.data.items.length > 0 && <div className="table-scroll">
                     <table>
                       <caption>{t.refunds}</caption>
                       <thead>
@@ -692,8 +690,8 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
                         ))}
                       </tbody>
                     </table>
-                  </div>
-                  {!refunds.data.items.length && <p>{t.empty}</p>}
+                  </div>}
+                  {!refunds.data.items.length && <p className="empty-state">{t.empty}</p>}
                   <Pager
                     offset={offset}
                     total={refunds.data.total}

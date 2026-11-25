@@ -36,6 +36,16 @@
   flex: 1;
   min-width: min(100%,12rem)
 }
+.insights-filters>.field:has(input[type="datetime-local"]) {
+  min-width: min(100%,15rem)
+}
+.insights-filters input {
+  width: 100%;
+  min-width: 0
+}
+.insights-filters>button {
+  flex: none
+}
 .insights .controls {
   flex-wrap: wrap
 }

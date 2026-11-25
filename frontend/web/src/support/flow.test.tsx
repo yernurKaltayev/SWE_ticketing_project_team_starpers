@@ -137,7 +137,8 @@ it("opens a context-linked case as the signed-in requester and displays its init
   await screen.findByText("Please help");
   expect(sent).toMatchObject({ order_id: order.id, category: "technical" });
   expect(sent).not.toHaveProperty("requester_id");
-  expect(screen.getByText(order.id)).toBeDefined();
+  // The linked order shows as a short reference with the full id on hover.
+  expect(screen.getByTitle(order.id).textContent).toBe(`#${order.id.slice(0, 8)}`);
 });
 it("allows an event owner to claim, reply, resolve and retain a case without reloading", async () => {
   const buyer = await actor("attendee@example.com"),

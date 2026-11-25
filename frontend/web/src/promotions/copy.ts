@@ -5,7 +5,7 @@ export const promoCopy = {
     previewEvent: "Preview event with code",
     title: "Promotions",
     intro:
-      "Campaign codes change server-calculated prices. Campaign QR opens an event; it is not an admission ticket.",
+      "Discount codes and QR links that lead buyers to this event.",
     create: "Create campaign",
     edit: "Edit campaign",
     name: "Campaign name",
@@ -87,7 +87,7 @@ export const promoCopy = {
     previewEvent: "Открыть событие с кодом",
     title: "Промоакции",
     intro:
-      "Коды кампаний меняют цены на сервере. QR кампании открывает событие и не является входным билетом.",
+      "Промокоды со скидкой и QR-ссылки, которые ведут покупателей на это мероприятие.",
     create: "Создать кампанию",
     edit: "Изменить кампанию",
     name: "Название кампании",
@@ -168,7 +168,7 @@ export const promoCopy = {
     previewEvent: "Іс-шараны кодпен ашу",
     title: "Промоакциялар",
     intro:
-      "Кампания кодтары сервердегі бағаны өзгертеді. Кампания QR-і іс-шараны ашады, кіру билеті емес.",
+      "Сатып алушыларды осы іс-шараға апаратын жеңілдік кодтары мен QR-сілтемелер.",
     create: "Кампания құру",
     edit: "Кампанияны өзгерту",
     name: "Кампания атауы",

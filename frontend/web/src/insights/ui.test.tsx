@@ -136,7 +136,6 @@ it("renders server totals and accessible tables alongside charts without recompu
   })).toBeTruthy();
   expect(screen.getAllByRole("img")).toHaveLength(2);
   expect(screen.getByText(/Processing fees are payout deductions/)).toBeTruthy();
-  expect(screen.getByText(/Inventory and check-in are current/)).toBeTruthy();
 });
 it("sends event-zone dates and ticket type as one applied analytics filter", async () => {
   const requests: URL[] = [];
@@ -148,12 +147,12 @@ it("sends event-zone dates and ticket type as one applied analytics filter", asy
   }));
   await mount(`${path}/analytics`);
   await screen.findByText(formatMoney(7001, "en").replace(/\s/g, " "));
-  fireEvent.change(screen.getByLabelText("From (inclusive) · Almaty"), {
+  fireEvent.change(screen.getByLabelText("From"), {
     target: {
       value: "2026-11-18T10:00"
     }
   });
-  fireEvent.change(screen.getByLabelText("Until (exclusive) · Almaty"), {
+  fireEvent.change(screen.getByLabelText("Until"), {
     target: {
       value: "2026-11-19T10:00"
     }
@@ -524,7 +523,7 @@ it("uses authenticated CSV export, safe filename and revokes its download URL", 
   }));
   vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
   await mount("/admin/exports", "admin@example.com");
-  fireEvent.change(screen.getByLabelText("From (inclusive) · UTC"), {
+  fireEvent.change(screen.getByLabelText("From"), {
     target: {
       value: "2026-11-18T10:00"
     }

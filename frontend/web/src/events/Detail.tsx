@@ -5,7 +5,7 @@ import { PromotionBanner } from "../promotions/Banner";
 import { checkoutLink } from "../promotions/model";
 import { seatingCopy } from "../seating/copy";
 import { Link, useParams, useLocation } from "react-router-dom";
-import { formatDateTime, formatEventDateTime, formatPrice, zoneLabel } from "@biletflow/shared";
+import { formatEventDateTime, formatEventRange, formatPrice } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { Status } from "../auth/ui";
 import { useResource } from "./data";
@@ -134,7 +134,7 @@ function EventContent({
                   {t.starts_at} — {t.ends_at}
                 </dt>
                 <dd>
-                  {eventRange(event.starts_at, event.ends_at, event.timezone, locale)}
+                  {formatEventRange(event.starts_at, event.ends_at, event.timezone, locale)}
                 </dd>
               </div>
               {venue.data && (
@@ -266,13 +266,3 @@ function EventContent({
   );
 }
 
-/** "13 дек. 2026 г., 21:30 — 23:30 · Алматы": the zone once, the end day only if it differs. */
-function eventRange(start: string, end: string, zone: string, locale: Locale) {
-  const day = (v: string) => formatDateTime(v, locale, { timeZone: zone });
-  const from = formatDateTime(start, locale, { time: true, timeZone: zone });
-  const to =
-    day(start) === day(end)
-      ? new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: zone }).format(new Date(end))
-      : formatDateTime(end, locale, { time: true, timeZone: zone });
-  return `${from} — ${to} · ${zoneLabel(zone, locale)}`;
-}

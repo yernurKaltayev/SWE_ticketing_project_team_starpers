@@ -65,7 +65,7 @@ it("keeps outgoing create controls until the saved-event route takes over", asyn
     });
   fill("Title", "Transition regression");
   fill("Description", "Demo");
-  fill("Category", "student");
+  fill("Category", "education");
   await waitFor(() =>
     expect(
       document.querySelector(
@@ -77,7 +77,7 @@ it("keeps outgoing create controls until the saved-event route takes over", asyn
   fill("Starts", "2027-02-01T18:00");
   fill("Ends", "2027-02-01T20:00");
   await userEvent.click(
-    screen.getByRole("button", { name: "Save draft / changes" }),
+    screen.getByRole("button", { name: /^Save (draft|changes)$/ }),
   );
   await waitFor(() => expect(navigate).toHaveBeenCalledOnce());
   expect(navigate.mock.calls[0]?.[0]).toMatch(

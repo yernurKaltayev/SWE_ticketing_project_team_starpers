@@ -181,3 +181,26 @@
 .support-list {
   gap: 0.5rem;
 }
+.support-context h2,
+.support-thread h2 {
+  margin-top: 0;
+  font-size: 1.0625rem;
+}
+.support-context dl {
+  margin: 0;
+}
+.metadata-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.metadata-row > div {
+  flex: 1 1 12rem;
+}
+.metadata-row select {
+  width: 100%;
+}

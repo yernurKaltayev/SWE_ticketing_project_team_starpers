@@ -9,6 +9,10 @@ import { Field, Status } from "../auth/ui";
 import { useSession } from "../auth/session";
 import { eventCopy } from "./copy";
 import { categoryLabel, knownCategories } from "./categories";
+import { zoneLabel } from "@biletflow/shared";
+
+/** Kazakhstan's zones plus UTC; an event saved with another zone keeps it as an option. */
+const eventZones = ["Asia/Almaty", "Asia/Qyzylorda", "Asia/Aqtobe", "Asia/Aqtau", "Asia/Atyrau", "Asia/Oral", "Asia/Qostanay", "UTC"];
 import { toneFor } from "../tone";
 import { useEventRequest, useResource } from "./data";
 import {
@@ -159,7 +163,6 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
           moreVenues.reload();
         }}
       />
-      <p id="zone-hint">{t.zoneHint}</p>
       {event?.seating_mode === "assigned" && <Status>{t.assignedHint}</Status>}
       <form
         className="panel editor-form"
@@ -251,20 +254,25 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
             required
           />
           <div className="event-form-grid">
-            <Field
-              name="category"
-              label={t.category}
-              defaultValue={event?.category}
-              list="category-options"
-              required
-            />
-            <datalist id="category-options">
-              {knownCategories.map((key) => (
-                <option key={key} value={key}>
-                  {categoryLabel(key, locale)}
-                </option>
-              ))}
-            </datalist>
+            <div className="field">
+              <label htmlFor="category">{t.category}</label>
+              <select
+                id="category"
+                name="category"
+                defaultValue={event?.category?.trim().toLowerCase() || "concert"}
+                required
+              >
+                {event?.category &&
+                  !(knownCategories as string[]).includes(event.category.trim().toLowerCase()) && (
+                    <option value={event.category.trim().toLowerCase()}>{event.category}</option>
+                  )}
+                {knownCategories.map((key) => (
+                  <option key={key} value={key}>
+                    {categoryLabel(key, locale)}
+                  </option>
+                ))}
+              </select>
+            </div>
             <Field
               id="venue_id"
               name="venue_name"
@@ -319,19 +327,16 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
                 {t.next} · {t.venue_id}
               </button>
             )}
-          <Field
-            name="timezone"
-            label={t.timezone}
-            defaultValue={zone}
-            required
-            aria-describedby="zone-hint"
-            list="timezones"
-          />
-          <datalist id="timezones">
-            <option value="Asia/Almaty" />
-            <option value="Asia/Qyzylorda" />
-            <option value="UTC" />
-          </datalist>
+          <div className="field">
+            <label htmlFor="timezone">{t.timezone}</label>
+            <select id="timezone" name="timezone" defaultValue={zone} required>
+              {[...new Set([zone, ...eventZones])].map((z) => (
+                <option key={z} value={z}>
+                  {zoneLabel(z, locale)}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="event-form-grid">
             {(
               [
@@ -373,7 +378,7 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
               ))}
             </SelectField>
           </div>
-          <button>{pending ? t.working : t.save}</button>
+          <button>{pending ? t.working : event ? t.saveChanges : t.save}</button>
         </fieldset>
       </form>
       {dirty && <Status>{t.dirty}</Status>}
@@ -391,6 +396,7 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
             {event.status !== "cancelled" && (
               <button
                 ref={actionButton}
+                className={event.status === "published" ? "secondary" : undefined}
                 disabled={pending || dirty || !user?.email_verified_at}
                 onClick={() =>
                   setAction(
