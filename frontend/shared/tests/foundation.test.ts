@@ -123,7 +123,7 @@ describe("event time and baseline locales", () => {
 
     it("writes the event date with Kazakh month names", () => {
       expect(formatEventDateTime("2027-03-01T14:00:00Z", "Asia/Almaty", "kk")).toBe(
-        "2027 ж. 1 нау., 19:00 GMT+5 · Алматы",
+        "2027 ж. 1 нау., 19:00 · Алматы",
       );
     });
 

@@ -162,7 +162,6 @@ export function OrganizerPage({ locale }: { locale: Locale }) {
           locale={locale}
         />
       )}
-      <p className="notice">{t.payoutPending}</p>
     </section>
   );
 }

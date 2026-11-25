@@ -1,15 +1,13 @@
 import { useMemo, useState } from "react";
 import { BackLink } from "../BackLink";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { formatMoney } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
-import { useSession } from "../auth/session";
 import { parseEvent } from "../events/contracts";
 import { useLiveQuery } from "../support/data";
 import { useCampaignTypes } from "../promotions/data";
 import { parseCampaign, parseReport } from "../promotions/model";
 import { analyticsQuery, parseAnalytics } from "./model";
-import { useOwnedEvents } from "./data";
 import { label } from "./copy";
 import { eventCopy } from "../events/copy";
 import { DateFields, Failure } from "./ui";
@@ -30,15 +28,10 @@ function Content({
   id: string;
   locale: Locale;
 }) {
-  const {
-      user
-    } = useSession(),
-    t = (s: string) => label(locale, s);
-  const navigate = useNavigate();
+  const t = (s: string) => label(locale, s);
   const root = `/api/v1/events/${encodeURIComponent(id)}`;
   const event = useLiveQuery(root, parseEvent, 30000);
   const types = useCampaignTypes(`${root}/ticket-types`);
-  const owned = useOwnedEvents();
   const [params, setParams] = useSearchParams();
   const [invalid, setInvalid] = useState(false);
   const filter = useMemo(() => {
@@ -56,28 +49,22 @@ function Content({
   const report = useLiveQuery(filter.query !== undefined ? `${root}/analytics?${filter.query}` : "", parseAnalytics, 30000, !event.isError);
   const data = report.isError || event.isError ? undefined : report.data;
   return <section className="insights">
-  <BackLink to="/organizer/events">{eventCopy[locale].back}</BackLink>
+  <BackLink to={`/organizer/events/${encodeURIComponent(id)}/edit`}>{eventCopy[locale].backToEvent}</BackLink>
+  <header className="title-row spread">
   <h1>
     {t("analytics")}
   </h1>
-  {event.data && <>
-    <h2>
-      {event.data.title}
-    </h2>
-  </>}
-  <p className="notice">
-    {t("demo")}
-  </p>
-  {user?.role === "organizer" && owned.data && !owned.isError && <div>
-    <label htmlFor="analytics-event">
-      {t("chooseEvent")}
-    </label>
-    <select id="analytics-event" value={id} onChange={e => navigate(`/organizer/events/${encodeURIComponent(e.target.value)}/analytics`)}>
-      {owned.data.map(e => <option value={e.id} key={e.id}>
-        {e.title}
-      </option>)}
-    </select>
-  </div>}
+  <button className="secondary" disabled={report.isFetching} onClick={() => {
+      void event.refetch();
+      if (filter.query !== undefined && !event.isError) void report.refetch();
+      types.reload();
+    }}>
+    {t("refresh")}
+  </button>
+  </header>
+  {event.data && <p className="page-subtitle">
+    {event.data.title}
+  </p>}
   <form className="insights-filters" key={params.toString()} noValidate onSubmit={e => {
       e.preventDefault();
       const p = new URLSearchParams();
@@ -122,13 +109,6 @@ function Content({
     {t("invalid")}
   </p>}
   <Failure error={event.error ?? report.error ?? types.error} locale={locale} />
-  <button className="secondary" disabled={report.isFetching} onClick={() => {
-      void event.refetch();
-      if (filter.query !== undefined && !event.isError) void report.refetch();
-      types.reload();
-    }}>
-    {t("refresh")}
-  </button>
   {report.isPending && !filter.error && <p role="status">
     {t("loading")}
   </p>}
@@ -137,9 +117,7 @@ function Content({
       <h2>
         {t("current")}
       </h2>
-      <p>
-        {t("inventoryHint")}
-      </p>
+
       <dl className="insights-grid">
         {(["capacity", "sold", "remaining", "percent_sold", "checked_in", "absent", "checkin_percent"] as const).map(k => <div className="insights-metric" key={k}>
           <dt>

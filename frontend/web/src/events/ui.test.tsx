@@ -86,7 +86,7 @@ async function editor() {
     });
   fill("Title", "Dias demonstration");
   fill("Description", "Free general admission");
-  fill("Category", "student");
+  fill("Category", "education");
   await screen.findByRole("option", {
     name: "Demo campus auditorium · Astana · Demo venue address",
   });
@@ -99,7 +99,7 @@ it("renders the free-event journey with corrective publication errors and protec
   const user = userEvent.setup();
   await editor();
   await user.click(
-    screen.getByRole("button", { name: "Save draft / changes" }),
+    screen.getByRole("button", { name: /^Save (draft|changes)$/ }),
   );
   await screen.findByRole("heading", { name: "Edit event" });
   await user.click(screen.getByRole("button", { name: "Publish" }));
@@ -132,7 +132,7 @@ it("retains draft fields after failed save and allows explicit recovery without 
     }),
   );
   await user.click(
-    screen.getByRole("button", { name: "Save draft / changes" }),
+    screen.getByRole("button", { name: /^Save (draft|changes)$/ }),
   );
   await screen.findByRole("alert");
   expect(
@@ -141,7 +141,7 @@ it("retains draft fields after failed save and allows explicit recovery without 
   expect(writes).toBe(1);
   server.resetHandlers();
   await user.click(
-    screen.getByRole("button", { name: "Save draft / changes" }),
+    screen.getByRole("button", { name: /^Save (draft|changes)$/ }),
   );
   await screen.findByRole("heading", { name: "Edit event" });
 });
@@ -155,9 +155,13 @@ it("reports invalid wall-time fields with a focused, linked error and sends no c
       return HttpResponse.error();
     }),
   );
-  fill("Event time zone (IANA)", "Invalid/Zone");
+  // The picker only offers real zones; a stale or tampered value must still be caught.
+  (screen.getByLabelText("Time zone", { exact: true }) as HTMLSelectElement).add(
+    new Option("Invalid/Zone", "Invalid/Zone"),
+  );
+  fill("Time zone", "Invalid/Zone");
   await user.click(
-    screen.getByRole("button", { name: "Save draft / changes" }),
+    screen.getByRole("button", { name: /^Save (draft|changes)$/ }),
   );
   const alert = await screen.findByRole("alert");
   expect(document.activeElement).toBe(alert);
@@ -208,7 +212,7 @@ it("creates an event with live P4 venue arrays, then saves and edits a paid tick
   );
   await editor();
   await userEvent.click(
-    screen.getByRole("button", { name: "Save draft / changes" }),
+    screen.getByRole("button", { name: /^Save (draft|changes)$/ }),
   );
   await screen.findByRole("heading", { name: "Edit event" });
   expect(destinationLoaded).toBe(true);
@@ -356,7 +360,7 @@ it("creates a new venue chosen from the list, then saves the event at it", async
   fill("Venue address", "Abay Ave 110");
   fill("Venue city", "Almaty");
   await userEvent.click(
-    screen.getByRole("button", { name: "Save draft / changes" }),
+    screen.getByRole("button", { name: /^Save (draft|changes)$/ }),
   );
   await screen.findByRole("heading", { name: "Edit event" });
   const [venuePost, eventPost] = posts;
@@ -385,7 +389,7 @@ it("reuses a saved venue entered again as new without creating a copy", async ()
   fill("Venue address", "Demo venue address");
   fill("Venue city", "astana");
   await userEvent.click(
-    screen.getByRole("button", { name: "Save draft / changes" }),
+    screen.getByRole("button", { name: /^Save (draft|changes)$/ }),
   );
   await screen.findByRole("heading", { name: "Edit event" });
   expect(posts.map((p) => p.path)).toEqual(["/api/v1/events"]);
@@ -406,7 +410,7 @@ it("asks for the address and city of a new venue before sending anything", async
     ),
   ).toBeTruthy();
   fireEvent.submit(
-    screen.getByRole("button", { name: "Save draft / changes" }).closest("form")!,
+    screen.getByRole("button", { name: /^Save (draft|changes)$/ }).closest("form")!,
   );
   const alert = await screen.findByRole("alert");
   expect(alert.textContent).toContain("Venue address");

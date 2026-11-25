@@ -5,7 +5,7 @@ import { PromotionBanner } from "../promotions/Banner";
 import { checkoutLink } from "../promotions/model";
 import { seatingCopy } from "../seating/copy";
 import { Link, useParams, useLocation } from "react-router-dom";
-import { formatEventDateTime, formatPrice } from "@biletflow/shared";
+import { formatEventDateTime, formatEventRange, formatPrice } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { Status } from "../auth/ui";
 import { useResource } from "./data";
@@ -134,8 +134,7 @@ function EventContent({
                   {t.starts_at} — {t.ends_at}
                 </dt>
                 <dd>
-                  {formatEventDateTime(event.starts_at, event.timezone, locale)}{" "}
-                  — {formatEventDateTime(event.ends_at, event.timezone, locale)}
+                  {formatEventRange(event.starts_at, event.ends_at, event.timezone, locale)}
                 </dd>
               </div>
               {venue.data && (
@@ -266,3 +265,4 @@ function EventContent({
     </>
   );
 }
+

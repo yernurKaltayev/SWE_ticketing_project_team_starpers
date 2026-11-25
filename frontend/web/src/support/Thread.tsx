@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { noFinalDot } from "../auth/helpers";
 import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Locale } from "@biletflow/shared";
@@ -179,29 +178,31 @@ function Content({ id, locale }: { id: string; locale: Locale }) {
   return (
     <section className="support-page">
       <BackLink to="/support">{t.back}</BackLink>
-      <h1>{readable ? c.subject : t.title}</h1>
+      <header className="title-row spread">
+        <h1>{readable ? c.subject : t.title}</h1>
+        <button
+          className="secondary"
+          disabled={record.isFetching || feed.isFetching || busy || refreshing}
+          onClick={() => void refresh()}
+        >
+          {t.refresh}
+        </button>
+      </header>
       <div ref={errorRef} tabIndex={-1}>
         <SupportError error={record.error ?? feed.error ?? error} t={t} />
         {invalid && <p role="alert">{t.invalidMessage}</p>}
       </div>
       {record.isPending && <p role="status">{t.loading}</p>}
-      <button
-        className="secondary"
-        disabled={record.isFetching || feed.isFetching || busy || refreshing}
-        onClick={() => void refresh()}
-      >
-        {t.refresh}
-      </button>
       {readable && (
         <>
-          <p>
-            <span className="status-badge">{t.statuses[c.status]}</span> ·{" "}
-            {t.categories[c.category]}
-          </p>
-          <p>
-            {c.audience === "organizer_case"
-              ? t.platformAudience
-              : t.customerAudience}
+          <p className="case-meta">
+            <span className="status-badge">{t.statuses[c.status]}</span>{" "}
+            {t.categories[c.category]} · {t.assignee}:{" "}
+            {c.assignee_id
+              ? c.assignee_id === user?.id
+                ? t.you
+                : t.assignedOther
+              : t.unassigned}
           </p>
           <ContextDetails
             context={{
@@ -211,14 +212,6 @@ function Content({ id, locale }: { id: string; locale: Locale }) {
             }}
             t={t}
           />
-          <p>
-            {t.assignee}:{" "}
-            {c.assignee_id
-              ? c.assignee_id === user?.id
-                ? t.you
-                : t.assignedOther
-              : t.unassigned}
-          </p>
           {access.isPending ? (
             <p>{t.permissions}</p>
           ) : access.isError ? (
@@ -235,7 +228,6 @@ function Content({ id, locale }: { id: string; locale: Locale }) {
             <p>{t.readOnly}</p>
           )}
           {saved && <p role="status">{t.saved}</p>}
-          <p>{t.polling}</p>
           <div className="support-thread">
             <h2>{t.history}</h2>
             {feed.isPending && <p>{t.loading}</p>}
@@ -302,7 +294,6 @@ function Content({ id, locale }: { id: string; locale: Locale }) {
               void write("message", body);
             }}
           >
-            <p>{t.replyHint}</p>
             <label htmlFor="reply-body">{t.message}</label>
             <textarea
               id="reply-body"
@@ -359,42 +350,45 @@ function Metadata({
         save({ status, assignee_id: assignee || null });
       }}
     >
-      <fieldset disabled={busy}>
-        <legend>
+      <fieldset disabled={busy} className="metadata-row">
+        <legend className="visually-hidden">
           {t.status} / {t.assignee}
         </legend>
-        <label htmlFor="manage-status">{t.status}</label>
-        <select
-          id="manage-status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as CaseStatus)}
-        >
-          {statuses.map((s) => (
-            <option value={s} key={s}>
-              {t.statuses[s]}
-            </option>
-          ))}
-        </select>
-        <label htmlFor="manage-assignee">{t.chooseAssignee}</label>
-        <select
-          id="manage-assignee"
-          value={assignee}
-          onChange={(e) => setAssignee(e.target.value)}
-        >
-          <option value="">{t.unassign}</option>
-          <option value={user?.id}>{t.claim}</option>
-          {value.assignee_id &&
-            value.assignee_id !== user?.id &&
-            !choices.some((m) => m.user_id === value.assignee_id) && (
-              <option value={value.assignee_id}>{t.assignedOther}</option>
-            )}
-          {choices.map((m) => (
-            <option key={m.user_id} value={m.user_id}>
-              {m.full_name} · {m.email}
-            </option>
-          ))}
-        </select>
-        <p className="field-hint">{noFinalDot(t.rosterHint)}</p>
+        <div>
+          <label htmlFor="manage-status">{t.status}</label>
+          <select
+            id="manage-status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value as CaseStatus)}
+          >
+            {statuses.map((s) => (
+              <option value={s} key={s}>
+                {t.statuses[s]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="manage-assignee">{t.chooseAssignee}</label>
+          <select
+            id="manage-assignee"
+            value={assignee}
+            onChange={(e) => setAssignee(e.target.value)}
+          >
+            <option value="">{t.unassign}</option>
+            <option value={user?.id}>{t.claim}</option>
+            {value.assignee_id &&
+              value.assignee_id !== user?.id &&
+              !choices.some((m) => m.user_id === value.assignee_id) && (
+                <option value={value.assignee_id}>{t.assignedOther}</option>
+              )}
+            {choices.map((m) => (
+              <option key={m.user_id} value={m.user_id}>
+                {m.full_name} · {m.email}
+              </option>
+            ))}
+          </select>
+        </div>
         <button>{busy ? t.working : t.save}</button>
       </fieldset>
     </form>

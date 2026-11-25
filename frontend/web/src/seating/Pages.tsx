@@ -101,8 +101,8 @@ function SetupForm({
             .finally(() => setBusy(false));
         }}
       >
-        <fieldset disabled={busy || !draft}>
-          <legend>{t.setup}</legend>
+        <fieldset disabled={busy || !draft} className="seating-row">
+          <legend className="visually-hidden">{t.setup}</legend>
           <label>
             {t.setup}
             <select
@@ -155,7 +155,6 @@ function SetupForm({
         <p role={result === "error" ? "alert" : "status"}>{t[result]}</p>
       )}
       <h2>{t.category}</h2>
-      <p>{t.categoryHint}</p>
       {!!tickets.error && (
         <p role="alert">
           {t.error}
@@ -207,15 +206,22 @@ function CategoryForm({
           .finally(() => setBusy(false));
       }}
     >
-      <fieldset disabled={busy || disabled}>
-        <legend>{ticket.name}</legend>
+      <fieldset disabled={busy || disabled} className="seating-row">
+        <legend className="visually-hidden">{ticket.name}</legend>
         <label>
-          {t.category}
+          {ticket.name}
           <input
             value={value}
             maxLength={120}
+            placeholder="standard, vip…"
+            list="seating-categories"
+            aria-label={`${t.category} · ${ticket.name}`}
             onChange={(e) => setValue(e.target.value)}
           />
+          <datalist id="seating-categories">
+            <option value="standard" />
+            <option value="vip" />
+          </datalist>
         </label>
         <button>{t.save}</button>
       </fieldset>

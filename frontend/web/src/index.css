@@ -862,6 +862,11 @@ main:focus {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: 0 1rem;
+  align-items: start;
+}
+.event-form-grid input,
+.event-form-grid select {
+  min-width: 0;
 }
 .results-meta {
   display: flex;
@@ -1087,6 +1092,9 @@ main:focus {
   border: 1px dashed var(--color-line-strong);
   border-radius: var(--radius-card);
   color: var(--color-muted);
+  max-width: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 .empty-state p {
   max-width: 40ch;
@@ -1223,6 +1231,7 @@ main:focus {
   color: var(--color-muted);
 }
 .ticket-list .status-badge {
+  grid-column: 2;
   justify-self: end;
 }
 
@@ -1452,7 +1461,9 @@ section + section > h2:first-child {
   font-weight: 600;
 }
 .detail-cover {
-  aspect-ratio: 21 / 8;
+  aspect-ratio: auto;
+  height: clamp(150px, 16vw, 210px);
+  min-height: 0;
   border-radius: var(--radius-card);
 }
 .detail-cover .cover-art {
@@ -2008,20 +2019,18 @@ button.link-button:hover {
   gap: 0.75rem;
 }
 .help-panel .insights > button.secondary {
-  justify-self: start;
+  width: 100%;
   min-height: 36px;
-  padding: 0;
+  padding: 0 0.75rem;
   background: none;
   border: 0;
   color: var(--color-muted);
   font-size: 0.875rem;
   font-weight: 500;
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 .help-panel .insights > button.secondary:hover {
-  background: none;
-  color: var(--color-ink);
+  background: var(--color-danger-soft);
+  color: var(--color-danger-ink);
 }
 
 /* Event page on phones and tablets: the ticket panel drops below the description,
@@ -2245,4 +2254,156 @@ a.chip-link {
 a.chip-link:hover {
   border-color: var(--color-line-hover);
   background: var(--color-canvas);
+}
+
+.calendar-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.calendar-buttons > * {
+  flex: 1 1 auto;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* Account pages (orders, tickets) are lists and receipts: keep them at reading width. */
+.reading-page {
+  max-width: 880px;
+}
+
+/* Organizer event list: one compact card per event. */
+.organizer-event-card {
+  display: grid;
+  gap: 0.5rem;
+}
+.organizer-event-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.organizer-event-head h3 {
+  margin: 0;
+}
+.organizer-event-head h3 a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.organizer-event-head h3 a:hover {
+  color: var(--color-primary);
+}
+.organizer-event-when {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+.organizer-event-card > .card-links,
+.organizer-event-card > div:last-child {
+  margin: 0;
+}
+.organizer-event-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.organizer-event-card > .organizer-event-head,
+.organizer-event-card > .organizer-event-when {
+  grid-column: 1 / -1;
+}
+.organizer-event-card > div:last-child > button.secondary {
+  min-height: 34px;
+  font-size: 0.8125rem;
+}
+
+/* A heading that opens a card or form sits on the card's own padding, never below an extra gap. */
+:is(form, fieldset, .panel, [class*="-card"], [class*="-form"], .support-context, .support-thread, .danger-zone)
+  > :is(h2, h3, legend):first-child {
+  margin-top: 0;
+}
+.page-subtitle {
+  margin: -0.25rem 0 1.25rem;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.title-row.spread {
+  justify-content: space-between;
+}
+
+/* Activation steps: a form inside a step is a plain row, not a card inside a card. */
+.activation-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.activation-inline .field {
+  flex: 1 1 16rem;
+  margin: 0;
+}
+.activation-inline select {
+  width: 100%;
+}
+.activation-inline p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+/* Seating setup: one row per setting (label + control + save). */
+.seating-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 1rem 1.25rem;
+  margin: 0 0 0.75rem;
+}
+.seating-row > label {
+  display: grid;
+  gap: 0.35rem;
+  flex: 1 1 16rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.seating-row select,
+.seating-row input {
+  width: 100%;
+}
+
+.payout-account-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+.payout-account-row > div:first-child {
+  flex: 1 1 14rem;
+}
+.payout-account-row p {
+  margin: 0.15rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+.payout-account-row .controls {
+  margin: 0;
+}
+
+/* Admin: sections in the sidebar on desktop, a dropdown on phones. */
+.admin-section-select {
+  display: none;
+}
+@media (max-width: 900px) {
+  .admin-nav {
+    display: none;
+  }
+  .admin-section-select {
+    display: grid;
+    margin-bottom: 1rem;
+  }
+}
+.title-row :is(h1, h2) {
+  margin-block: 0;
 }

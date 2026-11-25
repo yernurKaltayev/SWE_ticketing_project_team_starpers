@@ -1,7 +1,7 @@
 import { DuplicateEvent } from "./DuplicateEvent";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { formatEventDateTime } from "@biletflow/shared";
+import { formatEventRange } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { lifecycle, lifecycles } from "./model";
 import { useOwnedEvents } from "./data";
@@ -51,9 +51,6 @@ export default function Archive({
     </Link>)}
   </nav>
   <Failure error={query.error} locale={locale} />
-  <button type="button" className="secondary" disabled={query.isFetching} onClick={() => void query.refetch()}>
-    {t("refresh")}
-  </button>
   {query.isPending && <p role="status">
     {t("loading")}
   </p>}
@@ -63,26 +60,22 @@ export default function Archive({
   {lifecycles.filter(g => !group || group === g).map(g => {
       const entries = page.filter(e => lifecycle(e, now) === g);
       return entries.length ? <section className="insights-group" key={g}>
-    <h2>
+    {!group && <h2>
       {t(g)}
-    </h2>
-    {entries.map(e => <article className="insights-card" key={e.id}>
-      <h3>
-        <Link to={`/organizer/events/${encodeURIComponent(e.id)}/edit`}>
-          {e.title}
-        </Link>
-      </h3>
-      <p>
-        {formatEventDateTime(e.starts_at, e.timezone, locale)}
-
-
-         —
-
-
-        {formatEventDateTime(e.ends_at, e.timezone, locale)}
-      </p>
-      <p>
-        {t(e.status)}
+    </h2>}
+    {entries.map(e => <article className="insights-card organizer-event-card" key={e.id}>
+      <div className="organizer-event-head">
+        <h3>
+          <Link to={`/organizer/events/${encodeURIComponent(e.id)}/edit`}>
+            {e.title}
+          </Link>
+        </h3>
+        <span className="status-badge" data-tone={e.status === "published" ? "success" : e.status === "cancelled" ? "danger" : "neutral"}>
+          {t(e.status)}
+        </span>
+      </div>
+      <p className="organizer-event-when">
+        {formatEventRange(e.starts_at, e.ends_at, e.timezone, locale)}
       </p>
       {/* Past events keep the records an organizer still needs after the date. */}
       <nav className="controls card-links" aria-label={e.title}>

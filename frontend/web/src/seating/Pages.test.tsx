@@ -108,7 +108,7 @@ it("retains a category after a failed save and supports explicit retry", async (
     ),
   );
   await start();
-  const category = await screen.findByLabelText("Price category");
+  const category = await screen.findByLabelText(/^Price category · /);
   fireEvent.change(category, { target: { value: "vip" } });
   const form = category.closest("form")!;
   fireEvent.click(within(form).getByRole("button"));
@@ -125,6 +125,6 @@ it("prevents seating and category changes for published events", async () => {
   await start(false);
   const mode = await screen.findByLabelText("Seating setup");
   expect(mode.matches(":disabled")).toBe(true);
-  const category = await screen.findByLabelText("Price category");
+  const category = await screen.findByLabelText(/^Price category · /);
   expect(category.matches(":disabled")).toBe(true);
 });

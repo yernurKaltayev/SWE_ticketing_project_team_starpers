@@ -27,7 +27,7 @@
 }
 .ticket-choice {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(7rem, 0.55fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 1rem;
   padding-block: 1rem;
   border-bottom: 1px solid var(--color-line);
@@ -37,7 +37,43 @@
   margin: 0;
 }
 .ticket-choice .field label {
-  font-size: 0.9rem;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.ticket-choice .field-hint {
+  margin: 0.15rem 0 0;
+}
+.qty-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.qty-stepper > button {
+  width: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+  border-radius: 999px;
+}
+.qty-stepper .field input {
+  width: 3.25rem;
+  min-height: 40px;
+  padding: 0;
+  text-align: center;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+}
+.qty-stepper .field input::-webkit-inner-spin-button,
+.qty-stepper .field input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 .attendee-fieldset {
   padding-block: 0.5rem 1rem;
@@ -146,7 +182,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .ticket-choice {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
   }
   .ticket-qr {
     text-align: left;

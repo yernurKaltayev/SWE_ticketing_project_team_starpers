@@ -22,6 +22,8 @@ import {
 import { makeOrderBody, parseVenue, registrationOpen } from "./model";
 import type { Attendee, Availability, Event, OrderBody } from "./model";
 import "./checkout.css";
+import { BackLink } from "../BackLink";
+import { eventCopy } from "../events/copy";
 
 export default function CheckoutPage({ locale }: { locale: Locale }) {
   const { eventId = "" } = useParams();
@@ -39,7 +41,7 @@ export default function CheckoutPage({ locale }: { locale: Locale }) {
   );
   return (
     <section>
-      <Link to="/events">{t.back}</Link>
+      <BackLink to={`/events/${eventId}`}>{eventCopy[locale].backToEvent}</BackLink>
       <h1>{paymentCopy[locale].checkout}</h1>
       <CommerceError
         error={event.error ?? availability.error}
@@ -299,7 +301,7 @@ function CheckoutForm({
       <div>
         <Status>{t.existing}</Status>
         <p>
-          <Link to={`/account/orders/${encodeURIComponent(recovery.orderId)}`}>
+          <Link className="action-link" to={`/account/orders/${encodeURIComponent(recovery.orderId)}`}>
             {t.view}
           </Link>
         </p>
@@ -346,7 +348,7 @@ function CheckoutForm({
     return (
       <div>
         <Status>{t.lost}</Status>
-        <Link to="/account/orders">{t.orders}</Link>
+        <Link className="action-link ghost" to="/account/orders">{t.orders}</Link>
       </div>
     );
 
@@ -372,7 +374,7 @@ function CheckoutForm({
       {recovery && (
         <div className="notice" role="status">
           <p>{t.unknown}</p>
-          <Link to="/account/orders">{t.orders}</Link>
+          <Link className="action-link ghost" to="/account/orders">{t.orders}</Link>
         </div>
       )}
       {review ? (
@@ -389,7 +391,7 @@ function CheckoutForm({
                   )?.name ?? t.ticket}
                 </strong>
                 <span>
-                  {t.quantity}: {item.quantity} ·{" "}
+                  {item.quantity} ×{" "}
                   {(() => {
                     const c = choices.find((c) => c.id === item.ticket_type_id);
                     return c?.free
@@ -438,10 +440,9 @@ function CheckoutForm({
           )}
           <p className="checkout-total" hidden={!!review.promo_code}>
             {selectedPaid ? p.estimate : t.total}:{" "}
-            {formatPrice(estimated, locale)}
+            {estimated === 0 ? t.free : formatPrice(estimated, locale)}
           </p>
-          <p>{selectedPaid ? p.authoritative : t.freeHint}</p>
-          <p>{t.reviewHint}</p>
+          {selectedPaid && <p className="field-hint">{noFinalDot(p.authoritative)}</p>}
           <div className="controls">
             <button
               disabled={busy}
@@ -522,44 +523,71 @@ function CheckoutForm({
             <Status>{p.noTickets}</Status>
           )}
           <div className="ticket-choices">
-            {choices.map((c) => (
-              <div className="ticket-choice" key={c.id}>
-                <div>
-                  <strong>{c.name}</strong>
-                  <p className="field-hint">
-                    {c.free
-                      ? t.free
-                      : c.price
-                        ? formatPrice(c.price, locale)
-                        : p.authoritative}{" "}
-                    · {t.limit}: {Math.min(c.available, c.limit)}
-                  </p>
+            {choices.map((c) => {
+              const max = Math.min(c.available, c.limit, 100);
+              const choosable = c.open && c.available > 0 && canChoose(c);
+              const value = quantities[c.id] ?? 0;
+              return (
+                <div className="ticket-choice" key={c.id}>
+                  <div>
+                    <strong>{c.name}</strong>
+                    <p className="field-hint">
+                      {c.free
+                        ? t.free
+                        : c.price
+                          ? formatPrice(c.price, locale)
+                          : p.authoritative}
+                      {choosable && max > 1 ? ` · ${t.limit} ${max}` : ""}
+                    </p>
+                  </div>
+                  {choosable ? (
+                    <div className="qty-stepper">
+                      <button
+                        type="button"
+                        className="secondary"
+                        aria-label={`− ${c.name}`}
+                        disabled={value <= 0}
+                        onClick={() => quantity(c.id, value - 1)}
+                      >
+                        −
+                      </button>
+                      <Field
+                        name={`quantity-${c.id}`}
+                        label={`${t.quantity} · ${c.name}`}
+                        type="number"
+                        min={0}
+                        max={max}
+                        step={1}
+                        value={value}
+                        onChange={(e) =>
+                          quantity(
+                            c.id,
+                            Math.max(
+                              0,
+                              Math.min(max, Math.floor(Number(e.target.value) || 0)),
+                            ),
+                          )
+                        }
+                      />
+                      <button
+                        type="button"
+                        className="secondary"
+                        aria-label={`+ ${c.name}`}
+                        disabled={value >= max}
+                        onClick={() => quantity(c.id, value + 1)}
+                      >
+                        +
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="status-badge" data-tone="neutral">
+                      {canChoose(c) && c.open ? eventCopy[locale].soldOut : eventCopy[locale].paidBlocked}
+                    </span>
+                  )}
                 </div>
-                <Field
-                  name={`quantity-${c.id}`}
-                  label={`${t.quantity} · ${c.name}`}
-                  type="number"
-                  min={0}
-                  max={Math.min(c.available, c.limit, 100)}
-                  step={1}
-                  disabled={!c.open || !c.available || !canChoose(c)}
-                  value={quantities[c.id] ?? 0}
-                  onChange={(e) =>
-                    quantity(
-                      c.id,
-                      Math.max(
-                        0,
-                        Math.min(100, Math.floor(Number(e.target.value) || 0)),
-                      ),
-                    )
-                  }
-                />
-              </div>
-            ))}
+              );
+            })}
           </div>
-          {!paidActive && choices.some((c) => !c.free) && (
-            <p className="notice">{p.blocked}</p>
-          )}
           {count > 0 && (
             <>
               <h2>{t.details}</h2>
@@ -570,7 +598,8 @@ function CheckoutForm({
                       {t.attendee} {i + 1} · {labels[i]}
                     </legend>
                     <Field
-                      label={`${t.fullName} · ${i + 1}`}
+                      label={t.fullName}
+                      aria-label={`${t.fullName} · ${i + 1}`}
                       name={`attendee-name-${i}`}
                       required
                       maxLength={200}
@@ -586,7 +615,8 @@ function CheckoutForm({
                       }
                     />
                     <Field
-                      label={`${t.email} · ${i + 1}`}
+                      label={t.email}
+                      aria-label={`${t.email} · ${i + 1}`}
                       name={`attendee-email-${i}`}
                       required
                       type="email"

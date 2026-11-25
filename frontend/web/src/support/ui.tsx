@@ -66,7 +66,15 @@ export function ContextDetails({
                   ]
                 }
               </dt>
-              <dd>{context[k]}</dd>
+              <dd>
+                {k === "event_id" ? (
+                  <Link className="chip-link" to={`/events/${encodeURIComponent(context[k]!)}`}>
+                    {t.openEvent}
+                  </Link>
+                ) : (
+                  <code title={context[k]}>#{context[k]!.slice(0, 8)}</code>
+                )}
+              </dd>
             </div>
           ))}
       </dl>
