@@ -351,10 +351,9 @@ it("blocks unavailable paid selections and preserves free registration", async (
     ),
   );
   await mount(`/events/${demoEventId}/checkout`, "attendee@example.com");
-  expect(
-    ((await screen.findByRole("spinbutton")) as HTMLInputElement).disabled,
-  ).toBe(true);
-  await screen.findByText(/Paid tickets are unavailable/);
+  // Paid tickets without active sales show a badge instead of a quantity control.
+  expect(await screen.findByText("Not on sale yet")).toBeDefined();
+  expect(screen.queryByRole("spinbutton")).toBeNull();
 });
 it("registers an active paid ticket, shows the authoritative order, then issues tickets after payment", async () => {
   const setup = await mount(`/organizer/events/${demoEventId}/activation`);

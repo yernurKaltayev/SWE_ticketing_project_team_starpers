@@ -76,7 +76,7 @@ export default function Orders({ locale }: { locale: Locale }) {
           []),
   );
   return (
-    <section>
+    <section className="reading-page">
       <h1>{t.orders}</h1>
       <nav className="controls" aria-label={`${t.tickets} / ${t.orders}`}>
         <Link to="/account/tickets" aria-current={undefined}>
@@ -171,7 +171,7 @@ function OrderContent({
     return () => window.clearTimeout(timer);
   }, [poll, polls, dataUpdatedAt, isFetching, refetch]);
   return (
-    <section>
+    <section className="reading-page">
       <BackLink to="/account/orders">{t.orders}</BackLink>
       <h1>{order?.status === "free_confirmed" ? t.confirmed : t.order}</h1>
       <CommerceError
@@ -185,11 +185,7 @@ function OrderContent({
       {order && (
         <>
           {eventOf(order) && (
-            <OrderEvent
-              eventId={eventOf(order)!}
-              locale={locale}
-              calendar={!!confirmed}
-            />
+            <OrderEvent eventId={eventOf(order)!} locale={locale} calendar={false} />
           )}
           <p>
             <span className="commerce-identifier">{order.order_number}</span>{" "}
@@ -215,7 +211,7 @@ function OrderContent({
           )}
           {["failed", "expired", "cancelled"].includes(order.status) && (
             <p>
-              <Link to="/events">{t.back}</Link>
+              <Link className="action-link ghost" to="/events">{t.back}</Link>
             </p>
           )}
           {poll && polls >= 10 && <p role="status">{t.pollEnded}</p>}
@@ -256,6 +252,9 @@ function OrderContent({
           {!order.tickets.length && !preparing && <p>{t.emptyTickets}</p>}
           </>
           )}
+          {confirmed && eventOf(order) && (
+            <OrderEvent eventId={eventOf(order)!} locale={locale} calendar onlyCalendar />
+          )}
           <p className="quiet-help">
             <SupportLink locale={locale} context={{ order_id: order.id }} />
           </p>
@@ -270,10 +269,12 @@ function OrderEvent({
   eventId,
   locale,
   calendar,
+  onlyCalendar = false,
 }: {
   eventId: string;
   locale: Locale;
   calendar: boolean;
+  onlyCalendar?: boolean;
 }) {
   const event = useCommerceQuery(eventPath(eventId), parseEvent);
   const venue = useCommerceQuery(
@@ -282,6 +283,10 @@ function OrderEvent({
     !!event.data,
   );
   if (!event.data || event.isError) return null;
+  if (onlyCalendar)
+    return calendar ? (
+      <CalendarActions event={event.data} venue={venue.data} locale={locale} />
+    ) : null;
   return (
     <>
       <h2 className="order-event">

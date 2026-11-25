@@ -94,7 +94,6 @@ it("lets an anonymous visitor download the canonical .ics and open provider temp
     ).toBe("Demo campus auditorium, Demo venue address, Astana"),
   );
   expect(within(section).getByRole("link", { name: /Outlook\.com/ })).toBeDefined();
-  expect(within(section).getByText(/\(Almaty\)/)).toBeDefined();
 
   await userEvent.click(
     within(section).getByRole("button", { name: "Download .ics file" }),

@@ -2,6 +2,24 @@
   display: grid;
   gap: 1rem;
   min-width: 0;
+  max-width: 880px;
+}
+.support-compose fieldset {
+  display: grid;
+  gap: 0.35rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.support-compose select {
+  width: 100%;
+}
+.support-compose fieldset > label {
+  margin-top: 0.75rem;
+}
+.support-compose fieldset > button {
+  justify-self: start;
+  margin-top: 1rem;
 }
 .support-page > * {
   min-width: 0;
@@ -121,4 +139,45 @@
 .site-header .site-nav {
   overflow-x: auto;
   scrollbar-width: none;
+}
+
+.title-row.spread {
+  justify-content: space-between;
+}
+.support-filters > button {
+  align-self: end;
+}
+.case-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 1rem;
+}
+.case-row h2 {
+  margin: 0 0 0.2rem;
+  font-size: 1.0625rem;
+}
+.case-row h2 a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+/* The whole row opens the case. */
+.case-row h2 a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.case-row:hover {
+  border-color: var(--color-line-hover);
+}
+.case-meta {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+.support-list {
+  gap: 0.5rem;
 }

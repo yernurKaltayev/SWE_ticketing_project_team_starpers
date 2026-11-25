@@ -543,7 +543,7 @@ function Application() {
               element={
                 <>
                   <h1>{t.notFound}</h1>
-                  <Link to="/">{t.home}</Link>
+                  <Link className="action-link" to="/">{t.home}</Link>
                 </>
               }
             />

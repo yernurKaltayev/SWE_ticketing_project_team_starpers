@@ -141,6 +141,6 @@ export function formatEventDateTime(
   const date = value instanceof Date ? value : new Date(value);
   if (!Number.isFinite(date.getTime()))
     throw new RangeError("Timestamp is invalid.");
-  const formatted = formatDateTime(date, locale, { time: true, timeZone, zoneName: true });
+  const formatted = formatDateTime(date, locale, { time: true, timeZone });
   return `${formatted} · ${zoneLabel(timeZone, locale)}`;
 }

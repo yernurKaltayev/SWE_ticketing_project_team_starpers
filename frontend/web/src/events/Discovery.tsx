@@ -494,10 +494,6 @@ function PublicEventCard({
         <Link to={`/events/${event.id}`}>{event.title}</Link>
       </h2>
       <ul className="event-meta">
-        <li>
-          <CalendarIcon size={16} />
-          {formatEventDateTime(event.starts_at, event.timezone, locale)}
-        </li>
         {venue && (
           <li>
             <PinIcon size={16} />

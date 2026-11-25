@@ -1223,6 +1223,7 @@ main:focus {
   color: var(--color-muted);
 }
 .ticket-list .status-badge {
+  grid-column: 2;
   justify-self: end;
 }
 
@@ -1452,7 +1453,9 @@ section + section > h2:first-child {
   font-weight: 600;
 }
 .detail-cover {
-  aspect-ratio: 21 / 8;
+  aspect-ratio: auto;
+  height: clamp(150px, 16vw, 210px);
+  min-height: 0;
   border-radius: var(--radius-card);
 }
 .detail-cover .cover-art {
@@ -2008,20 +2011,18 @@ button.link-button:hover {
   gap: 0.75rem;
 }
 .help-panel .insights > button.secondary {
-  justify-self: start;
+  width: 100%;
   min-height: 36px;
-  padding: 0;
+  padding: 0 0.75rem;
   background: none;
   border: 0;
   color: var(--color-muted);
   font-size: 0.875rem;
   font-weight: 500;
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 .help-panel .insights > button.secondary:hover {
-  background: none;
-  color: var(--color-ink);
+  background: var(--color-danger-soft);
+  color: var(--color-danger-ink);
 }
 
 /* Event page on phones and tablets: the ticket panel drops below the description,
@@ -2245,4 +2246,20 @@ a.chip-link {
 a.chip-link:hover {
   border-color: var(--color-line-hover);
   background: var(--color-canvas);
+}
+
+.calendar-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.calendar-buttons > * {
+  flex: 1 1 auto;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* Account pages (orders, tickets) are lists and receipts: keep them at reading width. */
+.reading-page {
+  max-width: 880px;
 }

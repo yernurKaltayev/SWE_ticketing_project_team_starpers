@@ -36,7 +36,7 @@ export default function Tickets({ locale }: { locale: Locale }) {
       : (query.data?.items.map((ticket) => ticket.event_id) ?? []),
   );
   return (
-    <section>
+    <section className="reading-page">
       <h1>{t.tickets}</h1>
       <nav className="controls" aria-label={`${t.tickets} / ${t.orders}`}>
         <Link to="/account/tickets" aria-current={"page"}>
@@ -211,7 +211,7 @@ function TicketContent({
     }
   }
   return (
-    <section>
+    <section className="reading-page">
       <Link to="/account/tickets">{t.tickets}</Link>
       <h1>{t.ticket}</h1>
       <CommerceError
@@ -289,7 +289,6 @@ function TicketContent({
                 >
                   {downloading ? t.working : t.download}
                 </button>
-                <p className="field-hint print-hint">{t.print}</p>
               </>
             )}
             {event.data && (

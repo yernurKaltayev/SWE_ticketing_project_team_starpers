@@ -43,6 +43,7 @@ export function ContextDetails({
   context: Context;
   t: SupportCopy;
 }) {
+  if (!context.event_id && !context.order_id && !context.ticket_id) return null;
   return (
     <div className="support-context">
       <h2>{t.context}</h2>

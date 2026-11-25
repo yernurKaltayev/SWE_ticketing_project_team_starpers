@@ -25,7 +25,7 @@ export default function Cases({ locale }: { locale: Locale }) {
   const records = useLiveQuery(`/api/v1/support/cases?${p}`, parseCases);
   return (
     <section className="support-page">
-      <header>
+      <header className="title-row spread">
         <h1>{t.inbox}</h1>
         <Link className="action-link" to="/support/new">
           {t.newCase}
@@ -47,7 +47,13 @@ export default function Cases({ locale }: { locale: Locale }) {
       >
         <div>
           <label htmlFor="case-role">{t.inbox}</label>
-          <select id="case-role" name="role" defaultValue={role} key={role}>
+          <select
+            id="case-role"
+            name="role"
+            defaultValue={role}
+            key={role}
+            onChange={(e) => e.currentTarget.form?.requestSubmit()}
+          >
             <option value="">{t.all}</option>
             <option value="requester">{t.mine}</option>
             <option value="handler">{t.handler}</option>
@@ -60,6 +66,7 @@ export default function Cases({ locale }: { locale: Locale }) {
             name="status"
             defaultValue={status}
             key={status}
+            onChange={(e) => e.currentTarget.form?.requestSubmit()}
           >
             <option value="">{t.allStatuses}</option>
             {statuses.map((s) => (
@@ -69,7 +76,6 @@ export default function Cases({ locale }: { locale: Locale }) {
             ))}
           </select>
         </div>
-        <button>{t.filter}</button>
         <button
           type="button"
           className="secondary"
@@ -86,22 +92,19 @@ export default function Cases({ locale }: { locale: Locale }) {
           {!records.data.items.length && <p>{t.empty}</p>}
           <ul className="support-list">
             {records.data.items.map((c) => (
-              <li className="support-card" key={c.id}>
-                <h2>
-                  <Link to={`/support/cases/${encodeURIComponent(c.id)}`}>
-                    {c.subject}
-                  </Link>
-                </h2>
-                <p>
-                  {t.categories[c.category]} ·{" "}
-                  <span className="status-badge">{t.statuses[c.status]}</span>
-                </p>
-                <p>
-                  {c.audience === "organizer_case"
-                    ? t.platformAudience
-                    : t.customerAudience}
-                </p>
-                <Timestamp value={c.created_at} locale={locale} />
+              <li className="support-card case-row" key={c.id}>
+                <div>
+                  <h2>
+                    <Link to={`/support/cases/${encodeURIComponent(c.id)}`}>
+                      {c.subject}
+                    </Link>
+                  </h2>
+                  <p className="case-meta">
+                    {t.categories[c.category]} ·{" "}
+                    <Timestamp value={c.created_at} locale={locale} />
+                  </p>
+                </div>
+                <span className="status-badge">{t.statuses[c.status]}</span>
               </li>
             ))}
           </ul>

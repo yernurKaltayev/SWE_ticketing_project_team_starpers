@@ -31,7 +31,7 @@ const en = {
     "This event requires seat selection. Online seat selection is not available here yet.",
   paid: "Paid registration is not available here yet.",
   noFree: "No free tickets are available right now.",
-  limit: "Maximum available for this registration",
+  limit: "up to",
   reviewHint: "Check each attendee's name and email before confirming.",
   unknown:
     "We could not confirm the outcome of your registration. Keep this page open and retry the same registration, or check My orders. Do not start another registration for these tickets yet.",
@@ -122,7 +122,7 @@ const ru: Text = {
     "Для этого события нужно выбрать места. Выбор мест здесь пока недоступен.",
   paid: "Платная регистрация здесь пока недоступна.",
   noFree: "Сейчас нет доступных бесплатных билетов.",
-  limit: "Доступный максимум для этой регистрации",
+  limit: "не больше",
   reviewHint: "Проверьте имя и почту каждого участника перед подтверждением.",
   unknown:
     "Результат регистрации не удалось подтвердить. Не закрывайте страницу: повторите эту же регистрацию или проверьте «Мои заказы». Пока не создавайте новую регистрацию на эти билеты.",
@@ -212,7 +212,7 @@ const kk: Text = {
     "Бұл іс-шарада орын таңдау қажет. Мұнда орын таңдау әзірге қолжетімсіз.",
   paid: "Ақылы тіркелу мұнда әзірге қолжетімсіз.",
   noFree: "Қазір қолжетімді тегін билеттер жоқ.",
-  limit: "Осы тіркелу үшін қолжетімді ең көп сан",
+  limit: "ең көбі",
   reviewHint:
     "Растау алдында әр қатысушының аты-жөнін және поштасын тексеріңіз.",
   unknown:
