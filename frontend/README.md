@@ -134,6 +134,15 @@ DOM-free logic and kk/ru/en copy for every web area live in `shared/src/features
 
 Data loading (F0.2): mobile screens use `useAuthedQuery(key, path)` / `useAuthedMutation` from `mobile/src/data.ts` with keys from `@biletflow/shared/features/query-keys` (the same arrays the web builds). The mobile query cache is cleared on every sign-out and session expiry and refetches when the app returns to the foreground. Storage that shared logic needs is passed in as a `KeyValueStore` (`localStorage` on web, `createSecureKeyValueStore(SecureStore)` on mobile). Metro must keep package exports enabled (the SDK default) for `@biletflow/shared/features/*` to resolve.
 
+## Adding a native mobile screen (F11)
+
+The BiletFlow web tab shows every page that has no native screen yet. To replace a page:
+
+1. Build the screen in `mobile/src/<area>/` using the shared logic (`@biletflow/shared/features/...`) and `useAuthedQuery`.
+2. Add `{ pattern, to }` to `nativeRoutes` in `mobile/src/navigation/routes.ts`. Copy `pattern` exactly from `web/src/App.tsx` (a test fails otherwise) and extend `NativeTarget`.
+3. Handle the new target in `goNative` (`mobile/App.tsx`); if the screen is a tab, add it to `tabScreens` in `mobile/src/navigation/linking.ts`.
+4. Check it: tap the matching link inside the web tab, and open `exp://<computer-ip>:8081/--/<path>` on the phone (deep link in Expo Go).
+
 ## Tooling
 
 Application workspaces use template-compatible TypeScript 6. Root code generation uses TypeScript 5.9 because the current `openapi-typescript` peer range requires TypeScript 5; npm resolves these through one lockfile. Review dependency advisories with `npm audit` rather than forcing breaking Expo/schema-tool changes.

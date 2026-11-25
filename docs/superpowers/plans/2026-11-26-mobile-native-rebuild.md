@@ -43,10 +43,12 @@
 - Add `@tanstack/react-query` to mobile with one `QueryClient`; `queryClient.clear()` on sign-out (session `onClear`).
 - `useAuthedQuery` / `useAuthedMutation` wrappers over `session.request` in `mobile/src/data.ts`, same key factories as web.
 
-### F0.3 Navigation shell and route map — size M
-- Tabs: **Discover** (A3/A4), **Tickets** (A7/A8), **Organizer** (shown when `user.role === "organizer"`), **Check-in** (existing), **Account** (A1/A2/A9/A10, Admin entry for `platform_admin`). Until a tab's WPs land, it shows `WebScreen` at the matching web path.
-- `mobile/src/navigation/routes.ts`: `nativeRouteFor(path: string): { screen: string; params: object } | null` mapping web paths (e.g. `/events/:eventId` → `EventDetail`). `WebScreen` calls it in `onShouldStartLoadWithRequest` and navigates natively when non-null. Tested in vitest with every web path from `web/src/App.tsx`.
-- Deep links (`biletflow://` + https) use the same map.
+### F0.3 Navigation shell and route map — size M — **done** (`docs/superpowers/plans/2026-11-26-f11-f0-3-route-map.md`)
+- **Approach A (chosen):** one BiletFlow web tab stays; native tabs (Discover, Account, Organizer…) appear when their WPs land; the web tab is removed in Z1. Several web-backed tabs were rejected because each embedded web view has its own private sign-in.
+- `mobile/src/navigation/routes.ts`: `nativeRoutes` (`pattern` copied from `web/src/App.tsx`, test-enforced) → `NativeTarget`; `nativeRouteFor(url, origin)`.
+- The web tab hands mapped pages to the app both for full loads (`onShouldStartLoadWithRequest`) and for React Router navigations (injected `history.pushState/replaceState` guard, `navigation/guard.ts`). Browser back/forward is never intercepted.
+- Deep links use `linkingConfig()` built from the same map; in Expo Go: `exp://<ip>:8081/--/account/tickets`. `scheme: "biletflow"` registered for later builds.
+- **Rule for every WP:** the WP is done when its screens are in `nativeRoutes` (and `goNative` in App.tsx / `tabScreens` in `linking.ts` know the target).
 
 ### F0.4 Native UI kit additions — size M
 In `mobile/src/ui.tsx` (or `ui/` folder): `FormField` (label, hint, error), `Select` (bottom-sheet list), `DateTimeField` (datetimepicker, shows event time zone), `MoneyInput` (KZT, stores tiyn), `ImageField` (expo-image-picker → presigned upload helper), `ConfirmSheet`, `EmptyState`, `ErrorState` (retry), `ListScreen` (FlatList + pull-to-refresh + pagination), `Tabs/Segmented` (exists), `Badge/Pill` (exists).
