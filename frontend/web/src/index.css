@@ -1169,6 +1169,12 @@ main:focus {
   background: var(--color-primary-soft);
   color: var(--color-primary);
 }
+/* Pin every label and value to the text column. A fact with several values (e.g. ticket
+   sales open + close) would otherwise auto-place the extra value in the 36px icon column. */
+.facts dt,
+.facts dd {
+  grid-column: 2;
+}
 .facts dt {
   font-size: 0.75rem;
   font-weight: 650;

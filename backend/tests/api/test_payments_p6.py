@@ -454,3 +454,37 @@ async def test_free_only_event_cannot_complete_activation(client, db):
     ).json()
     assert "paid_ticket_type" in body["missing_steps"]
     assert await db.scalar(select(func.count(TicketType.id))) >= 1
+
+
+async def test_paid_ticket_added_after_checklist_activates_sales(client, db):
+    """Completing every other step first, then adding the paid ticket, must turn sales on."""
+    owner, profile = await make_organizer(db)
+    event = await make_event(db, profile, status=EventStatus.published, capacity=10)
+    free = await make_ticket_type(db, event, is_free=True, quantity_total=2)
+    await db.commit()
+    s = {"event_id": event.id, "h": {"owner": auth_header(owner)}}
+    await _activate(client, s)
+    url = f"{API}/events/{event.id}/activation"
+    body = (await client.get(url, headers=s["h"]["owner"])).json()
+    assert body["status"] == "incomplete" and body["missing_steps"] == ["paid_ticket_type"]
+
+    created = await client.post(
+        f"{API}/events/{event.id}/ticket-types",
+        json={
+            "name": "Paid",
+            "price_amount": "2500.00",
+            "is_free": False,
+            "quantity_total": 3,
+            "max_per_order": 3,
+        },
+        headers=s["h"]["owner"],
+    )
+    assert created.status_code == 201, created.text
+    body = (await client.get(url, headers=s["h"]["owner"])).json()
+    assert body["status"] == "active" and body["missing_steps"] == []
+    await db.refresh(event)
+    assert event.paid_sales_status == PaidSalesStatus.active
+    availability = (await client.get(f"{API}/events/{event.id}/availability")).json()
+    paid = next(t for t in availability["ticket_types"] if t["name"] == "Paid")
+    assert paid["sales_open"] is True
+    assert free.is_free

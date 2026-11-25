@@ -87,6 +87,30 @@ def _sales_open(event: Event, ticket: TicketType, now: datetime) -> bool:
     )
 
 
+async def _activate_paid_sales_if_ready(
+    db: AsyncSession, event: Event, ticket: TicketType, user: User
+) -> None:
+    """The paid-ticket step of the activation checklist (P6) can be the last one done.
+
+    Activation is otherwise re-checked only when an activation step changes, so an organizer
+    who finished the checklist before adding a paid ticket (or before making a free ticket
+    paid) was left with "not on sale" forever. Does not commit.
+    """
+    if ticket.is_free:
+        return
+    # Local import: the payments package imports inventory helpers from this module.
+    from app.models.payment import PaidSalesActivation
+    from app.services.payments.activation import try_activate
+
+    activation = await db.scalar(
+        select(PaidSalesActivation)
+        .where(PaidSalesActivation.event_id == event.id)
+        .with_for_update()
+    )
+    if activation is not None:
+        await try_activate(db, event, activation, datetime.now(UTC), user)
+
+
 async def _lock_event(db: AsyncSession, event_id: uuid.UUID) -> Event:
     event = await db.scalar(select(Event).where(Event.id == event_id).with_for_update())
     if event is None:
@@ -155,6 +179,7 @@ async def create_ticket_type(
         actor=user,
         description="Created ticket type",
     )
+    await _activate_paid_sales_if_ready(db, event, item, user)
     await db.commit()
     return _ticket_out(item)
 
@@ -226,6 +251,7 @@ async def update_ticket_type(
             },
         },
     )
+    await _activate_paid_sales_if_ready(db, event, item, user)
     await db.commit()
     return _ticket_out(item)
 
