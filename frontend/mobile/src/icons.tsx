@@ -74,3 +74,24 @@ const styles = StyleSheet.create({
   brand: { flexDirection: "row", alignItems: "center", gap: 9 },
   wordmark: { ...type.heading, fontSize: 19, letterSpacing: -0.4, color: color.ink },
 });
+
+export type TabGlyph = "web" | "tickets" | "scan";
+
+/** Bottom-tab symbols in the same 2px stroke family. */
+export function TabIcon({ glyph, tint, size = 24 }: { glyph: TabGlyph; tint: string; size?: number }) {
+  const stroke = { stroke: tint, strokeWidth: 2, fill: "none", strokeLinecap: "round", strokeLinejoin: "round" } as const;
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      {glyph === "web" ? (
+        <>
+          <Circle cx="12" cy="12" r="9" {...stroke} />
+          <Path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z" {...stroke} />
+        </>
+      ) : glyph === "tickets" ? (
+        <Path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a3 3 0 0 0 0 6v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a3 3 0 0 0 0-6zM14 5v14" {...stroke} />
+      ) : (
+        <Path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M4 12h16" {...stroke} />
+      )}
+    </Svg>
+  );
+}

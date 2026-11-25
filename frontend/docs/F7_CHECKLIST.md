@@ -58,3 +58,17 @@ The dedicated React Native (Expo SDK 58) app now covers sign-in and session reco
 - Run on a physical Android phone and an iPhone: camera allow, deny, and re-enable in settings; scan both a digital and a printed (color and grayscale) ticket, where the first is admitted and the second rejected; check refunded, cancelled, wrong-event and Campaign QR results; sign-out and session expiry; airplane mode (unknown result); and record on-device latency.
 - TalkBack/VoiceOver pass over the result announcements.
 - Design pass: the app keeps the restrained styling. The Figma direction is still awaiting approval.
+
+## Mobile parity (embedded web + native tickets)
+
+The instructor asked for the full product in the mobile app. Until every screen is rebuilt natively (roadmap: `docs/superpowers/plans/2026-11-26-mobile-native-rebuild.md`), the app has three bottom tabs:
+
+| Tab | What it is |
+|---|---|
+| **BiletFlow** | The full web app in a `react-native-webview` (browse, checkout, orders, support, notifications, organizer, admin). Same-origin links stay inside; other hosts open in the system browser; Android back walks the web history; pull-to-refresh; error card with Reload. Address: `EXPO_PUBLIC_WEB_ORIGIN`, else `EXPO_PUBLIC_API_ORIGIN` (deployed web and API share one origin). |
+| **Tickets** | Native. `GET /me/tickets`, re-read on focus. Detail re-reads the ticket and shows the server-issued QR (`GET /tickets/{id}/qr`, bearer). Non-valid tickets show a danger notice. |
+| **Check-in** | Unchanged F7 scanner, attendee search, counts and undo. |
+
+Known limits: the web tab keeps its own cookie session (sign in once there); PDF/CSV downloads inside the web tab are not supported yet; use the native Tickets tab at the door.
+
+Evidence (2026-11-26): `npm run check` green (420 tests), `npm run export:mobile` green, Metro serves Android and iOS dev bundles. Phone smoke still to record: web tab on the deployed site → register → Tickets shows QR → Check-in scans it (accepted), rescan → already used.
