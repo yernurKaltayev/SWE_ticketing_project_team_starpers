@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -47,6 +47,19 @@ describe("shared feature modules", () => {
   it.each(moved)("exposes %s through the package path", async (path) => {
     const mod: Record<string, unknown> = await import(`@biletflow/shared/features/${path}`);
     expect(Object.keys(mod).length).toBeGreaterThan(0);
+  });
+
+  it("leaves each old web path as a one-line re-export, never a second copy", () => {
+    const featureFiles = sources(join(sharedSrc, "features"));
+    expect(featureFiles.length).toBeGreaterThan(0);
+    const webSrc = join(sharedSrc, "..", "..", "web", "src");
+    const wrong = featureFiles
+      .map((file) => file.slice(join(sharedSrc, "features").length + 1).split(sep).join("/").replace(/\.ts$/, ""))
+      .filter((path) => {
+        const stub = readFileSync(join(webSrc, `${path}.ts`), "utf8").trim();
+        return stub !== `export * from "@biletflow/shared/features/${path}";`;
+      });
+    expect(wrong).toEqual([]);
   });
 
   it("keeps browser and React APIs out of shared", () => {

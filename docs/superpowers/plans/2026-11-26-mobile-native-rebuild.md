@@ -31,16 +31,16 @@
 ## Phase 0 — Foundations (one person, before any other WP)
 
 ### F0.1 Move portable logic to `shared` — size M — **done** (`docs/superpowers/plans/2026-11-26-f11-f0-1-shared-logic.md`)
-- As built: per-file subpaths `@biletflow/shared/features/<area>/<file>` (no per-area `index.ts`, avoids name clashes between `copy` and `model`); old web paths are re-export stubs; 26 files moved; `insights/model.test.ts` stays in web (uses web mocks).
-- Move `web/src/<area>/{model,copy,contracts,helpers}.ts` (all areas listed below) to `shared/src/features/<area>/`; web re-imports from `@biletflow/shared/features/<area>`. Tests move with them.
-- Not moved (browser-bound, stay in web): `checkout/attempt.ts` (sessionStorage), `support/data.ts`, `operations/data.ts`. Their storage needs a `KeyValueStore` interface in shared (`get/set/remove: Promise`), implemented by `localStorage` on web and SecureStore on mobile.
-- Add `"./features/*": "./src/features/*/index.ts"` to `shared/package.json` `exports`, with one `index.ts` per area.
-- Add `shared/tests/no-dom.test.ts`: fails if any file under `shared/src` contains `document.`, `window.`, `localStorage`, `sessionStorage`.
-- Acceptance: web unchanged behaviour, `npm run check` green, no file left duplicated.
+- As built: 26 files moved from `web/src/<area>/` to `shared/src/features/<area>/`, imported as `@biletflow/shared/features/<area>/<file>` (export `"./features/*": "./src/features/*.ts"`; no per-area `index.ts`, which avoids name clashes between `copy` and `model`). Each old web path is a one-line `export *` stub. Logic tests moved to `shared/tests/features/<area>/`; `insights/model.test.ts` stays in web (uses web mocks).
+- Guard: `shared/tests/features.test.ts` fails if `shared/src` uses browser or React APIs, and if any old web path stops being exactly its one-line stub (no duplicated file).
+- Not moved (browser-bound, stay in web): `checkout/attempt.ts` (sessionStorage), `support/data.ts`, `operations/data.ts`, every `data.ts`.
+- **Deferred to F0.2:** the `KeyValueStore` interface in shared (`get/set/remove: Promise`, `localStorage` on web, SecureStore on mobile) and the query-key factories. Both are needed only once mobile has a data layer, and F0.1 was kept a pure move with no behaviour change.
 
-### F0.2 Data layer on mobile — size S
+### F0.2 Data layer on mobile — size M
+- Add `KeyValueStore` to shared (see F0.1 deferral); web implements it with `localStorage`, mobile with SecureStore; `checkout/attempt.ts` logic that does not touch storage moves to shared on top of it.
+- Move the web query keys (e.g. `["f3", user?.id, path]` in `web/src/checkout/data.ts`) into key factories in `shared/src/features/<area>/keys.ts`; web `data.ts` files use them.
 - Add `@tanstack/react-query` to mobile with one `QueryClient`; `queryClient.clear()` on sign-out (session `onClear`).
-- `useAuthedQuery` / `useAuthedMutation` wrappers over `session.request` in `mobile/src/data.ts`, same query keys as web `data.ts` files (move the key factories to shared in F0.1).
+- `useAuthedQuery` / `useAuthedMutation` wrappers over `session.request` in `mobile/src/data.ts`, same key factories as web.
 
 ### F0.3 Navigation shell and route map — size M
 - Tabs: **Discover** (A3/A4), **Tickets** (A7/A8), **Organizer** (shown when `user.role === "organizer"`), **Check-in** (existing), **Account** (A1/A2/A9/A10, Admin entry for `platform_admin`). Until a tab's WPs land, it shows `WebScreen` at the matching web path.
