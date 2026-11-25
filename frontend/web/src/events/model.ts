@@ -173,7 +173,7 @@ export function dayBoundary(
   return new Date(local + offset * 60_000).toISOString();
 }
 export type QuickRange = "today" | "weekend" | "month";
-const isoDay = (d: Date) =>
+export const isoDay = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 /** Local calendar days for the discovery shortcuts; the weekend is Sat–Sun. */
 export function quickRange(kind: QuickRange, now = new Date()) {
@@ -226,7 +226,7 @@ export function offerSummary(tickets: Availability[]) {
     /** Only say "from" when there is more than one price on offer. */
     priceVaries: new Set(prices).size > 1,
     allFree: prices.every((p) => p === 0),
-    /** Lowest paid price, for "Free · from X" when free and paid types mix. */
+    /** Lowest paid price when free and paid types mix. */
     minPaidPrice: prices.some((p) => p > 0)
       ? Math.min(...prices.filter((p) => p > 0))
       : null,

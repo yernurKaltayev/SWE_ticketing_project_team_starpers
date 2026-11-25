@@ -86,9 +86,9 @@ async function review() {
   const quantity = await screen.findByRole("spinbutton");
   fireEvent.change(quantity, { target: { value: "1" } });
   await userEvent.click(
-    screen.getByRole("button", { name: "Review registration" }),
+    screen.getByRole("button", { name: "Continue" }),
   );
-  await screen.findByRole("heading", { name: "Review registration" });
+  await screen.findByRole("heading", { name: "Review your order" });
 }
 
 it("registers a free ticket, shows authoritative totals, and retrieves the protected canonical QR", async () => {
@@ -99,7 +99,6 @@ it("registers a free ticket, shows authoritative totals, and retrieves the prote
     screen.getByRole("button", { name: "Register for free" }),
   );
   await screen.findByRole("heading", { name: "Registration confirmed" });
-  expect(screen.getByText(/keep your order number/i)).toBeDefined();
   // F11: a confirmed order and its tickets offer the event's calendar options.
   expect(
     await screen.findByRole("region", { name: "Add to calendar" }),
@@ -259,7 +258,7 @@ it("labels invalid attendee fields and does not submit an order", async () => {
     target: { value: "invalid" },
   });
   await userEvent.click(
-    screen.getByRole("button", { name: "Review registration" }),
+    screen.getByRole("button", { name: "Continue" }),
   );
   await screen.findByRole("alert");
   expect(screen.getByLabelText("Email · 1").getAttribute("aria-invalid")).toBe(
@@ -400,7 +399,7 @@ it("shows a pending server outcome without claiming free confirmation or ticket 
   await userEvent.click(
     screen.getByRole("button", { name: "Register for free" }),
   );
-  await screen.findByText(/Payment is pending/);
+  await screen.findByRole("button", { name: "Pay" });
   expect(screen.getByText("Simulated", { exact: true })).toBeDefined();
   expect(
     screen.queryByRole("heading", { name: "Registration confirmed" }),

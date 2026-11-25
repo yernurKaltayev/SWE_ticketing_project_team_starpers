@@ -139,12 +139,12 @@ it("pays only after an explicit sandbox outcome and recovers a lost response fro
   await mount("/account/orders/paid-order", "attendee@example.com");
   expect(
     await screen.findByRole("button", {
-      name: "Continue to simulated payment",
+      name: "Pay",
     }),
   ).toBeDefined();
   expect(fixture.starts()).toBe(0);
   await userEvent.click(
-    screen.getByRole("button", { name: "Continue to simulated payment" }),
+    screen.getByRole("button", { name: "Pay" }),
   );
   await screen.findByRole("button", { name: "Simulate success" });
   expect(fixture.value.status).toBe("pending");
@@ -170,7 +170,7 @@ it("restores a pending payment after remount without creating a second intent, a
   );
   await userEvent.click(
     await screen.findByRole("button", {
-      name: "Continue to simulated payment",
+      name: "Pay",
     }),
   );
   await screen.findByRole("button", { name: "Simulate failure" });
@@ -376,14 +376,14 @@ it("registers an active paid ticket, shows the authoritative order, then issues 
   expect((quantity as HTMLInputElement).disabled).toBe(false);
   fireEvent.change(quantity, { target: { value: "1" } });
   await userEvent.click(
-    screen.getByRole("button", { name: "Review registration" }),
+    screen.getByRole("button", { name: "Continue" }),
   );
   await userEvent.click(
-    screen.getByRole("button", { name: "Create order and continue" }),
+    screen.getByRole("button", { name: "Go to payment" }),
   );
   await userEvent.click(
     await screen.findByRole("button", {
-      name: "Continue to simulated payment",
+      name: "Pay",
     }),
   );
   expect(screen.queryByRole("link", { name: /MOCK-TICKET/ })).toBeNull();

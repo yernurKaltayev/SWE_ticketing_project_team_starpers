@@ -429,10 +429,34 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Get a presigned upload URL for an event image
-         * @description Owner: P2. Access: event owner, platform admin, or staff (manager).
+         * Upload the event cover image
+         * @description Owner: P2. Access: event owner, platform admin, or staff (manager). Multipart upload of one JPEG, PNG or WebP file (at most 5 MB); the format is checked from the file content. Replaces any previous cover image.
          */
         post: operations["post_events_event_id_images"];
+        /**
+         * Remove the event cover image
+         * @description Owner: P2. Access: event owner, platform admin, or staff (manager).
+         */
+        delete: operations["delete_events_event_id_images"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/event-images/{event_id}/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Event image file
+         * @description Owner: P2. Access: public. Names are random and immutable, so the response is cacheable indefinitely.
+         */
+        get: operations["get_event_images_event_id_name"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2568,20 +2592,6 @@ export interface components {
              */
             expires_at: string;
         };
-        /** ImageUploadIn */
-        ImageUploadIn: {
-            /** Filename */
-            filename: string;
-            /** Content Type */
-            content_type: string;
-        };
-        /** ImageUploadOut */
-        ImageUploadOut: {
-            /** Upload Url */
-            upload_url: string;
-            /** Image Url */
-            image_url: string;
-        };
         /** LayoutOut */
         LayoutOut: {
             /**
@@ -4618,23 +4628,79 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ImageUploadIn"];
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
             };
         };
         responses: {
             /** @description Success */
-            201: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ImageUploadOut"];
+                    "application/json": components["schemas"]["EventOut"];
                 };
             };
             401: components["responses"]["Error"];
             403: components["responses"]["Error"];
             404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             422: components["responses"]["Error"];
+        };
+    };
+    delete_events_event_id_images: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventOut"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+        };
+    };
+    get_event_images_event_id_name: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The image */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
+                };
+            };
+            404: components["responses"]["Error"];
         };
     };
     get_venues: {

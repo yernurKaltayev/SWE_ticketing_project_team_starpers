@@ -1,31 +1,29 @@
 import { label as insightLabel } from "../insights/copy";
 import { operationsCopy } from "../operations/copy";
+import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { CategoryBar, DateStrip, FeaturedCarousel } from "./DiscoveryParts";
+import { readCity } from "./city";
 import { formatEventDateTime } from "@biletflow/shared";
-import { categoryLabel, knownCategories } from "./categories";
+import { categoryLabel } from "./categories";
 import type { Locale } from "@biletflow/shared";
-import { Field, Status } from "../auth/ui";
+import { Status } from "../auth/ui";
 import { eventCopy } from "./copy";
 import type { EventCopy } from "./copy";
 import { discoveryCopy } from "./discoveryCopy";
 import { offerLabel } from "./offerLabel";
 import { toneFor } from "../tone";
 import { useResource } from "./data";
-import {
-  activeRange,
-  categoryTone,
-  offerSummary,
-  quickRange,
-  searchQuery,
-} from "./model";
-import type { Availability, Event, Page, QuickRange } from "./model";
+import { categoryTone, offerSummary, searchQuery } from "./model";
+import type { Availability, Event, Page } from "./model";
 import { CoverArt, EventError, Image } from "./ui";
-import { commerceNavigation } from "../checkout/navigation";
+import { commerceAction } from "../checkout/navigation";
 import { parseEvents, parsePublicAvailability } from "./contracts";
+import { cityLabel, parseVenueRefs } from "./venues";
+import type { VenueRef } from "./venues";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
-  CalendarIcon,
   PinIcon,
   PlusIcon,
   SearchIcon,
@@ -194,25 +192,6 @@ function OrganizerEventList({ locale }: { locale: Locale }) {
   );
 }
 
-type VenueRef = { id: string; name: string; city: string };
-/**
- * Live P4 returns a bare array whose address/city may be null; older fixtures
- * return a page. Rows without a usable id/name are skipped, never invented.
- */
-function parseVenueRefs(value: unknown): VenueRef[] {
-  const rows = Array.isArray(value)
-    ? value
-    : value && typeof value === "object" && Array.isArray((value as { items?: unknown }).items)
-      ? (value as { items: unknown[] }).items
-      : [];
-  return rows.flatMap((row) => {
-    if (!row || typeof row !== "object") return [];
-    const { id, name, city } = row as Record<string, unknown>;
-    if (typeof id !== "string" || typeof name !== "string") return [];
-    return [{ id, name, city: typeof city === "string" ? city.trim() : "" }];
-  });
-}
-
 function PublicEventList({ locale }: { locale: Locale }) {
   const t = eventCopy[locale];
   const d = discoveryCopy[locale];
@@ -224,32 +203,18 @@ function PublicEventList({ locale }: { locale: Locale }) {
   );
   const venues = useResource<VenueRef[]>("/api/v1/venues", parseVenueRefs);
   const venueById = new Map((venues.data ?? []).map((v) => [v.id, v]));
-  const cities = [
-    ...new Set(
-      [...(venues.data ?? []).map((v) => v.city), params.get("city") ?? ""].filter(
-        Boolean,
-      ),
-    ),
-  ].sort((a, b) => a.localeCompare(b));
-  // Suggested categories plus any other text organizers used, one entry per
-  // case-insensitive value (the API filters with ILIKE), labelled in the UI language.
-  const categories = [
-    ...new Map(
-      [
-        ...knownCategories,
-        ...(data?.items ?? []).map((e) => e.category.trim()),
-        params.get("category") ?? "",
-      ]
-        .filter(Boolean)
-        .map((c) => [c.toLowerCase(), c] as const),
-    ).values(),
-  ].sort((a, b) =>
-    categoryLabel(a, locale).localeCompare(categoryLabel(b, locale)),
-  );
   const offset = Number(new URLSearchParams(query).get("offset"));
-  const range = activeRange(params);
   const hasFilters = filterKeys.some((key) => params.get(key));
-  const customDates = !range && Boolean(params.get("date_from") || params.get("date_to"));
+  // The banner is a front page, not a search result: hide it once the buyer narrows the list.
+  const browsing = !["q", "category", "date_from", "date_to"].some((key) => params.get(key));
+  const savedCity = params.has("city") ? "" : readCity();
+  useEffect(() => {
+    if (savedCity) {
+      const p = new URLSearchParams(params);
+      p.set("city", savedCity);
+      setParams(p, { replace: true });
+    }
+  }, [savedCity, params, setParams]);
 
   function update(changes: Partial<Record<(typeof filterKeys)[number], string>>) {
     const p = new URLSearchParams();
@@ -259,41 +224,26 @@ function PublicEventList({ locale }: { locale: Locale }) {
     }
     setParams(p);
   }
-  function submit(form: HTMLFormElement) {
-    const f = new FormData(form);
-    const next: Record<string, string> = {};
-    for (const key of filterKeys) next[key] = String(f.get(key) ?? "").trim();
-    const to = form.querySelector<HTMLInputElement>("#date_to");
-    if (next.date_from && next.date_to && next.date_from > next.date_to) {
-      to?.setCustomValidity(t.invalid);
-      to?.reportValidity();
-      return;
-    }
-    update(next);
-  }
-  function chooseRange(kind?: QuickRange) {
-    update(kind ? quickRange(kind) : { date_from: "", date_to: "" });
-  }
 
   return (
     <section className="discovery">
+      <h1 className="visually-hidden">{t.events}</h1>
+      <CategoryBar
+        value={params.get("category") ?? ""}
+        locale={locale}
+        onChange={(category) => update({ category })}
+      />
+      {browsing && (
+        <FeaturedCarousel city={params.get("city") ?? ""} locale={locale} />
+      )}
       <form
-        className="discovery-hero"
-        key={params.toString()}
-        onChange={(e) => {
-          e.currentTarget
-            .querySelector<HTMLInputElement>("#date_to")
-            ?.setCustomValidity("");
-        }}
+        className="discovery-search"
+        key={params.get("q") ?? ""}
         onSubmit={(e) => {
           e.preventDefault();
-          submit(e.currentTarget);
+          update({ q: String(new FormData(e.currentTarget).get("q") ?? "") });
         }}
       >
-        <div className="discovery-intro">
-          <h1>{t.events}</h1>
-          <p>{d.heroIntro}</p>
-        </div>
         <div className="hero-search">
           <SearchIcon className="hero-search-icon" size={20} />
           <label className="visually-hidden" htmlFor="q">
@@ -308,93 +258,13 @@ function PublicEventList({ locale }: { locale: Locale }) {
           />
           <button>{d.searchSubmit}</button>
         </div>
-        <div className="discovery-filters" aria-label={d.filters} role="group">
-          <div className="field">
-            <label htmlFor="category">{t.category}</label>
-            <select
-              id="category"
-              name="category"
-              defaultValue={params.get("category") ?? ""}
-              onChange={(e) => e.currentTarget.form?.requestSubmit()}
-            >
-              <option value="">{d.allCategories}</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {categoryLabel(c, locale)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="city">{t.city}</label>
-            <select
-              id="city"
-              name="city"
-              defaultValue={params.get("city") ?? ""}
-              onChange={(e) => e.currentTarget.form?.requestSubmit()}
-            >
-              <option value="">{d.allCities}</option>
-              {cities.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field date-chips">
-            <span className="field-label" id="date-chips-label">
-              {d.dates}
-            </span>
-            <div className="chip-row" role="group" aria-labelledby="date-chips-label">
-              {(
-                [
-                  [undefined, d.anyDate],
-                  ["today", d.today],
-                  ["weekend", d.weekend],
-                  ["month", d.month],
-                ] as const
-              ).map(([kind, label]) => {
-                const pressed = kind
-                  ? range === kind
-                  : !params.get("date_from") && !params.get("date_to");
-                return (
-                  <button
-                    key={label}
-                    type="button"
-                    className="chip"
-                    aria-pressed={pressed}
-                    onClick={() => chooseRange(kind)}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <details className="custom-dates" open={customDates}>
-            <summary>
-              <CalendarIcon size={16} />
-              {d.moreFilters}
-            </summary>
-            <div className="custom-dates-fields">
-              <Field
-                name="date_from"
-                label={t.date_from}
-                type="date"
-                defaultValue={params.get("date_from") ?? ""}
-                onChange={(e) => e.currentTarget.form?.requestSubmit()}
-              />
-              <Field
-                name="date_to"
-                label={t.date_to}
-                type="date"
-                defaultValue={params.get("date_to") ?? ""}
-                onChange={(e) => e.currentTarget.form?.requestSubmit()}
-              />
-            </div>
-          </details>
-        </div>
       </form>
+      <DateStrip
+        from={params.get("date_from") ?? ""}
+        to={params.get("date_to") ?? ""}
+        locale={locale}
+        onChange={(day) => update({ date_from: day ?? "", date_to: day ?? "" })}
+      />
       <EventError error={error} t={t} retry={reload} />
       {!data && !error && <Status>{t.loading}</Status>}
       {data && (
@@ -485,7 +355,7 @@ function PublicEventCard({
           offer?.onSale &&
           offer.remaining <= LOW_STOCK && (
             <span className="status-badge cover-badge" data-tone="warning">
-              {d.left}: {offer.remaining}
+              {d.left(offer.remaining)}
             </span>
           )
         )}
@@ -497,7 +367,7 @@ function PublicEventCard({
         {venue && (
           <li>
             <PinIcon size={16} />
-            {venue.city ? `${venue.name} · ${venue.city}` : venue.name}
+            {venue.city ? `${venue.name} · ${cityLabel(venue.city, locale)}` : venue.name}
           </li>
         )}
       </ul>
@@ -511,7 +381,7 @@ function PublicEventCard({
         </div>
         {event.status === "published" && !offer?.soldOut && (
           <Link className="card-cta" to={`/events/${event.id}/checkout`}>
-            {commerceNavigation[locale].register}
+            {commerceAction(locale, offer?.allFree)}
             <ArrowRightIcon className="card-arrow" size={16} />
           </Link>
         )}

@@ -78,7 +78,7 @@ test("F8 campaign management, linked sign-in, discounted order and attribution",
   await page.getByRole("link", { name: "Preview event with code" }).click();
   await page.getByRole("button", { name: "Account menu" }).click();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
-  await page.getByRole("link", { name: "Registration", exact: true }).click();
+  await page.getByRole("link", { name: "Register", exact: true }).click();
   await expect(page).toHaveURL(/login.*promo/);
   await page.getByLabel("Email", { exact: true }).fill("attendee@example.com");
   await page.getByLabel("Password", { exact: true }).fill("BiletFlow123!");
@@ -95,8 +95,8 @@ test("F8 campaign management, linked sign-in, discounted order and attribution",
     ).toBe(true);
   }
   await page.locator(".language-control select").selectOption("en");
-  await page.getByRole("button", { name: "Review registration" }).click();
-  await page.getByRole("button", { name: "Create order and continue" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Go to payment" }).click();
   await expect(
     page.getByRole("heading", { name: "Registration confirmed" }),
   ).toBeVisible();

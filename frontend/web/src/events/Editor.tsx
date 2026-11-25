@@ -1,6 +1,6 @@
 import { DuplicateEvent } from "../insights/DuplicateEvent";
+import { CoverEditor } from "./CoverEditor";
 import { noFinalDot } from "../auth/helpers";
-import { SupportLink } from "../support/ui";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { formatPrice } from "@biletflow/shared";
@@ -26,7 +26,7 @@ import {
   priceInput,
 } from "./model";
 import type { Event, Page, Ticket, Venue } from "./model";
-import { EventError, Image, SelectField, TextArea } from "./ui";
+import { EventError, SelectField, TextArea } from "./ui";
 import { ArrowLeftIcon } from "../icons";
 import {
   parseEvent,
@@ -339,16 +339,6 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
                 {t.next} · {t.venue_id}
               </button>
             )}
-          <div className="field">
-            <label htmlFor="timezone">{t.timezone}</label>
-            <select id="timezone" name="timezone" defaultValue={zone} required>
-              {[...new Set([zone, ...eventZones])].map((z) => (
-                <option key={z} value={z}>
-                  {zoneLabel(z, locale)}
-                </option>
-              ))}
-            </select>
-          </div>
           <div className="event-form-grid">
             {(
               [
@@ -392,6 +382,16 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
                 </option>
               ))}
             </SelectField>
+            <div className="field">
+              <label htmlFor="timezone">{t.timezone}</label>
+              <select id="timezone" name="timezone" defaultValue={zone} required>
+                {[...new Set([zone, ...eventZones])].map((z) => (
+                  <option key={z} value={z}>
+                    {zoneLabel(z, locale)}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <button>{pending ? t.working : event ? t.saveChanges : t.save}</button>
         </fieldset>
@@ -465,6 +465,12 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
               </button>
             </div>
           </dialog>
+          <CoverEditor
+            event={event}
+            locale={locale}
+            locked={pending || event.status === "cancelled"}
+            onChange={setEvent}
+          />
           <TicketEditor
             event={event}
             locale={locale}
@@ -475,16 +481,6 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
             locale={locale}
             locked={pending || dirty || event.status === "cancelled"}
           />
-          <h2>{t.images}</h2>
-          <p>{t.uploadGap}</p>
-          <div className="event-grid">
-            {event.images.map((src) => (
-              <Image key={src} src={src} title={event.title} />
-            ))}
-          </div>
-          <p className="quiet-help">
-            <SupportLink locale={locale} context={{ event_id: event.id }} />
-          </p>
           {event.status !== "cancelled" && (
             // Kept apart from publish/duplicate so a slip cannot cancel an event.
             <section className="danger-zone" aria-labelledby="danger-title">

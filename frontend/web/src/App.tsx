@@ -32,6 +32,7 @@ import { EventDetail } from "./events/Detail";
 import { EventEditor } from "./events/Editor";
 import { eventCopy } from "./events/copy";
 import { commerceNavigation } from "./checkout/navigation";
+import { CityPicker } from "./events/CityPicker";
 import { paymentCopy } from "./payments/copy";
 import { PageErrorBoundary } from "./PageErrorBoundary";
 import { operationsCopy } from "./operations/copy";
@@ -170,21 +171,20 @@ function Application() {
           <BrandMark />
           BiletFlow
         </Link>
+        <CityPicker locale={locale} />
         <nav className="site-nav" aria-label="BiletFlow">
-          <NavLink to="/events">{eventCopy[locale].events}</NavLink>
+          <NavLink to="/events">{eventCopy[locale].navEvents}</NavLink>
           {user ? (
             <NavLink to="/support">{supportCopy[locale].title}</NavLink>
           ) : null}
+          {isOrganizer && (
+            <NavLink to="/organizer">{eventCopy[locale].organizer}</NavLink>
+          )}
           {hasRole(user, ["platform_admin"]) && (
             <NavLink to="/admin">{insightLabel(locale, "admin")}</NavLink>
           )}
         </nav>
         <div className="account-nav">
-          {isOrganizer && (
-            <NavLink className="organizer-link" to="/organizer/events">
-              {eventCopy[locale].organizer}
-            </NavLink>
-          )}
           <LanguagePicker locale={locale} onChange={setLocale} />
           {user ? (
             <>
@@ -511,6 +511,10 @@ function Application() {
                   <OrganizerPage key={user?.id} locale={locale} />
                 </RequireSession>
               }
+            />
+            <Route
+              path="/organizer"
+              element={<Navigate to="/organizer/events" replace />}
             />
             <Route
               path="/organizer/*"

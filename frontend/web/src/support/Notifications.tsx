@@ -7,6 +7,21 @@ import { noticeLink, offsetValue, parseNotice, parseNotices } from "./model";
 import { supportCopy } from "./copy";
 import { Pager, SupportError, Timestamp } from "./ui";
 import "./support.css";
+/** The body is the plain-text email; keep only its message lines for a short preview. */
+function noticePreview(body: string): string {
+  return body
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(
+      (line) =>
+        line &&
+        !/^(hello|hi|dear|здравствуйте|сәлеметсіз)\b/i.test(line) &&
+        !/https?:\/\//.test(line) &&
+        !/^the biletflow team$/i.test(line) &&
+        !/^(—|-)?\s*biletflow$/i.test(line),
+    )
+    .join(" ");
+}
 const unreadPath = "/api/v1/me/notifications?unread_only=true&limit=1&offset=0";
 export default function Notifications({ locale }: { locale: Locale }) {
   const t = supportCopy[locale],
@@ -45,68 +60,67 @@ export default function Notifications({ locale }: { locale: Locale }) {
       setBusy(null);
     }
   }
+  const unreadTotal = !count.isError && count.data ? count.data.total : null;
   return (
     <section className="support-page">
-      <h1>{t.notifications}</h1>
-      <p>{t.noticeHint}</p>
-      <p>{t.polling}</p>
-      {!count.isError && count.data && (
-        <p role="status">
-          {t.unreadCount}: {count.data.total}
-        </p>
-      )}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const form = new FormData(e.currentTarget);
-          setParams(form.has("unread") ? { unread: "true" } : {});
-        }}
-      >
-        <label className="support-check">
-          <input
-            type="checkbox"
-            name="unread"
-            defaultChecked={unread}
-            key={String(unread)}
-          />
+      <header className="title-row spread">
+        <h1>{t.notifications}</h1>
+        <button
+          type="button"
+          className="secondary"
+          disabled={records.isFetching}
+          onClick={() => {
+            void records.refetch();
+            void count.refetch();
+          }}
+        >
+          {t.refresh}
+        </button>
+      </header>
+      <div className="chip-row" role="group" aria-label={t.unreadCount}>
+        <button
+          type="button"
+          className="chip"
+          aria-pressed={!unread}
+          onClick={() => setParams({})}
+        >
+          {t.allNotices}
+        </button>
+        <button
+          type="button"
+          className="chip"
+          aria-pressed={unread}
+          onClick={() => setParams({ unread: "true" })}
+        >
           {t.unreadOnly}
-        </label>
-        <div className="controls">
-          <button>{t.filter}</button>
-          <button
-            type="button"
-            className="secondary"
-            disabled={records.isFetching}
-            onClick={() => {
-              void records.refetch();
-              void count.refetch();
-            }}
-          >
-            {t.refresh}
-          </button>
-        </div>
-      </form>
+          {unreadTotal ? ` · ${unreadTotal}` : ""}
+        </button>
+      </div>
       <SupportError error={records.error ?? error} t={t} />
       {records.isPending && <p role="status">{t.loading}</p>}
       {records.data && !records.isError && (
         <>
-          {!records.data.items.length && <p>{t.empty}</p>}
-          <ul className="support-list">
+          {!records.data.items.length && <p className="empty-state">{t.empty}</p>}
+          <ul className="notice-list">
             {records.data.items.map((n) => {
               const target = noticeLink(n, user?.role ?? "");
+              const preview = noticePreview(n.body);
               return (
                 <li
-                  className={`support-card ${n.read_at ? "" : "support-unread"}`}
+                  className={`notice-row${n.read_at ? "" : " is-unread"}`}
                   key={n.id}
                 >
-                  <h2>{n.title}</h2>
-                  <Timestamp value={n.created_at} locale={locale} />
-                  <p className="support-body">{n.body}</p>
-                  <span className="status-badge">
-                    {n.read_at ? t.read : t.unread}
-                  </span>
-                  <div className="controls">
-                    {target && <Link to={target}>{t.open}</Link>}
+                  <div className="notice-main">
+                    <h2>{n.title}</h2>
+                    {preview && <p className="notice-preview">{preview}</p>}
+                    <Timestamp value={n.created_at} locale={locale} />
+                  </div>
+                  <div className="notice-actions">
+                    {target && (
+                      <Link className="action-link ghost" to={target}>
+                        {t.open}
+                      </Link>
+                    )}
                     {!n.read_at && (
                       <button
                         className="secondary"

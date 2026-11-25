@@ -1,5 +1,4 @@
 import { CalendarActions } from "../calendar/CalendarActions";
-import { noFinalDot } from "../auth/helpers";
 import { SupportLink } from "../support/ui";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -189,16 +188,15 @@ function OrderContent({
           )}
           <p>
             <span className="commerce-identifier">{order.order_number}</span>{" "}
-            <CommerceStatus value={order.status} t={t} />
+            <CommerceStatus value={order.status} t={t} />{" "}
+            {/* Free registrations involve no money, simulated or not. */}
+            {order.is_simulated && order.total > 0 && (
+              <span className="status-badge" data-tone="neutral">{t.simulated}</span>
+            )}
           </p>
-          {/* Free registrations involve no money, simulated or not. */}
-          {order.is_simulated && order.total > 0 && (
-            <p className="notice">{t.simulated}</p>
-          )}
           {order.subtotal > 0 && <OrderTotals order={order} locale={locale} />}
-          {confirmed && <p className="field-hint">{noFinalDot(t.emailNote)}</p>}
           {preparing && <Status>{t.preparing}</Status>}
-          {order.status === "pending" && (
+          {order.status === "pending" && order.total === 0 && (
             <Status>{paymentCopy[locale].pending}</Status>
           )}
           {order.status === "pending" && order.total > 0 && (
@@ -214,8 +212,10 @@ function OrderContent({
               <Link className="action-link ghost" to="/events">{t.back}</Link>
             </p>
           )}
-          {poll && polls >= 10 && <p role="status">{t.pollEnded}</p>}
           {/* A pending paid order has the payment panel's own refresh. */}
+          {poll && polls >= 10 && !(order.status === "pending" && order.total > 0) && (
+            <p role="status">{t.pollEnded}</p>
+          )}
           {poll && !(order.status === "pending" && order.total > 0) && (
           <div className="controls">
             <button

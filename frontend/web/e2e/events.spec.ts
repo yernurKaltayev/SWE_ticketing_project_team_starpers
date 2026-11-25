@@ -48,7 +48,7 @@ test("organizer creates a free event, corrects publication, previews, publishes,
   ).toBeVisible();
   await page
     .locator(".workspace-main")
-    .getByRole("link", { name: "Protected preview" })
+    .getByRole("link", { name: "Preview" })
     .click();
   await expect(
     page.getByRole("heading", { name: "Demo · Dias free event" }),
@@ -64,7 +64,7 @@ test("organizer creates a free event, corrects publication, previews, publishes,
     page.getByRole("button", { name: "Return to draft" }),
   ).toBeVisible();
   await page
-    .getByRole("link", { name: "Discover events", exact: true })
+    .getByRole("link", { name: "Events", exact: true })
     .click();
   await page.getByLabel("Search", { exact: true }).fill("Dias");
   await page.getByRole("button", { name: "Search", exact: true }).click();
@@ -74,7 +74,7 @@ test("organizer creates a free event, corrects publication, previews, publishes,
   await page.getByRole("link", { name: "My events", exact: true }).click();
   await page.getByRole("link", { name: "Demo · Dias free event" }).click();
   await page
-    .getByRole("button", { name: "Duplicate into a new draft" })
+    .getByRole("button", { name: "Duplicate" })
     .first()
     .click();
   await page

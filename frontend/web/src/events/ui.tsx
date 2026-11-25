@@ -147,7 +147,8 @@ export function TextArea({
 }
 export function Image({ src, title }: { src: string; title: string }) {
   const [hidden, setHidden] = useImageVisibility(src);
-  if (hidden || !/^https?:\/\//i.test(src)) return null;
+  // Absolute URLs, or covers uploaded to this API (served from our own origin).
+  if (hidden || !/^(https?:\/\/|\/api\/v1\/event-images\/)/i.test(src)) return null;
   return (
     <img
       className="event-image"
