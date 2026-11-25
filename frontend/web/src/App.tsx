@@ -2,6 +2,7 @@ import { label as insightLabel } from "./insights/copy";
 import { EmailOrderLink, EmailTicketsLink } from "./support/EmailLinks";
 import { NotificationLink } from "./support/NotificationLink";
 import { supportCopy } from "./support/copy";
+import { promoCopy } from "./promotions/copy";
 import { lazy, Suspense, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import {
@@ -38,8 +39,10 @@ import { staffCopy } from "./staff/copy";
 import { seatingCopy } from "./seating/copy";
 import {
   BankIcon,
+  BellIcon,
   BoltIcon,
   BrandMark,
+  ChevronDownIcon,
   ChartIcon,
   EditIcon,
   EyeIcon,
@@ -47,6 +50,7 @@ import {
   PlusIcon,
   ReceiptIcon,
   SeatIcon,
+  TicketIcon,
   UserIcon,
   UsersIcon,
   WalletIcon,
@@ -137,8 +141,20 @@ function Application() {
     saveLocale(locale);
   }, [locale]);
   useEffect(() => {
-    document.title = "BiletFlow";
     document.getElementById("main")?.focus();
+    // Each page names itself with its <h1>; pages load data first, so follow
+    // the heading as it appears or changes instead of setting it once.
+    const main = document.getElementById("main");
+    const sync = () => {
+      const heading = main?.querySelector("h1")?.textContent?.trim();
+      const title = heading ? `${heading} · BiletFlow` : "BiletFlow";
+      if (document.title !== title) document.title = title;
+    };
+    sync();
+    if (!main || typeof MutationObserver === "undefined") return;
+    const observer = new MutationObserver(sync);
+    observer.observe(main, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
   }, [location.pathname]);
   return (
     <>
@@ -160,7 +176,7 @@ function Application() {
             <NavLink to="/support">{supportCopy[locale].title}</NavLink>
           ) : null}
           {hasRole(user, ["platform_admin"]) && (
-            <NavLink to="/admin/users">{insightLabel(locale, "admin")}</NavLink>
+            <NavLink to="/admin">{insightLabel(locale, "admin")}</NavLink>
           )}
         </nav>
         <div className="account-nav">
@@ -583,8 +599,18 @@ function OrganizerNav({
           label: operationsCopy[locale].title,
           icon: <ReceiptIcon />,
         },
+        {
+          to: `${base}/promotions`,
+          label: promoCopy[locale].title,
+          icon: <TicketIcon />,
+        },
+        {
+          to: `/support?role=handler&event_id=${encodeURIComponent(scoped)}`,
+          label: supportCopy[locale].title,
+          icon: <BellIcon />,
+        },
         { to: `${base}/activation`, label: pay.activation, icon: <BoltIcon /> },
-        { to: `${base}/financials`, label: pay.finances, icon: <ChartIcon /> },
+        { to: `${base}/financials`, label: pay.eventFinances, icon: <ChartIcon /> },
         {
           to: `${base}/staff`,
           label: staffCopy[locale].link,
@@ -603,8 +629,34 @@ function OrganizerNav({
       ? [{ id: "nav-event", label: ev.details, links: eventLinks }]
       : []),
   ];
+  // Phones/tablets: the full list collapses behind a button that names the
+  // current page, instead of a sideways-scrolling strip of 15 links.
+  // Remember which page the menu was opened on, so navigating closes it.
+  const [openOn, setOpenOn] = useState<string | null>(null);
+  const open = openOn === pathname;
+  const current = groups
+    .flatMap((group) => group.links)
+    .filter((link) => {
+      const path = link.to.split("?")[0]!;
+      return pathname === path || (!("end" in link) && pathname.startsWith(`${path}/`));
+    })
+    .sort((a, b) => b.to.length - a.to.length)[0];
   return (
-    <nav className="workspace-nav" aria-label={authCopy[locale].organizerRole}>
+    <nav
+      className="workspace-nav"
+      data-open={open || undefined}
+      aria-label={authCopy[locale].organizerRole}
+    >
+      <button
+        type="button"
+        className="workspace-nav-toggle secondary"
+        aria-expanded={open}
+        onClick={() => setOpenOn(open ? null : pathname)}
+      >
+        {current?.icon}
+        <span>{current?.label ?? authCopy[locale].organizerRole}</span>
+        <ChevronDownIcon />
+      </button>
       {groups.map((group) => (
         <section key={group.id}>
           <p className="nav-label" id={group.id}>

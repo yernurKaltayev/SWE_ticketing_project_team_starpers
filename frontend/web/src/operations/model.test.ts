@@ -17,6 +17,7 @@ import type { Order, Request, Action } from "./model";
 const order: Order = {
   id: "a",
   order_number: "ORDER-A",
+  event_id: "event",
   status: "paid",
   subtotal: 150000,
   discount_amount: 0,

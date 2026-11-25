@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { retryRead, readDelay, useVisible } from "../support/data";
 import { useMemo, useState } from "react";
-import { Link, NavLink, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { formatMoney } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { useSession } from "../auth/session";
@@ -46,9 +46,9 @@ export default function Admin({
     {t("admin")}
   </h1>
   <nav className="insights-nav" aria-label={t("admin")}>
-    {[...sections, "disputes", "settings", "exports"].map(s => <NavLink key={s} to={`/admin/${s}`}>
+    {[...sections, "disputes", "settings", "exports"].map(s => <Link key={s} to={`/admin/${s}`} aria-current={s === section ? "page" : undefined}>
       {t(s)}
-    </NavLink>)}
+    </Link>)}
   </nav>
   <p className="notice">
     {t("demo")}
@@ -346,9 +346,9 @@ function DataTable({
     <tbody>
       {rows.map(r => <tr key={String(r.id ?? r.campaign_id)}>
         {columns[section].map((c, i) => i === 0 ? <th scope="row" key={c}>
-          <Value field={c} value={r[c]} locale={locale} />
+          {c === "event_id" && typeof r[c] === "string" ? <EventName id={r[c]} /> : <Cell field={c} value={r[c]} locale={locale} />}
         </th> : <td key={c}>
-          <Value field={c} value={r[c]} locale={locale} />
+          <Cell field={c} value={r[c]} locale={locale} />
         </td>)}
         <td>
           {select ? <button className="secondary" onClick={() => select(r)}>
@@ -576,4 +576,51 @@ function Exports({
     </button>
   </form>
 </>;
+}
+
+/** Reports and activations carry only an event ID; show the event's title instead. */
+function EventName({
+  id
+}: {
+  id: string;
+}) {
+  const {
+    user,
+    controller
+  } = useSession();
+  const query = useQuery({
+    queryKey: ["admin-event-name", user?.id, id],
+    queryFn: async ({
+      signal
+    }) => {
+      const raw = await controller.request(`/api/v1/events/${encodeURIComponent(id)}`, {
+        signal
+      });
+      const title = raw && typeof raw === "object" && "title" in raw ? (raw as {
+        title: unknown;
+      }).title : null;
+      return typeof title === "string" ? title : null;
+    },
+    staleTime: 5 * 60_000,
+    retry: false
+  });
+  return <span title={id}>
+    {query.data ?? <span className="commerce-identifier">{id.slice(0, 8)}…</span>}
+  </span>;
+}
+
+/** Table cells: other records' IDs are shortened; full values stay in the details panel. */
+function Cell({
+  field,
+  value,
+  locale
+}: {
+  field: string;
+  value: unknown;
+  locale: Locale;
+}) {
+  if (field.endsWith("_id") && typeof value === "string" && value.length > 12) return <span className="commerce-identifier" title={value}>
+    {value.slice(0, 8)}…
+  </span>;
+  return <Value field={field} value={value} locale={locale} />;
 }

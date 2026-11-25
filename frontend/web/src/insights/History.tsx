@@ -7,7 +7,10 @@ import { parseEvent } from "../events/contracts";
 import { useLiveQuery } from "../support/data";
 import { dateQuery, parseHistory, categories } from "./model";
 import { label } from "./copy";
-import { DateFields, EventLinks, Failure, Pager } from "./ui";
+import { actionLabel } from "./actions";
+import { useSession } from "../auth/session";
+import { eventCopy } from "../events/copy";
+import { DateFields, Failure, Pager } from "./ui";
 export default function History({
   locale
 }: {
@@ -17,6 +20,7 @@ export default function History({
       eventId = ""
     } = useParams(),
     t = (s: string) => label(locale, s);
+  const { user } = useSession();
   const root = `/api/v1/events/${encodeURIComponent(eventId)}`;
   const event = useLiveQuery(root, parseEvent, 30000);
   const [params, setParams] = useSearchParams(),
@@ -52,8 +56,8 @@ export default function History({
   const history = useLiveQuery(filter.query !== undefined ? `${root}/history?${filter.query}` : "", parseHistory, 30000, !event.isError);
   const data = event.isError || history.isError ? undefined : history.data;
   return <section className="insights">
-  <Link to="/organizer/events">
-    {t("archive")}
+  <Link className="back-link" to="/organizer/events">
+    {eventCopy[locale].back}
   </Link>
   <h1>
     {t("history")}
@@ -62,7 +66,6 @@ export default function History({
     <h2>
       {event.data.title}
     </h2>
-    <EventLinks id={eventId} locale={locale} />
   </>}
   <p>
     {t("newest")}
@@ -121,9 +124,7 @@ export default function History({
   </p>}
   {data && <>
     <p>
-      {t(data.lifecycle)}
-       ·
-      {t(data.event_status)}
+      {t(data.lifecycle)} · {t(data.event_status)}
     </p>
     {!data.items.length && <p>
       {t("empty")}
@@ -133,28 +134,16 @@ export default function History({
         <time dateTime={row.occurred_at}>
           {formatEventDateTime(row.occurred_at, event.data?.timezone ?? "UTC", locale)}
         </time>
-        <h3>
-          {row.action_type}
+        <h3 title={row.action_type}>
+          {actionLabel(row.action_type, locale)}
         </h3>
         <p>
-          {t("actor_id")}
-          :
-          {row.actor_id ?? t("none")}
-           ·
-          {t(row.actor_role)}
+          {row.actor_id && row.actor_id === user?.id ? t("you") : t(row.actor_role)}
         </p>
-        <p>
-          {t("entity_type")}
-          :
-          {row.entity_type}
-           ·
-          {t("entity_id")}
-          :
-          {row.entity_id}
-        </p>
-        <p>
+        {/* Descriptions are stored in English; other locales rely on the label above. */}
+        {locale === "en" && row.description && <p>
           {row.description}
-        </p>
+        </p>}
       </li>)}
     </ol>
     <Pager locale={locale} offset={filter.offset ?? 0} total={data.total} onChange={n => {

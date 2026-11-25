@@ -391,7 +391,7 @@ it("registers an active paid ticket, shows the authoritative order, then issues 
   await userEvent.click(
     await screen.findByRole("button", { name: "Simulate success" }),
   );
-  await screen.findByRole("link", { name: /MOCK-TICKET/ });
+  await screen.findByText(/MOCK-TICKET/);
   expect(screen.getByText("Paid", { exact: true })).toBeDefined();
 });
 it("renders payout and financial empty states and localized simulation notices", async () => {

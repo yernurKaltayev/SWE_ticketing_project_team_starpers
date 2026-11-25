@@ -65,3 +65,22 @@
 .operations h1 + p {
   color: var(--color-muted);
 }
+
+/* Text inputs (<label>) and selects (.field) share one baseline and width rule. */
+.operation-filters .field {
+  flex: 1 1 180px;
+  margin: 0;
+}
+.operation-filters button,
+.operations > button,
+.operations .controls button {
+  width: auto;
+  flex: 0 0 auto;
+  justify-self: start;
+}
+@media (max-width: 680px) {
+  .operation-filters .field,
+  .operation-filters label {
+    flex-basis: auto;
+  }
+}

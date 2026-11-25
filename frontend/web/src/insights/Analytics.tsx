@@ -10,7 +10,8 @@ import { parseCampaign, parseReport } from "../promotions/model";
 import { analyticsQuery, parseAnalytics } from "./model";
 import { useOwnedEvents } from "./data";
 import { label } from "./copy";
-import { DateFields, EventLinks, Failure } from "./ui";
+import { eventCopy } from "../events/copy";
+import { DateFields, Failure } from "./ui";
 export default function Analytics({
   locale
 }: {
@@ -54,8 +55,8 @@ function Content({
   const report = useLiveQuery(filter.query !== undefined ? `${root}/analytics?${filter.query}` : "", parseAnalytics, 30000, !event.isError);
   const data = report.isError || event.isError ? undefined : report.data;
   return <section className="insights">
-  <Link to="/organizer/events">
-    {t("archive")}
+  <Link className="back-link" to="/organizer/events">
+    {eventCopy[locale].back}
   </Link>
   <h1>
     {t("analytics")}
@@ -64,7 +65,6 @@ function Content({
     <h2>
       {event.data.title}
     </h2>
-    <EventLinks id={id} locale={locale} />
   </>}
   <p className="notice">
     {t("demo")}

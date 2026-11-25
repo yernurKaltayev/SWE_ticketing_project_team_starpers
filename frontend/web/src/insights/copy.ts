@@ -2,7 +2,7 @@ import type { Locale } from "@biletflow/shared";
 const words: Record<string, [string, string, string]> = {
   analytics: ["Analytics", "Аналитика", "Талдау"],
   history: ["Activity history", "История действий", "Әрекеттер тарихы"],
-  archive: ["Events by lifecycle", "События по периоду", "Кезеңдер бойынша іс-шаралар"],
+  archive: ["Events by lifecycle", "Мероприятия по этапам", "Кезеңдер бойынша іс-шаралар"],
   admin: ["Platform administration", "Администрирование платформы", "Платформаны басқару"],
   upcoming: ["Upcoming", "Предстоящие", "Алдағы"],
   active: ["Active", "Активные", "Белсенді"],
@@ -191,6 +191,9 @@ const words: Record<string, [string, string, string]> = {
   attendee: ["Attendee", "Посетитель", "Қатысушы"],
   organizer: ["Organizer", "Организатор", "Ұйымдастырушы"],
   platform_admin: ["Platform Admin", "Администратор", "Платформа әкімшісі"],
+  organizer_staff: ["Event staff", "Сотрудник мероприятия", "Іс-шара қызметкері"],
+  system: ["System", "Система", "Жүйе"],
+  you: ["You", "Вы", "Сіз"],
   attendee_case: ["Attendee support", "Поддержка посетителя", "Қатысушы қолдауы"],
   organizer_case: ["Platform support", "Поддержка платформы", "Платформа қолдауы"],
   ticket_delivery: ["Ticket delivery", "Доставка билета", "Билетті жеткізу"],

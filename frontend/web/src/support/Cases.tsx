@@ -30,7 +30,6 @@ export default function Cases({ locale }: { locale: Locale }) {
         <Link className="action-link" to="/support/new">
           {t.newCase}
         </Link>
-        <p>{t.polling}</p>
       </header>
       <form
         className="support-filters"

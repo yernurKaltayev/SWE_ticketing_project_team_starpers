@@ -33,8 +33,6 @@ const en = {
   noFree: "No free tickets are available right now.",
   limit: "Maximum available for this registration",
   reviewHint: "Check each attendee's name and email before confirming.",
-  policy:
-    "Refund and cancellation terms are not available here. Confirm the terms with the organizer before registering.",
   unknown:
     "We could not confirm the outcome of your registration. Keep this page open and retry the same registration, or check My orders. Do not start another registration for these tickets yet.",
   lost: "Your previous registration may have completed. Check My orders for your tickets. If you cannot find it, contact the organizer before registering again.",
@@ -96,7 +94,7 @@ const ru: Text = {
   checkout: "Бесплатная регистрация",
   orders: "Мои заказы",
   tickets: "Мои билеты",
-  back: "К событиям",
+  back: "К мероприятиям",
   select: "Выберите билеты",
   quantity: "Количество",
   attendee: "Участник",
@@ -126,8 +124,6 @@ const ru: Text = {
   noFree: "Сейчас нет доступных бесплатных билетов.",
   limit: "Доступный максимум для этой регистрации",
   reviewHint: "Проверьте имя и почту каждого участника перед подтверждением.",
-  policy:
-    "Условия возврата и отмены здесь недоступны. Уточните их у организатора до регистрации.",
   unknown:
     "Результат регистрации не удалось подтвердить. Не закрывайте страницу: повторите эту же регистрацию или проверьте «Мои заказы». Пока не создавайте новую регистрацию на эти билеты.",
   lost: "Предыдущая регистрация могла завершиться. Проверьте «Мои заказы». Если заказа нет, свяжитесь с организатором перед повторной регистрацией.",
@@ -219,8 +215,6 @@ const kk: Text = {
   limit: "Осы тіркелу үшін қолжетімді ең көп сан",
   reviewHint:
     "Растау алдында әр қатысушының аты-жөнін және поштасын тексеріңіз.",
-  policy:
-    "Қайтару және бас тарту шарттары мұнда қолжетімсіз. Тіркелмес бұрын оларды ұйымдастырушыдан нақтылаңыз.",
   unknown:
     "Тіркелу нәтижесін растау мүмкін болмады. Бетті жаппай, осы тіркелуді қайта жіберіңіз немесе «Менің тапсырыстарым» бөлімін тексеріңіз. Әзірге осы билеттерге жаңа тіркелу жасамаңыз.",
   lost: "Алдыңғы тіркелу аяқталған болуы мүмкін. «Менің тапсырыстарым» бөлімін тексеріңіз. Тапсырыс табылмаса, қайта тіркелмес бұрын ұйымдастырушыға хабарласыңыз.",

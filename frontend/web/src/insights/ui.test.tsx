@@ -148,12 +148,12 @@ it("sends event-zone dates and ticket type as one applied analytics filter", asy
   }));
   await mount(`${path}/analytics`);
   await screen.findByText(formatMoney(7001, "en").replace(/\s/g, " "));
-  fireEvent.change(screen.getByLabelText("From (inclusive) · Asia/Almaty"), {
+  fireEvent.change(screen.getByLabelText("From (inclusive) · Almaty"), {
     target: {
       value: "2026-11-18T10:00"
     }
   });
-  fireEvent.change(screen.getByLabelText("Until (exclusive) · Asia/Almaty"), {
+  fireEvent.change(screen.getByLabelText("Until (exclusive) · Almaty"), {
     target: {
       value: "2026-11-19T10:00"
     }
@@ -252,7 +252,9 @@ it("renders a read-only actor/entity timeline and applies action/category filter
   await mount(`${path}/history`);
   await screen.findByText("Sandbox failed");
   expect(screen.getByText("Venue corrected")).toBeTruthy();
-  expect(screen.getAllByText(new RegExp(user.id))).toHaveLength(2);
+  // The signed-in organizer is shown as "You", not a raw user ID.
+  expect(screen.getAllByText("You")).toHaveLength(2);
+  expect(screen.queryByText(new RegExp(user.id))).toBeNull();
   fireEvent.change(screen.getByLabelText("Activity category"), {
     target: {
       value: "payment"

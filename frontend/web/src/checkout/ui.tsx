@@ -32,7 +32,7 @@ export function CommerceError({
   return (
     <div className="form-error" role="alert" tabIndex={-1} ref={ref}>
       <p>{message}</p>
-      {error instanceof ApiError && error.requestId && (
+      {error instanceof ApiError && error.status >= 500 && error.requestId && (
         <p className="field-hint">
           {t.requestId}: {error.requestId}
         </p>

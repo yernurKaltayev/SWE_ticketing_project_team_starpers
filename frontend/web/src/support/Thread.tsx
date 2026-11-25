@@ -301,7 +301,6 @@ function Content({ id, locale }: { id: string; locale: Locale }) {
             }}
           >
             <p>{t.replyHint}</p>
-            <p>{t.draftHint}</p>
             <label htmlFor="reply-body">{t.message}</label>
             <textarea
               id="reply-body"

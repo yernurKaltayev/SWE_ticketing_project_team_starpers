@@ -1,6 +1,7 @@
 import type { Locale } from "@biletflow/shared";
 const en = {
   cancel: "Cancel event",
+  dangerZone: "Danger zone",
   cancelHint:
     "Cancellation stops sales. The server must confirm cancellation and any required refunds. Orders and history are retained.",
   assignedHint:
@@ -67,6 +68,9 @@ const en = {
   price: "Price (KZT; 0 for free)",
   quantity_total: "Total quantity",
   max_per_order: "Maximum per order",
+  priceColumn: "Price",
+  ticketColumn: "Ticket",
+  hiddenBadge: "Hidden",
   is_hidden: "Hidden from buyers",
   sales_start: "Sales start",
   sales_end: "Sales end",
@@ -116,12 +120,12 @@ const en = {
   helpHint: "Questions about tickets, payment or the event itself.",
   helpSupport: "Contact support",
   refund: "Refund policy",
-  policyGap:
-    "The current API does not return the saved refund policy. Confirm the organizer’s terms before registering.",
   summary: "Refund terms",
   refundable_until: "Refund deadline",
   savePolicy: "Save refund policy",
-  policySaved: "Refund policy submitted. The current API cannot read it back.",
+  policySaved: "Refund policy saved. Buyers see it on the event page.",
+  policyEmpty:
+    "No refund policy yet. Until you add one, buyers see no refund terms.",
   images: "Event images",
   uploadGap:
     "Image upload awaits the backend upload and attachment contract. Existing images are shown below.",
@@ -137,6 +141,7 @@ const en = {
 type Copy = Record<keyof typeof en, string>;
 const ru: Copy = {
   cancel: "Отменить мероприятие",
+  dangerZone: "Опасная зона",
   cancelHint:
     "Отмена останавливает продажи. Сервер должен подтвердить отмену и необходимые возвраты. Заказы и история сохраняются.",
   assignedHint:
@@ -204,6 +209,9 @@ const ru: Copy = {
   price: "Цена (KZT; 0 — бесплатно)",
   quantity_total: "Общее количество",
   max_per_order: "Максимум в заказе",
+  priceColumn: "Цена",
+  ticketColumn: "Билет",
+  hiddenBadge: "Скрыт",
   is_hidden: "Скрыть от покупателей",
   sales_start: "Начало продаж",
   sales_end: "Окончание продаж",
@@ -251,13 +259,13 @@ const ru: Copy = {
   helpHint: "Вопросы о билетах, оплате или самом событии.",
   helpSupport: "Написать в поддержку",
   refund: "Правила возврата",
-  policyGap:
-    "Текущий API не возвращает сохранённые правила возврата. Уточните условия у организатора до регистрации.",
   summary: "Условия возврата",
   refundable_until: "Срок возврата",
   savePolicy: "Сохранить правила возврата",
   policySaved:
-    "Правила отправлены. Текущий API не позволяет прочитать их обратно.",
+    "Правила возврата сохранены. Покупатели видят их на странице мероприятия.",
+  policyEmpty:
+    "Правила возврата ещё не заданы. Пока их нет, покупатели не видят условий возврата.",
   images: "Изображения",
   uploadGap:
     "Загрузка ожидает контракт сервера для загрузки и привязки изображений. Существующие изображения показаны ниже.",
@@ -272,6 +280,7 @@ const ru: Copy = {
 };
 const kk: Copy = {
   cancel: "Іс-шарадан бас тарту",
+  dangerZone: "Қауіпті әрекеттер",
   cancelHint:
     "Бас тарту сатуды тоқтатады. Сервер бас тартуды және қажетті қайтарымдарды растауы тиіс. Тапсырыстар мен тарих сақталады.",
   assignedHint:
@@ -339,6 +348,9 @@ const kk: Copy = {
   price: "Бағасы (KZT; 0 — тегін)",
   quantity_total: "Жалпы саны",
   max_per_order: "Бір тапсырыстағы шегі",
+  priceColumn: "Бағасы",
+  ticketColumn: "Билет",
+  hiddenBadge: "Жасырын",
   is_hidden: "Сатып алушылардан жасыру",
   sales_start: "Сатудың басталуы",
   sales_end: "Сатудың аяқталуы",
@@ -386,13 +398,13 @@ const kk: Copy = {
   helpHint: "Билеттер, төлем немесе іс-шараның өзі туралы сұрақтар.",
   helpSupport: "Қолдауға жазу",
   refund: "Қайтару ережелері",
-  policyGap:
-    "Қазіргі API сақталған қайтару ережелерін бермейді. Тіркелмес бұрын ұйымдастырушыдан шарттарды нақтылаңыз.",
   summary: "Қайтару шарттары",
   refundable_until: "Қайтарудың соңғы мерзімі",
   savePolicy: "Қайтару ережелерін сақтау",
   policySaved:
-    "Ережелер жіберілді. Қазіргі API оларды қайта оқуға мүмкіндік бермейді.",
+    "Қайтару ережелері сақталды. Сатып алушылар оларды іс-шара бетінде көреді.",
+  policyEmpty:
+    "Қайтару ережелері әлі жоқ. Олар қосылғанша сатып алушылар қайтару шарттарын көрмейді.",
   images: "Суреттер",
   uploadGap:
     "Сурет жүктеу және тіркеу үшін сервер келісімшарты қажет. Бар суреттер төменде көрсетілген.",

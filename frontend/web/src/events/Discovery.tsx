@@ -1,13 +1,14 @@
-import { supportCopy } from "../support/copy";
-import { promoCopy } from "../promotions/copy";
+import { label as insightLabel } from "../insights/copy";
 import { operationsCopy } from "../operations/copy";
 import { Link, useSearchParams } from "react-router-dom";
-import { formatEventDateTime, formatMoney } from "@biletflow/shared";
+import { formatEventDateTime } from "@biletflow/shared";
+import { categoryLabel, knownCategories } from "./categories";
 import type { Locale } from "@biletflow/shared";
 import { Field, Status } from "../auth/ui";
 import { eventCopy } from "./copy";
 import type { EventCopy } from "./copy";
 import { discoveryCopy } from "./discoveryCopy";
+import { offerLabel } from "./offerLabel";
 import { toneFor } from "../tone";
 import { useResource } from "./data";
 import {
@@ -20,8 +21,6 @@ import {
 import type { Availability, Event, Page, QuickRange } from "./model";
 import { CoverArt, EventError, Image } from "./ui";
 import { commerceNavigation } from "../checkout/navigation";
-import { paymentCopy } from "../payments/copy";
-import { staffCopy } from "../staff/copy";
 import { parseEvents, parsePublicAvailability } from "./contracts";
 import {
   ArrowLeftIcon,
@@ -144,7 +143,9 @@ function OrganizerEventList({ locale }: { locale: Locale }) {
                     <Image src={event.images[0]} title={event.title} />
                   )}
                   {event.category && (
-                    <span className="event-category">{event.category}</span>
+                    <span className="event-category">
+                      {categoryLabel(event.category, locale)}
+                    </span>
                   )}
                 </div>
                 <h2>
@@ -163,34 +164,17 @@ function OrganizerEventList({ locale }: { locale: Locale }) {
                     {t[event.status as "draft"] ?? event.status}
                   </span>
                 </div>
-                <nav className="controls">
-                  <Link
-                    to={`/support?role=handler&event_id=${encodeURIComponent(event.id)}`}
-                  >
-                    {supportCopy[locale].inbox}
-                  </Link>
-                  <Link to={`/organizer/events/${event.id}/promotions`}>
-                    {promoCopy[locale].title}
-                  </Link>
+                {/* Everything else for this event lives in the sidebar once it is open. */}
+                <nav className="controls card-actions">
                   <Link
                     to={`/organizer/events/${encodeURIComponent(event.id)}/orders`}
                   >
                     {operationsCopy[locale].title}
                   </Link>
                   <Link
-                    to={`/organizer/events/${encodeURIComponent(event.id)}/activation`}
+                    to={`/organizer/events/${encodeURIComponent(event.id)}/analytics`}
                   >
-                    {paymentCopy[locale].activation}
-                  </Link>
-                  <Link
-                    to={`/organizer/events/${encodeURIComponent(event.id)}/financials`}
-                  >
-                    {paymentCopy[locale].finances}
-                  </Link>
-                  <Link
-                    to={`/organizer/events/${encodeURIComponent(event.id)}/staff`}
-                  >
-                    {staffCopy[locale].link}
+                    {insightLabel(locale, "analytics")}
                   </Link>
                 </nav>
               </article>
@@ -247,9 +231,21 @@ function PublicEventList({ locale }: { locale: Locale }) {
       ),
     ),
   ].sort((a, b) => a.localeCompare(b));
+  // Suggested categories plus any other text organizers used, one entry per
+  // case-insensitive value (the API filters with ILIKE), labelled in the UI language.
   const categories = [
-    ...new Set((data?.items ?? []).map((e) => e.category.trim()).filter(Boolean)),
-  ].sort((a, b) => a.localeCompare(b));
+    ...new Map(
+      [
+        ...knownCategories,
+        ...(data?.items ?? []).map((e) => e.category.trim()),
+        params.get("category") ?? "",
+      ]
+        .filter(Boolean)
+        .map((c) => [c.toLowerCase(), c] as const),
+    ).values(),
+  ].sort((a, b) =>
+    categoryLabel(a, locale).localeCompare(categoryLabel(b, locale)),
+  );
   const offset = Number(new URLSearchParams(query).get("offset"));
   const range = activeRange(params);
   const hasFilters = filterKeys.some((key) => params.get(key));
@@ -315,22 +311,19 @@ function PublicEventList({ locale }: { locale: Locale }) {
         <div className="discovery-filters" aria-label={d.filters} role="group">
           <div className="field">
             <label htmlFor="category">{t.category}</label>
-            <input
+            <select
               id="category"
               name="category"
-              list="category-options"
-              placeholder={d.categoryPlaceholder}
               defaultValue={params.get("category") ?? ""}
-              onBlur={(e) => {
-                if (e.currentTarget.value.trim() !== (params.get("category") ?? ""))
-                  e.currentTarget.form?.requestSubmit();
-              }}
-            />
-            <datalist id="category-options">
+              onChange={(e) => e.currentTarget.form?.requestSubmit()}
+            >
+              <option value="">{d.allCategories}</option>
               {categories.map((c) => (
-                <option key={c} value={c} />
+                <option key={c} value={c}>
+                  {categoryLabel(c, locale)}
+                </option>
               ))}
-            </datalist>
+            </select>
           </div>
           <div className="field">
             <label htmlFor="city">{t.city}</label>
@@ -480,7 +473,9 @@ function PublicEventCard({
         <CoverArt event={event} locale={locale} />
         {event.images[0] && <Image src={event.images[0]} title={event.title} />}
         {event.category && (
-          <span className="event-category">{event.category}</span>
+          <span className="event-category">
+                      {categoryLabel(event.category, locale)}
+                    </span>
         )}
         {offer?.soldOut ? (
           <span className="status-badge cover-badge" data-tone="neutral">
@@ -514,9 +509,7 @@ function PublicEventCard({
         <div className="offer">
           {offer && (
             <strong className="price">
-              {offer.allFree
-                ? d.free
-                : `${offer.priceVaries ? `${d.from} ` : ""}${formatMoney(offer.minPrice, locale)}`}
+              {offerLabel(offer, locale)}
             </strong>
           )}
         </div>

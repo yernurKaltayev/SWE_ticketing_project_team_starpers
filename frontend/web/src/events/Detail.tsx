@@ -5,14 +5,17 @@ import { PromotionBanner } from "../promotions/Banner";
 import { checkoutLink } from "../promotions/model";
 import { seatingCopy } from "../seating/copy";
 import { Link, useParams, useLocation } from "react-router-dom";
-import { formatEventDateTime, formatMoney } from "@biletflow/shared";
+import { formatEventDateTime, formatPrice } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { Status } from "../auth/ui";
 import { useResource } from "./data";
 import { eventCopy } from "./copy";
-import { salesState } from "./model";
+import { offerSummary, salesState } from "./model";
 import type { Availability, Event, Venue } from "./model";
-import { CoverArt, EventError, Image } from "./ui";
+import { CoverArt, EventError, Image, RefundPolicy } from "./ui";
+import { categoryLabel } from "./categories";
+import { offerLabel } from "./offerLabel";
+import { createPortal } from "react-dom";
 import { commerceNavigation } from "../checkout/navigation";
 import { parseEvent, parsePublicAvailability, parseVenue } from "./contracts";
 import {
@@ -83,6 +86,7 @@ function EventContent({
     `/api/v1/events/${encodeURIComponent(event.id)}/availability`,
     parsePublicAvailability,
   );
+  const offer = tickets.data ? offerSummary(tickets.data) : null;
   const registration = [
     event.registration_opens_at,
     event.registration_closes_at,
@@ -95,11 +99,17 @@ function EventContent({
         <h1>{event.title}</h1>
         <p className="meta-line">
           {event.category && (
-            <span className="event-category">{event.category}</span>
+            <span className="event-category">
+              {categoryLabel(event.category, locale)}
+            </span>
           )}
-          <span className="status-badge" data-tone={toneFor(event.status)}>
-            {t[event.status as "draft"] ?? event.status}
-          </span>
+          {/* "Published" is the normal state and means nothing to a buyer; only
+              draft (preview) and cancelled are worth a badge. */}
+          {event.status !== "published" && (
+            <span className="status-badge" data-tone={toneFor(event.status)}>
+              {t[event.status as "draft"] ?? event.status}
+            </span>
+          )}
         </p>
       </header>
       <div className="detail-layout">
@@ -163,10 +173,7 @@ function EventContent({
               <p className="event-description">{event.description}</p>
             </div>
           )}
-          <div className="panel">
-            <h2>{t.refund}</h2>
-            <p>{t.policyGap}</p>
-          </div>
+          <RefundPolicy event={event} locale={locale} />
         </div>
         <aside className="detail-aside">
           <div className="panel ticket-panel">
@@ -183,7 +190,7 @@ function EventContent({
                     <span className="price">
                       {ticket.price_amount === 0
                         ? t.free
-                        : formatMoney(ticket.price_amount, locale)}
+                        : formatPrice(ticket.price_amount, locale)}
                     </span>
                     {/* Closed tickets report 0, which is not a real count. */}
                     {state === "onSale" || state === "soldOut" ? (
@@ -237,6 +244,25 @@ function EventContent({
           )}
         </aside>
       </div>
+      {!preview &&
+        event.status === "published" &&
+        !offer?.soldOut &&
+        // Phones: the ticket panel sits below the description, so keep the
+        // primary action reachable. Portalled to <body> because the page
+        // wrapper animates with a transform, which would trap position:fixed.
+        createPortal(
+        <div className="mobile-cta">
+          {offer && <span className="price">{offerLabel(offer, locale)}</span>}
+          <Link
+            className="action-link"
+            to={checkoutLink(event.id, location.search)}
+          >
+            <TicketIcon />
+            {commerceNavigation[locale].register}
+          </Link>
+        </div>,
+        document.body,
+      )}
     </>
   );
 }

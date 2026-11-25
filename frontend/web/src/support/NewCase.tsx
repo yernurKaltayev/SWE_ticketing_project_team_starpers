@@ -97,7 +97,6 @@ function Compose({ locale, context }: { locale: Locale; context: Context }) {
       <Link to="/support">{t.back}</Link>
       <h1>{t.newCase}</h1>
       <ContextDetails context={context} t={t} />
-      <p>{t.draftHint}</p>
       <div tabIndex={-1} ref={ref}>
         {invalid && <p role="alert">{t.invalid}</p>}
         <SupportError error={error} t={t} />

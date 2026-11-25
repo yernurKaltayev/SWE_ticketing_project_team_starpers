@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ApiError, formatMoney } from "@biletflow/shared";
+import { ApiError, formatPrice } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { Status } from "../auth/ui";
 import { useSession } from "../auth/session";
@@ -156,29 +156,27 @@ export function PaymentPanel({
       {paymentId && query.isPending && <Status>{t.loading}</Status>}
       {payment && (
         <>
-          <dl className="commerce-totals">
-            <div>
-              <dt>{t.amount}</dt>
-              <dd>{formatMoney(payment.amount, locale, payment.currency)}</dd>
-            </div>
-            {kind === "ticket" && (
+          {/* Ticket buyers already see the order total above, and the
+              processing fee is the organizer's deduction, not theirs. */}
+          {kind === "activation_fee" && (
+            <dl className="commerce-totals">
               <div>
-                <dt>{t.deduction}</dt>
-                <dd>
-                  {formatMoney(payment.fee_amount, locale, payment.currency)}
-                </dd>
+                <dt>{t.amount}</dt>
+                <dd>{formatPrice(payment.amount, locale, payment.currency)}</dd>
               </div>
-            )}
-          </dl>
-          {kind === "ticket" && <p>{t.noBuyerFee}</p>}
-          <Status>
-            {kind === "activation_fee" && payment.status === "pending"
-              ? t.activationPending
-              : t[
-                  payment.status as
-                    "pending" | "succeeded" | "failed" | "cancelled"
-                ]}
-          </Status>
+            </dl>
+          )}
+          {/* The order page already says a ticket payment is pending. */}
+          {!(kind === "ticket" && payment.status === "pending") && (
+            <Status>
+              {kind === "activation_fee" && payment.status === "pending"
+                ? t.activationPending
+                : t[
+                    payment.status as
+                      "pending" | "succeeded" | "failed" | "cancelled"
+                  ]}
+            </Status>
+          )}
           {payment.status === "pending" && payment.is_simulated && (
             <div className="controls">
               <button

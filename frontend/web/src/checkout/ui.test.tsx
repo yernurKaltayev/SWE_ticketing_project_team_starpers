@@ -104,7 +104,7 @@ it("registers a free ticket, shows authoritative totals, and retrieves the prote
   expect(
     await screen.findByRole("region", { name: "Add to calendar" }),
   ).toBeDefined();
-  await userEvent.click(screen.getByRole("link", { name: "MOCK-TICKET-1-1" }));
+  await userEvent.click(ticketLink());
   await screen.findByRole("heading", { name: "Admission QR code" });
   expect(
     await screen.findByRole("region", { name: "Add to calendar" }),
@@ -215,7 +215,8 @@ it("shows a safe denial for an inaccessible order without private data", async (
   await screen.findByText(
     "This order or ticket is unavailable to this account.",
   );
-  expect(screen.getByText(/order-denied/)).toBeDefined();
+  // 4xx denials are explained in words; request IDs are only for server errors.
+  expect(screen.queryByText(/order-denied/)).toBeNull();
   expect(screen.queryByText("MOCK-TICKET-1-1")).toBeNull();
 });
 
@@ -277,7 +278,7 @@ it("removes a cached admission QR and private ticket data when a status read is 
     screen.getByRole("button", { name: "Register for free" }),
   );
   await screen.findByRole("heading", { name: "Registration confirmed" });
-  await userEvent.click(screen.getByRole("link", { name: "MOCK-TICKET-1-1" }));
+  await userEvent.click(ticketLink());
   await screen.findByRole("img");
   server.use(
     http.get("*/api/v1/tickets/:id", () =>
@@ -303,7 +304,7 @@ it("revokes the visible QR when the QR's own refresh is denied while ticket meta
     screen.getByRole("button", { name: "Register for free" }),
   );
   await screen.findByRole("heading", { name: "Registration confirmed" });
-  await userEvent.click(screen.getByRole("link", { name: "MOCK-TICKET-1-1" }));
+  await userEvent.click(ticketLink());
   await screen.findByRole("img");
   server.use(
     http.get("*/api/v1/tickets/:id/qr", () =>
@@ -357,7 +358,7 @@ it("identifies tickets by authoritative event title/date without fetching an eve
   expect(await screen.findAllByText("Shared authoritative event")).toHaveLength(
     2,
   );
-  expect(screen.getAllByText(/Asia\/Almaty/)).toHaveLength(2);
+  expect(screen.getAllByText(/Almaty/)).toHaveLength(2);
   expect(eventReads).toBe(1);
 });
 
@@ -406,3 +407,12 @@ it("shows a pending server outcome without claiming free confirmation or ticket 
   ).toBeNull();
   expect(screen.queryByRole("link", { name: /MOCK-TICKET/ })).toBeNull();
 });
+
+/** Order pages name tickets by type and attendee; the number is secondary text. */
+function ticketLink() {
+  const link = screen
+    .getAllByRole("link")
+    .find((a) => a.getAttribute("href")?.startsWith("/account/tickets/"));
+  if (!link) throw new Error("no ticket link");
+  return link;
+}

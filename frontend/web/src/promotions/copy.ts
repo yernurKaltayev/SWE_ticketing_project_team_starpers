@@ -51,7 +51,7 @@ export const promoCopy = {
     gross: "Gross revenue",
     discount: "Discount",
     net: "Net revenue",
-    back: "Event editor",
+    back: "Back to event",
     select: "Select tickets to validate this code.",
     apply: "Apply code",
     remove: "Remove code",
@@ -64,6 +64,7 @@ export const promoCopy = {
     changed:
       "Prices or discount changed. Review the updated selection before confirming.",
     entry: "Promo code",
+    have: "Have a promo code?",
     returnHint:
       "The promotion will be validated against your selected tickets at checkout.",
     notfound: "This code does not exist for this event.",
@@ -133,7 +134,7 @@ export const promoCopy = {
     gross: "Валовая выручка",
     discount: "Скидка",
     net: "Чистая выручка",
-    back: "Редактор события",
+    back: "К мероприятию",
     select: "Выберите билеты для проверки кода.",
     apply: "Применить код",
     remove: "Удалить код",
@@ -146,6 +147,7 @@ export const promoCopy = {
     changed:
       "Цена или скидка изменилась. Проверьте обновлённый выбор перед подтверждением.",
     entry: "Промокод",
+    have: "Есть промокод?",
     returnHint: "Промокод проверяется для выбранных билетов при оформлении.",
     notfound: "Код не найден для этого события.",
     promo_not_found: "Код не найден для этого события.",
@@ -212,7 +214,7 @@ export const promoCopy = {
     gross: "Жалпы табыс",
     discount: "Жеңілдік",
     net: "Таза табыс",
-    back: "Іс-шара редакторы",
+    back: "Іс-шараға оралу",
     select: "Кодты тексеру үшін билеттерді таңдаңыз.",
     apply: "Кодты қолдану",
     remove: "Кодты жою",
@@ -225,6 +227,7 @@ export const promoCopy = {
     changed:
       "Баға немесе жеңілдік өзгерді. Растамас бұрын жаңартылған таңдауды тексеріңіз.",
     entry: "Промокод",
+    have: "Промокод бар ма?",
     returnHint: "Промокод тапсырыс кезінде таңдалған билеттерге тексеріледі.",
     notfound: "Бұл іс-шара үшін код табылмады.",
     promo_not_found: "Бұл іс-шара үшін код табылмады.",

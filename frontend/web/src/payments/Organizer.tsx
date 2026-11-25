@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { formatMoney, formatEventDateTime } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { Field, Status } from "../auth/ui";
+import { eventCopy } from "../events/copy";
 import {
   useCommerceQuery,
   eventPath,
@@ -224,7 +225,11 @@ export function AccountsPage({ locale }: { locale: Locale }) {
       {query.isPending && <Status>{t.loading}</Status>}
       {query.data && !query.isError && (
         <>
-          {!query.data.length && <Status>{t.emptyAccounts}</Status>}
+          {!query.data.length && (
+            <div className="empty-state" role="status">
+              <p>{t.emptyAccounts}</p>
+            </div>
+          )}
           <ul className="payout-accounts">
             {query.data.map((a) => (
               <li key={a.id}>
@@ -429,7 +434,7 @@ export function FinancialsPage({ locale }: { locale: Locale }) {
   return (
     <section>
       <Link to="/organizer/events">{t.events}</Link>
-      <h1>{t.finances}</h1>
+      <h1>{t.eventFinances}</h1>
       {event.data && <h2>{event.data.title}</h2>}
       <p className="notice">{t.demo}</p>
       <nav className="controls">
@@ -494,7 +499,10 @@ export function PayoutsPage({ locale }: { locale: Locale }) {
       {query.data && !query.isError && (
         <>
           {!query.data.items.length ? (
-            <Status>{t.emptyPayouts}</Status>
+            <div className="empty-state" role="status">
+              <p>{t.emptyPayouts}</p>
+              <Link to="/organizer/events">{eventCopy[locale].organizer}</Link>
+            </div>
           ) : (
             <div className="table-scroll">
               <table className="payout-history">
@@ -557,6 +565,7 @@ export function PayoutsPage({ locale }: { locale: Locale }) {
               </table>
             </div>
           )}
+          {(pagination.offset > 0 || query.data.total > 20) && (
           <nav className="controls" aria-label={t.payouts}>
             <button
               disabled={!pagination.offset}
@@ -571,6 +580,7 @@ export function PayoutsPage({ locale }: { locale: Locale }) {
               {t.next}
             </button>
           </nav>
+          )}
         </>
       )}
       <button

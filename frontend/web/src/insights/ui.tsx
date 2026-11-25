@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
-import { ApiError, formatMoney, formatEventDateTime } from "@biletflow/shared";
+import { ApiError, formatMoney, formatEventDateTime, zoneLabel } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { Field } from "../auth/ui";
 import { label } from "./copy";
@@ -24,24 +23,10 @@ export function Failure({
   <p>
     {label(locale, error instanceof ApiError && [401, 403, 404].includes(error.status) ? "denied" : "error")}
   </p>
-  {error instanceof ApiError && error.requestId && <p>
+  {error instanceof ApiError && error.status >= 500 && error.requestId && <p>
     {error.requestId}
   </p>}
 </div>;
-}
-export function EventLinks({
-  id,
-  locale
-}: {
-  id: string;
-  locale: Locale;
-}) {
-  const root = `/organizer/events/${encodeURIComponent(id)}`;
-  return <nav className="controls insights-links" aria-label={label(locale, "events")}>
-  {[["edit", `${root}/edit`], ["analytics", `${root}/analytics`], ["history", `${root}/history`], ["orders", `${root}/orders`], ["attendees", `${root}/orders?view=attendees`], ["refunds", `${root}/orders?view=refunds`], ["campaigns", `${root}/promotions`], ["support", `/support?role=handler&event_id=${encodeURIComponent(id)}`], ["checkin", `${root}/analytics#attendance`]].map(([name, path]) => <Link key={name} to={path!}>
-    {label(locale, name!)}
-  </Link>)}
-</nav>;
 }
 export function DateFields({
   locale,
@@ -55,8 +40,8 @@ export function DateFields({
   zone: string;
 }) {
   return <>
-  <Field label={`${label(locale, "from")} · ${zone}`} name={keys[0]} type="datetime-local" defaultValue={params.get(keys[0]) ?? ""} />
-  <Field label={`${label(locale, "to")} · ${zone}`} name={keys[1]} type="datetime-local" defaultValue={params.get(keys[1]) ?? ""} />
+  <Field label={`${label(locale, "from")} · ${zoneLabel(zone, locale)}`} name={keys[0]} type="datetime-local" defaultValue={params.get(keys[0]) ?? ""} />
+  <Field label={`${label(locale, "to")} · ${zoneLabel(zone, locale)}`} name={keys[1]} type="datetime-local" defaultValue={params.get(keys[1]) ?? ""} />
 </>;
 }
 export function Pager({
@@ -70,6 +55,7 @@ export function Pager({
   onChange: (n: number) => void;
   locale: Locale;
 }) {
+  if (offset === 0 && total <= 20) return null;
   return <nav className="controls" aria-label={`${label(locale, "previous")} / ${label(locale, "next")}`}>
   <button type="button" className="secondary" disabled={!offset} onClick={() => onChange(Math.max(0, offset - 20))}>
     {label(locale, "previous")}

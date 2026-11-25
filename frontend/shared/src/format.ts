@@ -26,6 +26,41 @@ export function formatMoney(
     .join("");
 }
 
+/**
+ * A buyer-facing price: like formatMoney, but whole tenge drop the ",00" ("5 000 ₸").
+ * Ledgers, payouts and admin tables keep formatMoney so every tiyn stays visible.
+ */
+export function formatPrice(
+  amountTiyn: number,
+  locale: Locale = "kk",
+  currency = "KZT",
+): string {
+  const exact = formatMoney(amountTiyn, locale, currency);
+  if (amountTiyn % 100 !== 0) return exact;
+  return new Intl.NumberFormat(intlLocales[locale], {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amountTiyn / 100);
+}
+
+/** Kazakhstan's zones by city, so buyers read "Almaty" instead of "Asia/Almaty". */
+const zoneCities: Record<string, Record<Locale, string>> = {
+  "Asia/Almaty": { kk: "Алматы", ru: "Алматы", en: "Almaty" },
+  "Asia/Qyzylorda": { kk: "Қызылорда", ru: "Кызылорда", en: "Kyzylorda" },
+  "Asia/Qostanay": { kk: "Қостанай", ru: "Костанай", en: "Kostanay" },
+  "Asia/Aqtobe": { kk: "Ақтөбе", ru: "Актобе", en: "Aktobe" },
+  "Asia/Aqtau": { kk: "Ақтау", ru: "Актау", en: "Aktau" },
+  "Asia/Atyrau": { kk: "Атырау", ru: "Атырау", en: "Atyrau" },
+  "Asia/Oral": { kk: "Орал", ru: "Уральск", en: "Oral" },
+};
+
+/** The event zone as people say it: a city for Kazakhstan, the IANA id otherwise. */
+export function zoneLabel(timeZone: string, locale: Locale): string {
+  return zoneCities[timeZone]?.[locale] ?? timeZone;
+}
+
 /** CLDR abbreviated Kazakh month names, as full-ICU engines print them. */
 const kazakhMonths = [
   "қаң.",
@@ -107,5 +142,5 @@ export function formatEventDateTime(
   if (!Number.isFinite(date.getTime()))
     throw new RangeError("Timestamp is invalid.");
   const formatted = formatDateTime(date, locale, { time: true, timeZone, zoneName: true });
-  return `${formatted} · ${timeZone}`;
+  return `${formatted} · ${zoneLabel(timeZone, locale)}`;
 }

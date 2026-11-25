@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { ApiError, intlLocales } from "@biletflow/shared";
+import { ApiError, formatEventDateTime, intlLocales } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import type { Event } from "./model";
 import { InputError } from "./model";
 import type { EventCopy } from "./copy";
+import { eventCopy } from "./copy";
 
 export function EventError({
   error,
@@ -82,7 +83,7 @@ export function EventError({
           ))}
         </ul>
       )}
-      {error instanceof ApiError && error.requestId && (
+      {error instanceof ApiError && error.status >= 500 && error.requestId && (
         <p>ID: {error.requestId}</p>
       )}
       {retry && (
@@ -217,6 +218,31 @@ export function CoverArt({ event, locale }: { event: Event; locale: Locale }) {
           fill="currentColor"
         />
       </svg>
+    </div>
+  );
+}
+
+/** The organizer's refund terms as buyers see them; nothing when none are set. */
+export function RefundPolicy({
+  event,
+  locale,
+}: {
+  event: Event;
+  locale: Locale;
+}) {
+  const policy = event.refund_policy;
+  if (!policy?.summary?.trim()) return null;
+  const t = eventCopy[locale];
+  return (
+    <div className="panel">
+      <h2>{t.refund}</h2>
+      <p>{policy.summary}</p>
+      {policy.refundable_until && (
+        <p className="field-hint">
+          {t.refundable_until}:{" "}
+          {formatEventDateTime(policy.refundable_until, event.timezone, locale)}
+        </p>
+      )}
     </div>
   );
 }

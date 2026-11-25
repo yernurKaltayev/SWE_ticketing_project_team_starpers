@@ -58,9 +58,12 @@ export default function Tickets({ locale }: { locale: Locale }) {
                 <div>
                   {events.get(ticket.event_id)?.data ? (
                     <>
-                      <strong>
+                      <Link
+                        className="row-link"
+                        to={`/account/tickets/${encodeURIComponent(ticket.id)}`}
+                      >
                         {events.get(ticket.event_id)!.data!.title}
-                      </strong>
+                      </Link>
                       <p>
                         {formatEventDateTime(
                           events.get(ticket.event_id)!.data!.starts_at,
@@ -70,19 +73,20 @@ export default function Tickets({ locale }: { locale: Locale }) {
                       </p>
                     </>
                   ) : (
-                    <p className="field-hint">
+                    <Link
+                      className="row-link"
+                      to={`/account/tickets/${encodeURIComponent(ticket.id)}`}
+                    >
                       {events.get(ticket.event_id)?.isPending
                         ? t.loading
                         : t.eventUnavailable}
-                    </p>
+                    </Link>
                   )}
-                  <Link
-                    to={`/account/tickets/${encodeURIComponent(ticket.id)}`}
-                  >
-                    {ticket.ticket_number}
-                  </Link>
                   <p>
-                    {ticket.ticket_type} · {ticket.attendee_name}
+                    {ticket.ticket_type} · {ticket.attendee_name} ·{" "}
+                    <span className="commerce-identifier">
+                      {ticket.ticket_number}
+                    </span>
                   </p>
                 </div>
                 <CommerceStatus value={ticket.status} t={t} />
@@ -211,12 +215,6 @@ function TicketContent({
         <div className="checkout-layout ticket-detail">
           <div>
             <p className="commerce-identifier">{ticket.ticket_number}</p>
-            <p>
-              <SupportLink
-                locale={locale}
-                context={{ ticket_id: ticket.id, event_id: ticket.event_id }}
-              />
-            </p>
             <CommerceStatus value={ticket.status} t={t} />
             <CommerceError
               error={event.error}
@@ -257,10 +255,6 @@ function TicketContent({
               <div>
                 <dt>{t.attendee}</dt>
                 <dd>{ticket.attendee_name}</dd>
-              </div>
-              <div>
-                <dt>{t.ticketId}</dt>
-                <dd className="commerce-identifier">{ticket.id}</dd>
               </div>
               {ticket.seat && (
                 <div>
@@ -306,6 +300,12 @@ function TicketContent({
                 {query.isFetching ? t.working : t.refresh}
               </button>
             </div>
+            <p className="quiet-help">
+              <SupportLink
+                locale={locale}
+                context={{ ticket_id: ticket.id, event_id: ticket.event_id }}
+              />
+            </p>
           </div>
           {ticket.status === "valid" && (
             <div className="ticket-qr">

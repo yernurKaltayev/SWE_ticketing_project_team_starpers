@@ -286,8 +286,12 @@ it("opens public event details with the live P3 availability envelope", async ()
     </SessionContext.Provider>,
   );
   await screen.findByText("Live paid admission");
-  expect(screen.getByText(/2,500\.00/)).toBeDefined();
-  expect(screen.getByRole("link", { name: "Registration" })).toBeDefined();
+  // Whole tenge drop the ".00"; the price shows in the panel and the phone CTA.
+  expect(screen.getAllByText(/KZT 2,500$/).length).toBeGreaterThan(0);
+  expect(screen.queryByText(/2,500\.00/)).toBeNull();
+  expect(
+    screen.getAllByRole("link", { name: "Registration" }).length,
+  ).toBeGreaterThan(0);
 });
 it("shows a recoverable error for malformed availability instead of crashing event details", async () => {
   server.use(

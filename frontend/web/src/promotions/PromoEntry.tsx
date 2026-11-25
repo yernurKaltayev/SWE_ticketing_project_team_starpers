@@ -15,9 +15,13 @@ export function PromoEntry({
 }) {
   const t = promoCopy[locale];
   const [draft, setDraft] = useState(promotion.code);
+  // Most buyers have no code: keep the field folded until asked for, but open
+  // whenever a code is already applied (e.g. from a campaign QR link).
   return (
+    <details className="promo-toggle" open={!!promotion.code || undefined}>
+      <summary>{t.have}</summary>
     <fieldset className="promo-entry" disabled={disabled}>
-      <legend>{t.entry}</legend>
+      <legend className="visually-hidden">{t.entry}</legend>
       <label htmlFor="promo-code">{t.entry}</label>
       <div className="controls">
         <input
@@ -31,6 +35,7 @@ export function PromoEntry({
         />
         <button
           type="button"
+          className="secondary"
           onClick={() => {
             promotion.apply(draft);
             promotion.retry();
@@ -94,5 +99,6 @@ export function PromoEntry({
         </>
       )}
     </fieldset>
+    </details>
   );
 }

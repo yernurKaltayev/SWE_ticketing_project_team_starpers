@@ -23,6 +23,11 @@
   --color-danger-soft: #fff0f2;
   --color-warning: #946200;
   --color-warning-soft: #fff7e6;
+  --color-line-hover: #b6c1d1;
+  --color-subtle: #eef1f6;
+  --color-raised: #fbfcfe;
+  --color-danger-line: #efc3c9;
+  --color-danger-ink: #7c1d28;
 }
 
 :root {
@@ -177,12 +182,12 @@ button.secondary {
 }
 button.secondary:hover {
   background: var(--color-canvas);
-  border-color: #b6c1d1;
+  border-color: var(--color-line-hover);
 }
 button:disabled,
 button:disabled:hover {
   cursor: not-allowed;
-  background: #eef1f6;
+  background: var(--color-subtle);
   border-color: var(--color-line);
   color: #8794a7;
   box-shadow: none;
@@ -241,12 +246,12 @@ textarea {
 }
 input::placeholder,
 textarea::placeholder {
-  color: #7d8a9c;
+  color: var(--color-muted);
 }
 input:hover,
 select:hover,
 textarea:hover {
-  border-color: #b6c1d1;
+  border-color: var(--color-line-hover);
 }
 input:focus-visible,
 select:focus-visible,
@@ -382,9 +387,9 @@ label {
   background: var(--color-primary);
 }
 .form-error {
-  border: 1px solid #f2c4ca;
+  border: 1px solid var(--color-danger-line);
   background: var(--color-danger-soft);
-  color: #7c1d28;
+  color: var(--color-danger-ink);
   border-radius: var(--radius-control);
   padding: 1rem 1.15rem;
   margin-block: 1.25rem;
@@ -405,7 +410,7 @@ label {
   padding-left: 1.25rem;
 }
 .form-error a {
-  color: #7c1d28;
+  color: var(--color-danger-ink);
 }
 .form-error .field-hint {
   color: #8f3a44;
@@ -440,7 +445,7 @@ label {
   color: var(--color-danger);
 }
 .status-badge[data-tone="neutral"] {
-  background: #eef1f6;
+  background: var(--color-subtle);
   color: var(--color-muted);
 }
 .identity {
@@ -464,7 +469,7 @@ label {
 .environment-notice::before {
   content: "DEMO";
   flex: none;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 750;
   letter-spacing: 0.06em;
   padding: 0.1rem 0.45rem;
@@ -521,7 +526,7 @@ thead th {
   color: var(--color-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  background: #fbfcfe;
+  background: var(--color-raised);
   white-space: nowrap;
 }
 tbody tr:last-child > * {
@@ -531,7 +536,7 @@ tbody tr {
   transition: background-color 120ms var(--ease-out);
 }
 tbody tr:hover {
-  background: #fbfcfe;
+  background: var(--color-raised);
 }
 th[scope="row"] {
   font-weight: 650;
@@ -763,6 +768,9 @@ main:focus {
 }
 .workspace-main {
   min-width: 0;
+}
+.workspace-nav-toggle {
+  display: none;
 }
 
 /* ---------- Auth ---------- */
@@ -1061,6 +1069,7 @@ main:focus {
   color: var(--color-muted);
 }
 .empty-state p {
+  max-width: 40ch;
   margin: 0;
 }
 
@@ -1212,27 +1221,30 @@ main:focus {
   }
   .workspace-nav {
     position: static;
-    display: flex;
-    gap: 0.25rem 1rem;
-    overflow-x: auto;
+    gap: 1rem;
     padding: 0.5rem;
-    scrollbar-width: thin;
   }
-  .workspace-nav section {
+  .workspace-nav-toggle {
     display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    flex: none;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.6rem;
   }
-  .workspace-nav .nav-label {
+  .workspace-nav-toggle span {
+    flex: 1;
+    text-align: left;
+  }
+  .workspace-nav-toggle svg:last-child {
+    transition: transform 160ms var(--ease-out);
+  }
+  .workspace-nav[data-open] .workspace-nav-toggle svg:last-child {
+    transform: rotate(180deg);
+  }
+  .workspace-nav:not([data-open]) section {
     display: none;
   }
-  .workspace-nav ul {
-    display: flex;
-    gap: 0.25rem;
-  }
-  .workspace-nav a {
-    white-space: nowrap;
+  .workspace-nav section {
+    padding-inline: 0.25rem;
   }
 }
 @media (max-width: 760px) {
@@ -1335,7 +1347,7 @@ main:focus {
   font-size: 1.6rem;
 }
 .is-list .cover-date span {
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   letter-spacing: 0.05em;
 }
 .is-list .event-card h2 {
@@ -1440,7 +1452,7 @@ section + section > h2:first-child {
 button.danger {
   background: var(--color-surface);
   color: var(--color-danger);
-  border-color: #efc3c9;
+  border-color: var(--color-danger-line);
   box-shadow: none;
 }
 button.danger:hover {
@@ -1457,7 +1469,7 @@ nav.controls:has(> a[aria-current]) {
   scrollbar-width: none;
   gap: 2px;
   padding: 4px;
-  background: #eef1f6;
+  background: var(--color-subtle);
   border-radius: 12px;
 }
 nav.controls:has(> a[aria-current]) > a {
@@ -1535,11 +1547,11 @@ nav.controls:has(> a[aria-current]) > a[aria-current] {
   position: absolute;
   top: 2px;
   right: 0;
-  min-width: 1.15rem;
+  min-width: 1.25rem;
   padding: 0 0.3rem;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  line-height: 1.15rem;
+  line-height: 1.25rem;
   text-align: center;
   box-shadow: 0 0 0 2px var(--color-surface);
 }
@@ -1559,7 +1571,7 @@ nav.controls:has(> a[aria-current]) > a[aria-current] {
 .account-nav .account-trigger:hover,
 .account-nav .account-trigger[aria-expanded="true"] {
   background: var(--color-canvas);
-  border-color: #b6c1d1;
+  border-color: var(--color-line-hover);
 }
 .avatar {
   display: inline-grid;
@@ -1747,7 +1759,7 @@ button.chip {
 }
 button.chip:hover {
   background: var(--color-canvas);
-  border-color: #b6c1d1;
+  border-color: var(--color-line-hover);
 }
 button.chip[aria-pressed="true"] {
   background: var(--color-ink);
@@ -1990,4 +2002,118 @@ button.link-button:hover {
 .help-panel .insights > button.secondary:hover {
   background: none;
   color: var(--color-ink);
+}
+
+/* Event page on phones and tablets: the ticket panel drops below the description,
+   so the primary action stays pinned to the bottom of the screen. */
+.mobile-cta {
+  display: none;
+}
+@media (max-width: 1024px) {
+  .mobile-cta {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem max(1rem, env(safe-area-inset-left))
+      calc(0.75rem + env(safe-area-inset-bottom));
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-line);
+    box-shadow: 0 -6px 20px rgb(15 23 42 / 0.08);
+  }
+  .mobile-cta .price {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .mobile-cta .action-link {
+    flex: 0 0 auto;
+  }
+  body:has(> .mobile-cta) main {
+    padding-bottom: 5.5rem;
+  }
+}
+
+.ticket-table th[scope="row"] .status-badge {
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+.ticket-table td:last-child {
+  text-align: right;
+}
+
+/* Irreversible event actions, set apart at the end of the editor. */
+.danger-zone {
+  margin-top: 2.5rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-danger-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.danger-zone h2 {
+  margin-top: 0;
+  color: var(--color-danger);
+}
+
+/* Password fields: show/hide toggle inside the input. */
+.password-input {
+  position: relative;
+}
+.password-input input {
+  padding-right: 3rem;
+}
+button.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.25rem;
+  transform: translateY(-50%);
+  width: 40px;
+  min-height: 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: var(--color-muted);
+}
+button.password-toggle:hover,
+button.password-toggle[aria-pressed="true"] {
+  background: transparent;
+  color: var(--color-primary);
+}
+.empty-state button,
+.empty-state .action-link {
+  margin-top: 0.75rem;
+}
+
+/* Profile pages inside the organizer workspace align with the other pages
+   instead of floating as a narrow centred card. */
+.workspace-main .auth-page {
+  max-width: 44rem;
+  margin-inline: 0;
+}
+
+.quiet-help {
+  margin: 1.25rem 0 0;
+  font-size: 0.875rem;
+}
+.title-row {
+  margin-block: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+.title-row h1 {
+  margin-block: 0;
+}
+.ticket-table thead th {
+  white-space: normal;
+}
+.ticket-table td,
+.ticket-table th {
+  padding-inline: 0.75rem;
 }
