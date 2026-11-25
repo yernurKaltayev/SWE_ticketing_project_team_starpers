@@ -32,6 +32,7 @@ import { EventDetail } from "./events/Detail";
 import { EventEditor } from "./events/Editor";
 import { eventCopy } from "./events/copy";
 import { commerceNavigation } from "./checkout/navigation";
+import { CityPicker } from "./events/CityPicker";
 import { paymentCopy } from "./payments/copy";
 import { PageErrorBoundary } from "./PageErrorBoundary";
 import { operationsCopy } from "./operations/copy";
@@ -170,6 +171,7 @@ function Application() {
           <BrandMark />
           BiletFlow
         </Link>
+        <CityPicker locale={locale} />
         <nav className="site-nav" aria-label="BiletFlow">
           <NavLink to="/events">{eventCopy[locale].navEvents}</NavLink>
           {user ? (

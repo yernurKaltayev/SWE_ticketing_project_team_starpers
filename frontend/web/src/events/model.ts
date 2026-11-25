@@ -179,7 +179,7 @@ export function dayBoundary(
   return new Date(local + offset * 60_000).toISOString();
 }
 export type QuickRange = "today" | "weekend" | "month";
-const isoDay = (d: Date) =>
+export const isoDay = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 /** Local calendar days for the discovery shortcuts; the weekend is Sat–Sun. */
 export function quickRange(kind: QuickRange, now = new Date()) {

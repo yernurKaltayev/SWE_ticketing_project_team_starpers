@@ -22,6 +22,13 @@ const en = {
   emptyTitle: "Nothing matches these filters",
   emptyHint: "Try another date, city or keyword.",
   eventsCount: "events",
+  all: "All",
+  allDates: "All dates",
+  previous: "Previous",
+  next: "Next",
+  details: "Details",
+  featured: "Featured events",
+  categories: "Categories",
   filters: "Filters",
 };
 type Copy = typeof en;
@@ -48,6 +55,13 @@ const ru: Copy = {
   emptyTitle: "По этим фильтрам ничего нет",
   emptyHint: "Попробуйте другую дату, город или запрос.",
   eventsCount: "мероприятий",
+  all: "Все",
+  allDates: "Все даты",
+  previous: "Назад",
+  next: "Вперёд",
+  details: "Подробнее",
+  featured: "Избранные мероприятия",
+  categories: "Категории",
   filters: "Фильтры",
 };
 const kk: Copy = {
@@ -73,6 +87,13 @@ const kk: Copy = {
   emptyTitle: "Бұл сүзгілер бойынша ештеңе жоқ",
   emptyHint: "Басқа күнді, қаланы немесе сұрауды көріңіз.",
   eventsCount: "іс-шара",
+  all: "Барлығы",
+  allDates: "Барлық күндер",
+  previous: "Артқа",
+  next: "Алға",
+  details: "Толығырақ",
+  featured: "Таңдаулы іс-шаралар",
+  categories: "Санаттар",
   filters: "Сүзгілер",
 };
 export const discoveryCopy: Record<Locale, Copy> = { en, ru, kk };
