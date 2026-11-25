@@ -50,9 +50,14 @@
   align-items: end;
   flex-wrap: wrap;
 }
+/* Keep the filter controls grouped: fixed-basis columns with full-width
+   selects, instead of stretched wrappers around narrow selects. */
 .support-filters > div {
-  flex: 1;
+  flex: 0 1 16rem;
   min-width: min(100%, 12rem);
+}
+.support-filters select {
+  width: 100%;
 }
 .support-page textarea {
   width: 100%;

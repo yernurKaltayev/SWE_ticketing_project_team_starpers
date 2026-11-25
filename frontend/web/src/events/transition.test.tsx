@@ -66,14 +66,10 @@ it("keeps outgoing create controls until the saved-event route takes over", asyn
   fill("Title", "Transition regression");
   fill("Description", "Demo");
   fill("Category", "education");
-  await waitFor(() =>
-    expect(
-      document.querySelector(
-        'option[value="Demo campus auditorium · Astana · Demo venue address"]',
-      ),
-    ).not.toBeNull(),
-  );
-  fill("Venue", "Demo campus auditorium · Astana · Demo venue address");
+  await screen.findByRole("option", {
+    name: "Demo campus auditorium · Astana · Demo venue address",
+  });
+  fill("Venue", "4aab9cc5-d54c-47e8-9b53-09085463ce4c");
   fill("Starts", "2027-02-01T18:00");
   fill("Ends", "2027-02-01T20:00");
   await userEvent.click(
