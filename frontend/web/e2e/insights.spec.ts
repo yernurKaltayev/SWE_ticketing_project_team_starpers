@@ -103,7 +103,7 @@ test("F10 organizer reads analytics/history, retains a past event and duplicates
     exact: true
   })).toBeVisible();
   await page.getByRole("button", {
-    name: "Duplicate into a new draft",
+    name: "Duplicate",
     exact: true
   }).click();
   await expect(page.getByRole("button", {
@@ -115,7 +115,7 @@ test("F10 organizer reads analytics/history, retains a past event and duplicates
     exact: true
   }).click();
   await page.getByRole("button", {
-    name: "Duplicate into a new draft",
+    name: "Duplicate",
     exact: true
   }).click();
   await page.getByRole("dialog").getByRole("button", {

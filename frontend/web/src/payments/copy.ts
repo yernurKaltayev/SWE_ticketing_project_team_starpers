@@ -1,6 +1,6 @@
 import type { Locale } from "@biletflow/shared";
 const en = {
-  activation: "Activate paid sales",
+  activation: "Paid sales",
   finances: "Finances and payouts",
   eventFinances: "Event revenue",
   accounts: "Payout accounts",
@@ -35,7 +35,7 @@ const en = {
   feeQuote:
     "Open the simulated fee payment to see the current amount before choosing an outcome.",
   startFee: "Review activation fee",
-  startPayment: "Continue to simulated payment",
+  startPayment: "Pay",
   resume: "Start or resume payment",
   payment: "Simulated payment",
   amount: "Amount",
@@ -56,8 +56,8 @@ const en = {
     "The result could not be confirmed. Refresh status before retrying. Starting or resuming uses the existing pending payment when available.",
   blocked:
     "Paid tickets are unavailable until this event's paid sales are active. You may still select available free tickets.",
-  continue: "Create order and continue",
-  checkout: "Ticket registration",
+  continue: "Go to payment",
+  checkout: "Get tickets",
   estimate: "Estimated ticket total",
   authoritative: "Review the final order total before payment.",
   noTickets: "No tickets are available right now.",
@@ -108,7 +108,7 @@ type Copy = {
     : string;
 };
 const ru: Copy = {
-  activation: "Включить платные продажи",
+  activation: "Платные продажи",
   finances: "Финансы и выплаты",
   eventFinances: "Доходы мероприятия",
   accounts: "Счета для выплат",
@@ -143,7 +143,7 @@ const ru: Copy = {
   feeQuote:
     "Откройте симуляцию оплаты сбора, чтобы увидеть сумму до выбора результата.",
   startFee: "Проверить сбор активации",
-  startPayment: "Перейти к симуляции оплаты",
+  startPayment: "Оплатить",
   resume: "Начать или продолжить оплату",
   payment: "Симуляция оплаты",
   amount: "Сумма",
@@ -152,18 +152,18 @@ const ru: Copy = {
   succeed: "Симулировать успех",
   fail: "Симулировать отказ",
   retryPayment: "Начать новую симуляцию оплаты",
-  pending: "Оплата ожидается. Билеты выдаются после подтверждения сервером.",
+  pending: "Заказ ждёт оплаты. Билеты появятся сразу после оплаты.",
   activationPending:
     "Ожидается оплата сбора активации. Платные продажи станут доступны после выполнения всех шагов.",
-  succeeded: "Оплата подтверждена сервером.",
+  succeeded: "Оплата подтверждена.",
   failed: "Оплата не прошла. Билеты по этому платежу не выданы.",
   cancelled: "Платёж отменён или бронь истекла. Проверьте заказ.",
   checkFirst:
     "Результат неизвестен. Обновите статус перед повтором. Существующий ожидающий платёж будет использован повторно.",
   blocked:
     "Платные билеты недоступны до активации продаж. Доступные бесплатные билеты можно выбрать.",
-  continue: "Создать заказ и продолжить",
-  checkout: "Регистрация билетов",
+  continue: "Перейти к оплате",
+  checkout: "Оформление билетов",
   estimate: "Предварительная стоимость",
   authoritative: "Перед оплатой заказ покажет окончательную сумму сервера.",
   noTickets: "Сейчас нет доступных билетов.",
@@ -207,7 +207,7 @@ const ru: Copy = {
   pollEnded: "Автопроверка приостановлена. Обновите статус вручную.",
 };
 const kk: Copy = {
-  activation: "Ақылы сатуды іске қосу",
+  activation: "Ақылы сату",
   finances: "Қаржы және төлемдер",
   eventFinances: "Іс-шара табысы",
   accounts: "Қаражат алу шоттары",
@@ -241,7 +241,7 @@ const kk: Copy = {
   feeQuote:
     "Нәтижені таңдамас бұрын соманы көру үшін алым төлеу симуляциясын ашыңыз.",
   startFee: "Іске қосу алымын қарау",
-  startPayment: "Төлем симуляциясына өту",
+  startPayment: "Төлеу",
   resume: "Төлемді бастау не жалғастыру",
   payment: "Төлем симуляциясы",
   amount: "Сома",
@@ -250,10 +250,10 @@ const kk: Copy = {
   succeed: "Сәтті төлемді симуляциялау",
   fail: "Сәтсіз төлемді симуляциялау",
   retryPayment: "Жаңа төлем симуляциясын бастау",
-  pending: "Төлем күтілуде. Билеттер сервер растағаннан кейін беріледі.",
+  pending: "Тапсырыс төлемді күтуде. Билеттер төлемнен кейін бірден шығады.",
   activationPending:
     "Іске қосу алымы төленуі күтілуде. Барлық қадам орындалған соң ақылы сату қолжетімді болады.",
-  succeeded: "Төлемді сервер растады.",
+  succeeded: "Төлем расталды.",
   failed: "Төлем өтпеді. Бұл төлем бойынша билеттер берілмеді.",
   cancelled:
     "Төлем тоқтатылды немесе бронь мерзімі аяқталды. Тапсырысты тексеріңіз.",
@@ -261,8 +261,8 @@ const kk: Copy = {
     "Нәтиже белгісіз. Қайталаудан бұрын күйін жаңартыңыз. Күтілудегі төлем болса, сол жалғасады.",
   blocked:
     "Ақылы билеттер сату іске қосылғанша қолжетімсіз. Қолжетімді тегін билеттерді таңдауға болады.",
-  continue: "Тапсырыс жасап, жалғастыру",
-  checkout: "Билеттерді тіркеу",
+  continue: "Төлемге өту",
+  checkout: "Билеттерді рәсімдеу",
   estimate: "Билеттердің болжамды сомасы",
   authoritative: "Төлем алдында тапсырыста сервердің соңғы сомасы көрсетіледі.",
   noTickets: "Қазір қолжетімді билеттер жоқ.",

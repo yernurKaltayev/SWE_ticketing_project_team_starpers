@@ -573,15 +573,17 @@ export function PayoutsPage({ locale }: { locale: Locale }) {
           )}
         </>
       )}
-      <button
-        className="secondary"
-        disabled={query.isFetching}
-        onClick={() => {
-          void query.refetch();
-        }}
-      >
-        {t.refresh}
-      </button>
+      {!!query.data?.items.length && (
+        <button
+          className="secondary"
+          disabled={query.isFetching}
+          onClick={() => {
+            void query.refetch();
+          }}
+        >
+          {t.refresh}
+        </button>
+      )}
     </section>
   );
 }

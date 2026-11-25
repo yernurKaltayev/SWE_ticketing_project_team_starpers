@@ -114,7 +114,7 @@ it("renders the free-event journey with corrective publication errors and protec
   await user.click(screen.getByRole("button", { name: "Publish" }));
   await user.click(screen.getByRole("button", { name: "Confirm" }));
   await screen.findByRole("button", { name: "Return to draft" });
-  await user.click(screen.getByRole("link", { name: "Protected preview" }));
+  await user.click(screen.getByRole("link", { name: "Preview" }));
   await screen.findByRole("heading", { name: "Dias demonstration" });
   await screen.findByText("Free admission", { exact: true });
 });
@@ -290,7 +290,7 @@ it("opens public event details with the live P3 availability envelope", async ()
   expect(screen.getAllByText(/KZT 2,500$/).length).toBeGreaterThan(0);
   expect(screen.queryByText(/2,500\.00/)).toBeNull();
   expect(
-    screen.getAllByRole("link", { name: "Registration" }).length,
+    screen.getAllByRole("link", { name: "Tickets" }).length,
   ).toBeGreaterThan(0);
 });
 it("shows a recoverable error for malformed availability instead of crashing event details", async () => {

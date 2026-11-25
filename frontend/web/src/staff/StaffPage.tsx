@@ -101,9 +101,7 @@ function StaffContent({ eventId, locale }: { eventId: string; locale: Locale }) 
         {eventCopy[locale].backToEvent}
       </BackLink>
       <h1>{t.title}</h1>
-      {event.data ? <p className="event-heading">{event.data.title}</p> : null}
-      <p>{t.intro}</p>
-      <p className="field-hint">{noFinalDot(t.appHint)}</p>
+      {event.data ? <p className="page-subtitle">{event.data.title}</p> : null}
       {notice ? <Status>{notice}</Status> : null}
       {actionError ? (
         <div className="form-error" role="alert" tabIndex={-1} ref={errorRef}>
@@ -111,8 +109,9 @@ function StaffContent({ eventId, locale }: { eventId: string; locale: Locale }) 
         </div>
       ) : null}
 
-      <h2>{t.add}</h2>
-      <form onSubmit={submit} noValidate aria-busy={add.isPending}>
+      <form className="panel staff-form" onSubmit={submit} noValidate aria-busy={add.isPending}>
+        <h2>{t.add}</h2>
+        <p className="field-hint">{noFinalDot(t.appHint)}</p>
         <Field
           label={t.email}
           name="staff-email"
@@ -144,7 +143,7 @@ function StaffContent({ eventId, locale }: { eventId: string; locale: Locale }) 
         </button>
       </form>
 
-      <h2>{t.title}</h2>
+      <h2>{t.listTitle}</h2>
       {staff.isPending ? <Status>{t.loading}</Status> : null}
       {staff.isError ? (
         <div className="form-error" role="alert">
@@ -154,7 +153,7 @@ function StaffContent({ eventId, locale }: { eventId: string; locale: Locale }) 
           </button>
         </div>
       ) : null}
-      {staff.data && staff.data.length === 0 ? <p>{t.empty}</p> : null}
+      {staff.data && staff.data.length === 0 ? <p className="empty-state">{t.empty}</p> : null}
       {staff.data && staff.data.length > 0 ? (
         <div className="table-scroll">
           <table>

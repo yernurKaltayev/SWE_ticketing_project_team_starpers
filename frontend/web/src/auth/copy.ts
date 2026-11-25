@@ -94,7 +94,7 @@ const en = {
   rejected: "Rejected",
   unknownStatus: "Unknown",
   organizerVerificationNote:
-    "Organizer verification is simulated. Email confirmation is separate.",
+    "Organizer verification is simulated.",
   payoutPending:
     "Payout account setup will be available with payments. Do not enter bank details in these contact fields.",
   publicationNote: "Confirm your email before publishing an event.",
@@ -211,7 +211,7 @@ export const authCopy: Record<Locale, Copy> = {
     rejected: "Қабылданбаған",
     unknownStatus: "Белгісіз",
     organizerVerificationNote:
-      "Ұйымдастырушыны тексеру — симуляция. Поштаны растау бөлек орындалады.",
+      "Ұйымдастырушыны тексеру — симуляция.",
     payoutPending:
       "Төлем шотын баптау төлемдер модулімен қолжетімді болады. Бұл байланыс өрістеріне банк деректерін енгізбеңіз.",
     publicationNote: "Іс-шараны жариялау алдында поштаңызды растаңыз.",
@@ -324,7 +324,7 @@ export const authCopy: Record<Locale, Copy> = {
     rejected: "Отклонено",
     unknownStatus: "Неизвестен",
     organizerVerificationNote:
-      "Проверка организатора — симуляция. Подтверждение почты выполняется отдельно.",
+      "Проверка организатора — симуляция.",
     payoutPending:
       "Настройка счёта для выплат появится в модуле платежей. Не вводите банковские данные в контактные поля.",
     publicationNote: "Перед публикацией события подтвердите почту.",

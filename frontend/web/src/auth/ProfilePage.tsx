@@ -130,7 +130,6 @@ export function OrganizerPage({ locale }: { locale: Locale }) {
   return (
     <section className="auth-page">
       <h1>{t.organizer}</h1>
-      <p>{t.organizerIntro}</p>
       {!user?.email_verified_at ? (
         <Status>
           {t.publicationNote} <Link to="/verify-email">{t.resend}</Link>

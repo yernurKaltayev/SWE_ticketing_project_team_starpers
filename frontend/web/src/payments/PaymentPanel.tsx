@@ -214,6 +214,9 @@ export function PaymentPanel({
       )}
       {paymentId && (
         <div className="controls">
+          {/* While the simulated choice is on screen the status is polled
+              automatically; the manual refresh only matters once that stops. */}
+          {!(payment?.status === "pending" && payment.is_simulated && polls < 10) && (
           <button
             className="secondary"
             disabled={busy || query.isFetching}
@@ -225,6 +228,7 @@ export function PaymentPanel({
           >
             {t.refresh}
           </button>
+          )}
           {!payment && !query.isPending && (
             <button
               disabled={busy}

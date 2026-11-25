@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { useId, useState } from "react";
+import { usePopover } from "./popover";
+import { NavLink } from "react-router-dom";
 import { isLocale, localeLabels, locales, messages } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import {
@@ -23,39 +24,6 @@ const headerCopy: Record<
 };
 
 const localeCodes: Record<Locale, string> = { en: "EN", ru: "RU", kk: "KZ" };
-
-/** Close a popover on outside click, Escape (returning focus) and navigation. */
-function usePopover() {
-  const location = useLocation();
-  const [openOn, setOpenOn] = useState<string | null>(null);
-  const open = openOn === location.pathname;
-  const root = useRef<HTMLDivElement>(null);
-  const button = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const onPointer = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) setOpenOn(null);
-    };
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpenOn(null);
-        button.current?.focus();
-      }
-    };
-    document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-  return {
-    open,
-    setOpen: (value: boolean) => setOpenOn(value ? location.pathname : null),
-    root,
-    button,
-  };
-}
 
 /** Language switch: globe + short code; a menu lists the full names. */
 export function LanguagePicker({

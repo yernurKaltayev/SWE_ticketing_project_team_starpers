@@ -16,7 +16,7 @@ import { CoverArt, EventError, Image, RefundPolicy } from "./ui";
 import { categoryLabel } from "./categories";
 import { offerLabel } from "./offerLabel";
 import { createPortal } from "react-dom";
-import { commerceNavigation } from "../checkout/navigation";
+import { commerceAction } from "../checkout/navigation";
 import { parseEvent, parsePublicAvailability, parseVenue } from "./contracts";
 import {
   ArrowLeftIcon,
@@ -130,7 +130,7 @@ function EventContent({
                   <CalendarIcon />
                 </span>
                 <dt>
-                  {t.starts_at} — {t.ends_at}
+                  {t.when}
                 </dt>
                 <dd>
                   {formatEventRange(event.starts_at, event.ends_at, event.timezone, locale)}
@@ -216,7 +216,7 @@ function EventContent({
                 to={checkoutLink(event.id, location.search)}
               >
                 <TicketIcon />
-                {commerceNavigation[locale].register}
+                {commerceAction(locale, offer?.allFree)}
               </Link>
             )}
           </div>
@@ -263,7 +263,7 @@ function EventContent({
             to={checkoutLink(event.id, location.search)}
           >
             <TicketIcon />
-            {commerceNavigation[locale].register}
+            {commerceAction(locale, offer?.allFree)}
           </Link>
         </div>,
         document.body,

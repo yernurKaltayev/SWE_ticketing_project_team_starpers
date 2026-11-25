@@ -211,11 +211,11 @@ it("automatically validates a linked code, shows discounted tickets, and submits
     screen.getByText(/Estimated ticket total after discount:/).textContent,
   ).toMatch(/0[.,]00/);
   await userEvent.click(
-    screen.getByRole("button", { name: "Review registration" }),
+    screen.getByRole("button", { name: "Continue" }),
   );
-  await screen.findByRole("heading", { name: "Review registration" });
+  await screen.findByRole("heading", { name: "Review your order" });
   await userEvent.click(
-    screen.getByRole("button", { name: "Create order and continue" }),
+    screen.getByRole("button", { name: "Go to payment" }),
   );
   await screen.findByRole("heading", { name: "Registration confirmed" });
   expect(mockCampaignList()[0]!.redemptions_count).toBe(1);
@@ -229,13 +229,13 @@ it("removes a rejected linked code and enables ordinary checkout", async () => {
   await screen.findByText("This code does not exist for this event.");
   expect(
     screen
-      .getByRole("button", { name: "Review registration" })
+      .getByRole("button", { name: "Continue" })
       .hasAttribute("disabled"),
   ).toBe(true);
   await userEvent.click(screen.getByRole("button", { name: "Remove code" }));
   expect(
     screen
-      .getByRole("button", { name: "Review registration" })
+      .getByRole("button", { name: "Continue" })
       .hasAttribute("disabled"),
   ).toBe(false);
 });
@@ -254,10 +254,10 @@ it("freezes the original code/body/key when an order response is lost, even if t
   app(buyer, `/events/${demoEventId}/checkout?promo=${campaign.code}`);
   await select();
   await userEvent.click(
-    screen.getByRole("button", { name: "Review registration" }),
+    screen.getByRole("button", { name: "Continue" }),
   );
   await userEvent.click(
-    screen.getByRole("button", { name: "Create order and continue" }),
+    screen.getByRole("button", { name: "Go to payment" }),
   );
   await screen.findByText(/could not confirm the outcome/);
   await owner.request(`/api/v1/campaigns/${campaign.id}`, {
@@ -280,7 +280,7 @@ it("rejects a discount changed after review before posting an order", async () =
   app(buyer, `/events/${demoEventId}/checkout?promo=${campaign.code}`);
   await select();
   await userEvent.click(
-    screen.getByRole("button", { name: "Review registration" }),
+    screen.getByRole("button", { name: "Continue" }),
   );
   server.use(
     http.post("*/api/v1/promo/validate", () =>
@@ -288,7 +288,7 @@ it("rejects a discount changed after review before posting an order", async () =
     ),
   );
   await userEvent.click(
-    screen.getByRole("button", { name: "Create order and continue" }),
+    screen.getByRole("button", { name: "Go to payment" }),
   );
   await screen.findByText(/Prices or discount changed/);
   expect(writes).toBe(0);
@@ -433,7 +433,7 @@ it("carries the event page's promo context into its registration link", async ()
   const { buyer, campaign } = await setup();
   app(buyer, `/events/${demoEventId}?promo=${campaign.code}&share=demo-share`);
   // The ticket panel and the phone CTA both carry the same context.
-  const links = await screen.findAllByRole("link", { name: "Registration" });
+  const links = await screen.findAllByRole("link", { name: "Register" });
   for (const link of links)
     expect(link.getAttribute("href")).toBe(
       `/events/${demoEventId}/checkout?promo=${campaign.code}&share=demo-share`,
@@ -494,7 +494,7 @@ it.each(["promo_disabled", "promo_exhausted"])(
     );
     expect(
       screen
-        .getByRole("button", { name: "Review registration" })
+        .getByRole("button", { name: "Continue" })
         .hasAttribute("disabled"),
     ).toBe(true);
   },
@@ -513,7 +513,7 @@ it("rejects a malformed quote larger than the selected subtotal", async () => {
   await screen.findByText(/Could not validate the promotion/);
   expect(
     screen
-      .getByRole("button", { name: "Review registration" })
+      .getByRole("button", { name: "Continue" })
       .hasAttribute("disabled"),
   ).toBe(true);
 });

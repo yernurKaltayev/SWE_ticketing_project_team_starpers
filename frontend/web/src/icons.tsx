@@ -173,6 +173,69 @@ export const CloseIcon = (p: P) => (
   </Icon>
 );
 
+export const MusicIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M9 18V5.5l10-2V16" />
+    <circle cx="6.5" cy="18" r="2.5" />
+    <circle cx="16.5" cy="16" r="2.5" />
+  </Icon>
+);
+export const SparkleIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9Z" />
+    <path d="M18.5 16.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7Z" />
+  </Icon>
+);
+export const MaskIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M4.5 5h15v6.5a7.5 7.5 0 0 1-15 0Z" />
+    <path d="M8.5 9.5h1.5M14 9.5h1.5M9 14a4 4 0 0 0 6 0" />
+  </Icon>
+);
+export const BallIcon = (p: P) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7.5l3.8 2.8-1.5 4.5H9.7l-1.5-4.5Z" />
+    <path d="M12 3.5v4M15.8 10.3l4.2-1.6M14.3 14.8l2.6 3.7M9.7 14.8l-2.6 3.7M8.2 10.3 4 8.7" />
+  </Icon>
+);
+export const MicIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="9" y="3.5" width="6" height="11" rx="3" />
+    <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5" />
+  </Icon>
+);
+export const ChatIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M4.5 6.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H10l-4 3.5v-3.5h0a2 2 0 0 1-1.5-2Z" />
+  </Icon>
+);
+export const BookIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M12 6.5c-2-1.6-4.7-2-7.5-1.5v13c2.8-.5 5.5-.1 7.5 1.5 2-1.6 4.7-2 7.5-1.5V5c-2.8-.5-5.5-.1-7.5 1.5ZM12 6.5v13" />
+  </Icon>
+);
+export const FrameIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="4" y="4.5" width="16" height="15" rx="2" />
+    <path d="m4 16 4.5-4.5 4 4 2.5-2.5 5 5" />
+    <circle cx="15" cy="9" r="1.5" />
+  </Icon>
+);
+export const BalloonIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M12 15.5c-3.3 0-6-3-6-6.5a6 6 0 0 1 12 0c0 3.5-2.7 6.5-6 6.5Z" />
+    <path d="m11 15.5-.5 1.5h3l-.5-1.5M12 17c0 2-1.5 2.5-1.5 4" />
+  </Icon>
+);
+export const DotsIcon = (p: P) => (
+  <Icon {...p}>
+    <circle cx="6" cy="12" r="1.3" />
+    <circle cx="12" cy="12" r="1.3" />
+    <circle cx="18" cy="12" r="1.3" />
+  </Icon>
+);
+
 /** BiletFlow mark: lowercase "b" in a rounded tile (Figma shared component). */
 export function BrandMark({ className = "brand-mark" }: { className?: string }) {
   return (
