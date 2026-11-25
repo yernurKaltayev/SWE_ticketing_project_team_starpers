@@ -37,10 +37,15 @@ export default function Tickets({ locale }: { locale: Locale }) {
   );
   return (
     <section>
-      <div className="commerce-heading">
-        <h1>{t.tickets}</h1>
-        <Link to="/account/orders">{t.orders}</Link>
-      </div>
+      <h1>{t.tickets}</h1>
+      <nav className="controls" aria-label={`${t.tickets} / ${t.orders}`}>
+        <Link to="/account/tickets" aria-current={"page"}>
+          {t.tickets}
+        </Link>
+        <Link to="/account/orders" aria-current={undefined}>
+          {t.orders}
+        </Link>
+      </nav>
       <CommerceError
         error={query.error}
         t={t}
@@ -51,7 +56,14 @@ export default function Tickets({ locale }: { locale: Locale }) {
       {query.isPending && <Status>{t.loading}</Status>}
       {query.data && !query.isError && (
         <>
-          {!query.data.items.length && <Status>{t.emptyTickets}</Status>}
+          {!query.data.items.length && (
+            <div className="empty-state" role="status">
+              <p>{t.emptyTickets}</p>
+              <Link className="action-link" to="/events">
+                {t.back}
+              </Link>
+            </div>
+          )}
           <ul className="commerce-list">
             {query.data.items.map((ticket) => (
               <li key={ticket.id}>
@@ -96,7 +108,6 @@ export default function Tickets({ locale }: { locale: Locale }) {
           <Pagination {...pagination} total={query.data.total} t={t} />
         </>
       )}
-      <Link to="/events">{t.back}</Link>
     </section>
   );
 }

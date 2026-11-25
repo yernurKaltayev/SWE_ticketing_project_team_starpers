@@ -254,17 +254,17 @@ function Search({
         {["active", "suspended"].includes(String(row.paid_sales_status)) && <button disabled={write.busy || write.uncertain || row.status === "suspended"} onClick={() => suspend(row, true)}>
           {t(row.paid_sales_status === "suspended" ? "resumeSales" : "suspendSales")}
         </button>}
-        <Link to={`/organizer/events/${row.id}/analytics`}>
+        <Link className="action-link ghost" to={`/organizer/events/${row.id}/analytics`}>
           {t("analytics")}
         </Link>
-        <Link to={`/organizer/events/${row.id}/history`}>
+        <Link className="action-link ghost" to={`/organizer/events/${row.id}/history`}>
           {t("history")}
         </Link>
       </>}
-      {section === "orders" && <Link to={`/admin/orders?event_id=${row.event_id}`}>
+      {section === "orders" && <Link className="action-link ghost" to={`/admin/orders?event_id=${row.event_id}`}>
         {t("orders")}
       </Link>}
-      {section === "support" && <Link to={`/support/cases/${row.id}`}>
+      {section === "support" && <Link className="action-link ghost" to={`/support/cases/${row.id}`}>
         {t("support")}
       </Link>}
       {section === "reports" && <>
@@ -286,7 +286,7 @@ function Search({
           })}>
           {t(status)}
         </button>)}
-        <Link to="/admin/events">
+        <Link className="action-link ghost" to="/admin/events">
           {t("events")}
         </Link>
       </>}

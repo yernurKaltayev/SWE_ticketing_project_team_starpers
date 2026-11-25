@@ -17,6 +17,7 @@ import { useDraft } from "./drafts";
 import { useLiveQuery } from "./data";
 import { ContextDetails, SupportError } from "./ui";
 import "./support.css";
+import { BackLink } from "../BackLink";
 export default function NewCase({ locale }: { locale: Locale }) {
   const { search } = useLocation();
   const { user } = useSession();
@@ -94,7 +95,7 @@ function Compose({ locale, context }: { locale: Locale; context: Context }) {
   }
   return (
     <section className="support-page">
-      <Link to="/support">{t.back}</Link>
+      <BackLink to="/support">{t.back}</BackLink>
       <h1>{t.newCase}</h1>
       <ContextDetails context={context} t={t} />
       <div tabIndex={-1} ref={ref}>

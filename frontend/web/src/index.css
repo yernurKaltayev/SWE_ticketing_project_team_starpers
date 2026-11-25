@@ -2149,3 +2149,106 @@ button.password-toggle[aria-pressed="true"] {
     flex-basis: 100%;
   }
 }
+
+/* Language menu: same pill as the account trigger, list of full names. */
+.language-menu {
+  position: relative;
+}
+button.language-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 40px;
+  padding: 0 0.6rem 0 0.7rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-chip);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  box-shadow: none;
+}
+button.language-trigger svg {
+  color: var(--color-muted);
+}
+button.language-trigger:hover,
+button.language-trigger[aria-expanded="true"] {
+  background: var(--color-canvas);
+  border-color: var(--color-line-hover);
+}
+.language-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  z-index: 30;
+  min-width: 12rem;
+  padding: 0.4rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-raise);
+}
+.language-panel[hidden] {
+  display: none;
+}
+.language-panel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.language-panel button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 0.7rem;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--color-ink);
+  font-size: 0.9rem;
+  font-weight: 550;
+  box-shadow: none;
+}
+.language-panel button:hover {
+  background: var(--color-canvas);
+}
+.language-panel button[aria-pressed="true"] {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 650;
+}
+.language-code {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.language-panel button[aria-pressed="true"] .language-code {
+  color: var(--color-primary);
+}
+
+/* Secondary actions inside cards: small outlined pills, not bare links. */
+.card-links {
+  gap: 0.4rem;
+}
+a.chip-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 0.8rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-chip);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+a.chip-link:hover {
+  border-color: var(--color-line-hover);
+  background: var(--color-canvas);
+}

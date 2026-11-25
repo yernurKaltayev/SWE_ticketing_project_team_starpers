@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { BackLink } from "../BackLink";
+import { useParams, useSearchParams } from "react-router-dom";
 import { formatEventDateTime } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { Field } from "../auth/ui";
@@ -56,9 +57,7 @@ export default function History({
   const history = useLiveQuery(filter.query !== undefined ? `${root}/history?${filter.query}` : "", parseHistory, 30000, !event.isError);
   const data = event.isError || history.isError ? undefined : history.data;
   return <section className="insights">
-  <Link className="back-link" to="/organizer/events">
-    {eventCopy[locale].back}
-  </Link>
+  <BackLink to="/organizer/events">{eventCopy[locale].back}</BackLink>
   <h1>
     {t("history")}
   </h1>

@@ -85,8 +85,8 @@ export default function Archive({
         {t(e.status)}
       </p>
       {/* Past events keep the records an organizer still needs after the date. */}
-      <nav className="controls" aria-label={e.title}>
-        {([["orders", "orders"], ["refunds", "orders?view=refunds"], ["history", "history"], ["checkin", "analytics#attendance"]] as const).map(([name, path]) => <Link key={name} to={`/organizer/events/${encodeURIComponent(e.id)}/${path}`}>
+      <nav className="controls card-links" aria-label={e.title}>
+        {([["orders", "orders"], ["refunds", "orders?view=refunds"], ["history", "history"], ["checkin", "analytics#attendance"]] as const).map(([name, path]) => <Link className="chip-link" key={name} to={`/organizer/events/${encodeURIComponent(e.id)}/${path}`}>
             {t(name)}
           </Link>)}
       </nav>

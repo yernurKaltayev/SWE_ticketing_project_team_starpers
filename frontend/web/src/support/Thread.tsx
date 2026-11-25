@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Locale } from "@biletflow/shared";
 import { useSession } from "../auth/session";
@@ -28,6 +28,7 @@ import { useDraft } from "./drafts";
 import { supportCopy } from "./copy";
 import { ContextDetails, SupportError, Timestamp } from "./ui";
 import "./support.css";
+import { BackLink } from "../BackLink";
 export default function Thread({ locale }: { locale: Locale }) {
   const { caseId = "" } = useParams();
   const { user } = useSession();
@@ -176,7 +177,7 @@ function Content({ id, locale }: { id: string; locale: Locale }) {
   }
   return (
     <section className="support-page">
-      <Link to="/support">{t.back}</Link>
+      <BackLink to="/support">{t.back}</BackLink>
       <h1>{readable ? c.subject : t.title}</h1>
       <div ref={errorRef} tabIndex={-1}>
         <SupportError error={record.error ?? feed.error ?? error} t={t} />

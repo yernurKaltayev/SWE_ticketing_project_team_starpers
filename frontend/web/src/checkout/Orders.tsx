@@ -23,6 +23,7 @@ import type { Order } from "./model";
 import { PaymentPanel } from "../payments/PaymentPanel";
 import { paymentCopy } from "../payments/copy";
 import "./checkout.css";
+import { BackLink } from "../BackLink";
 
 // Older API builds sent no event_id; tickets of one order share one event.
 const eventOf = (order: Order): string | undefined =>
@@ -75,10 +76,15 @@ export default function Orders({ locale }: { locale: Locale }) {
   );
   return (
     <section>
-      <div className="commerce-heading">
-        <h1>{t.orders}</h1>
-        <Link to="/account/tickets">{t.tickets}</Link>
-      </div>
+      <h1>{t.orders}</h1>
+      <nav className="controls" aria-label={`${t.tickets} / ${t.orders}`}>
+        <Link to="/account/tickets" aria-current={undefined}>
+          {t.tickets}
+        </Link>
+        <Link to="/account/orders" aria-current={"page"}>
+          {t.orders}
+        </Link>
+      </nav>
       <CommerceError
         error={query.error}
         t={t}
@@ -89,7 +95,14 @@ export default function Orders({ locale }: { locale: Locale }) {
       {query.isPending && <Status>{t.loading}</Status>}
       {query.data && !query.isError && (
         <>
-          {!query.data.items.length && <Status>{t.emptyOrders}</Status>}
+          {!query.data.items.length && (
+            <div className="empty-state" role="status">
+              <p>{t.emptyOrders}</p>
+              <Link className="action-link" to="/events">
+                {t.back}
+              </Link>
+            </div>
+          )}
           <ul className="commerce-list">
             {query.data.items.map((order) => (
               <li key={order.id}>
@@ -122,7 +135,6 @@ export default function Orders({ locale }: { locale: Locale }) {
           <Pagination {...pagination} total={query.data.total} t={t} />
         </>
       )}
-      <Link to="/events">{t.back}</Link>
     </section>
   );
 }
@@ -159,7 +171,7 @@ function OrderContent({
   }, [poll, polls, dataUpdatedAt, isFetching, refetch]);
   return (
     <section>
-      <Link to="/account/orders">{t.orders}</Link>
+      <BackLink to="/account/orders">{t.orders}</BackLink>
       <h1>{order?.status === "free_confirmed" ? t.confirmed : t.order}</h1>
       <CommerceError
         error={query.error}

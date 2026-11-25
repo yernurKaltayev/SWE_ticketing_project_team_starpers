@@ -18,6 +18,7 @@ import {
 } from "./model";
 import type { Campaign } from "./model";
 import "./promotions.css";
+import { BackLink } from "../BackLink";
 export default function Campaigns({ locale }: { locale: Locale }) {
   const { eventId = "" } = useParams();
   return <Workspace key={eventId} eventId={eventId} locale={locale} />;
@@ -78,9 +79,7 @@ function Workspace({ eventId, locale }: { eventId: string; locale: Locale }) {
   }
   return (
     <section className="promotions">
-      <Link to={`/organizer/events/${encodeURIComponent(eventId)}/edit`}>
-        {t.back}
-      </Link>
+      <BackLink to={`/organizer/events/${encodeURIComponent(eventId)}/edit`}>{t.back}</BackLink>
       <header>
         <h1>{t.title}</h1>
         {event.data && <p>{event.data.title}</p>}

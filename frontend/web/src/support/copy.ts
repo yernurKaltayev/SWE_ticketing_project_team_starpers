@@ -1,6 +1,7 @@
 export const supportCopy = {
   en: {
     title: "Support",
+    contact: "Contact support",
     notifications: "Notifications",
     newCase: "New support case",
     inbox: "Support inbox",
@@ -105,6 +106,7 @@ export const supportCopy = {
   },
   ru: {
     title: "Поддержка",
+    contact: "Написать в поддержку",
     notifications: "Уведомления",
     newCase: "Новое обращение",
     inbox: "Обращения",
@@ -208,6 +210,7 @@ export const supportCopy = {
   },
   kk: {
     title: "Қолдау",
+    contact: "Қолдауға жазу",
     notifications: "Хабарландырулар",
     newCase: "Жаңа өтініш",
     inbox: "Қолдау өтініштері",

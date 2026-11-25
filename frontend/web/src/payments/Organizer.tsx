@@ -27,6 +27,7 @@ import { PaymentPanel } from "./PaymentPanel";
 import { PaymentError } from "./ui";
 import "../checkout/checkout.css";
 import "./payments.css";
+import { BackLink } from "../BackLink";
 
 export default function ActivationPage({ locale }: { locale: Locale }) {
   const { eventId = "" } = useParams();
@@ -56,7 +57,9 @@ function ActivationContent({
   }
   return (
     <section>
-      <Link to="/organizer/events">{t.events}</Link>
+      <BackLink to={`/organizer/events/${encodeURIComponent(eventId)}/edit`}>
+        {eventCopy[locale].backToEvent}
+      </BackLink>
       <h1>{t.activation}</h1>
       {event.data && (
         <p>
@@ -65,17 +68,6 @@ function ActivationContent({
       )}
       <p className="notice">{t.demo}</p>
       <p>{t.eventOnly}</p>
-      <nav className="controls">
-        <Link to={`/organizer/events/${encodeURIComponent(eventId)}/edit`}>
-          {t.viewEvent}
-        </Link>
-        <Link
-          to={`/organizer/events/${encodeURIComponent(eventId)}/financials`}
-        >
-          {t.finances}
-        </Link>
-        <Link to="/organizer/payout-accounts">{t.accounts}</Link>
-      </nav>
       <PaymentError
         error={
           activation.error ?? event.error ?? accounts.error ?? action.error
@@ -217,10 +209,8 @@ export function AccountsPage({ locale }: { locale: Locale }) {
   const [confirm, setConfirm] = useState("");
   return (
     <section>
-      <Link to="/organizer/events">{t.events}</Link>
       <h1>{t.accounts}</h1>
       <p className="notice">{t.demo}</p>
-      <Link to="/organizer/payouts">{t.payouts}</Link>
       <PaymentError error={query.error ?? action.error} locale={locale} />
       {query.isPending && <Status>{t.loading}</Status>}
       {query.data && !query.isError && (
@@ -433,19 +423,12 @@ export function FinancialsPage({ locale }: { locale: Locale }) {
   );
   return (
     <section>
-      <Link to="/organizer/events">{t.events}</Link>
+      <BackLink to={`/organizer/events/${encodeURIComponent(eventId)}/edit`}>
+        {eventCopy[locale].backToEvent}
+      </BackLink>
       <h1>{t.eventFinances}</h1>
       {event.data && <h2>{event.data.title}</h2>}
       <p className="notice">{t.demo}</p>
-      <nav className="controls">
-        <Link
-          to={`/organizer/events/${encodeURIComponent(eventId)}/activation`}
-        >
-          {t.activation}
-        </Link>
-        <Link to="/organizer/payouts">{t.payouts}</Link>
-        <Link to="/organizer/payout-accounts">{t.accounts}</Link>
-      </nav>
       <PaymentError error={query.error ?? event.error} locale={locale} />
       {query.isPending && <Status>{t.loading}</Status>}
       {query.data && !query.isError && (
@@ -490,10 +473,8 @@ export function PayoutsPage({ locale }: { locale: Locale }) {
   );
   return (
     <section>
-      <Link to="/organizer/events">{t.events}</Link>
       <h1>{t.payouts}</h1>
       <p className="notice">{t.demo}</p>
-      <Link to="/organizer/payout-accounts">{t.accounts}</Link>
       <PaymentError error={query.error} locale={locale} />
       {query.isPending && <Status>{t.loading}</Status>}
       {query.data && !query.isError && (
@@ -501,7 +482,9 @@ export function PayoutsPage({ locale }: { locale: Locale }) {
           {!query.data.items.length ? (
             <div className="empty-state" role="status">
               <p>{t.emptyPayouts}</p>
-              <Link to="/organizer/events">{eventCopy[locale].organizer}</Link>
+              <Link className="action-link ghost" to="/organizer/events">
+                {eventCopy[locale].organizer}
+              </Link>
             </div>
           ) : (
             <div className="table-scroll">

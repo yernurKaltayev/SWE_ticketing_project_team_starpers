@@ -380,7 +380,10 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
         <>
           <div className="controls">
             {!dirty && (
-              <Link to={`/organizer/events/${event.id}/preview`}>
+              <Link
+                className="action-link ghost"
+                to={`/organizer/events/${event.id}/preview`}
+              >
                 {t.preview}
               </Link>
             )}

@@ -32,6 +32,7 @@ import {
 import type { Action } from "./model";
 import { OperationError, Pager, State } from "./ui";
 import "./operations.css";
+import { BackLink } from "../BackLink";
 export default function Workspace({ locale }: { locale: Locale }) {
   const { user } = useSession();
   const { eventId = "", orderId = "" } = useParams();
@@ -361,9 +362,7 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
   }
   return (
     <section className="operations">
-      <Link to={`/organizer/events/${encodeURIComponent(eventId)}/edit`}>
-        {t.back}
-      </Link>
+      <BackLink to={`/organizer/events/${encodeURIComponent(eventId)}/edit`}>{t.back}</BackLink>
       <h1>{t.title}</h1>
       {ev && <h2>{ev.title}</h2>}
       <p>{t.readonly}</p>
