@@ -7,8 +7,8 @@ import {
   parseReport,
   parseValidation,
   selectedCart,
-} from "./model";
-import type { Choice } from "../checkout/model";
+} from "@biletflow/shared/features/promotions/model";
+import type { Choice } from "@biletflow/shared/features/checkout/model";
 function form(extra: Record<string, string | undefined> = {}) {
   const f = new FormData();
   for (const [k, v] of Object.entries({

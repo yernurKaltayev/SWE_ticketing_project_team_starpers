@@ -4,8 +4,8 @@ import {
   parsePayment,
   parseFinancials,
   parseAccounts,
-} from "./model";
-import { makeOrderBody, parseAvailability } from "../checkout/model";
+} from "@biletflow/shared/features/payments/model";
+import { makeOrderBody, parseAvailability } from "@biletflow/shared/features/checkout/model";
 it("validates IBAN checksums without retaining full account responses", () => {
   expect(normalizeIban("kz86 125K ZT50 0410 0100")).toBe(
     "KZ86125KZT5004100100",

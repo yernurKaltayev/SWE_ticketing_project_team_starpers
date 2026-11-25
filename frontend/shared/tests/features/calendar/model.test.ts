@@ -7,8 +7,8 @@ import {
   googleCalendarUrl,
   outlookCalendarUrl,
   validateCalendar,
-} from "./model";
-import type { CalendarEvent } from "./model";
+} from "@biletflow/shared/features/calendar/model";
+import type { CalendarEvent } from "@biletflow/shared/features/calendar/model";
 
 const event: CalendarEvent = {
   id: "04e1dfa3-c0a1-43d7-a774-32c7dc9fb419",

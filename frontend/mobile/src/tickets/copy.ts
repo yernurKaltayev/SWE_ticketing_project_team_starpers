@@ -1,6 +1,7 @@
 import type { Locale } from "@biletflow/shared";
+import { commerceCopy } from "@biletflow/shared/features/checkout/copy";
 
-// Wording follows web/src/checkout/copy.ts so both apps describe tickets the same way.
+// Status labels come from the shared checkout copy so both apps describe tickets the same way.
 const en = {
   tab: "Tickets",
   title: "My tickets",
@@ -20,12 +21,7 @@ const en = {
   qrFailed: "Could not load the QR code.",
   invalidTicket:
     "This ticket is not available for admission. Check its current status or contact the organizer.",
-  status: {
-    valid: "Valid",
-    checked_in: "Already checked in",
-    refunded: "Refunded",
-    cancelled: "Cancelled",
-  } as Record<string, string>,
+  status: commerceCopy.en.states,
 };
 
 type TicketsCopy = typeof en;
@@ -49,12 +45,7 @@ const ru: TicketsCopy = {
   qrFailed: "Не удалось загрузить QR-код.",
   invalidTicket:
     "Этот билет недоступен для входа. Проверьте статус или свяжитесь с организатором.",
-  status: {
-    valid: "Действителен",
-    checked_in: "Уже использован",
-    refunded: "Возвращён",
-    cancelled: "Отменён",
-  },
+  status: commerceCopy.ru.states,
 };
 
 const kk: TicketsCopy = {
@@ -76,12 +67,7 @@ const kk: TicketsCopy = {
   qrFailed: "QR-кодты жүктеу мүмкін болмады.",
   invalidTicket:
     "Бұл билетпен кіру қолжетімсіз. Күйін тексеріңіз немесе ұйымдастырушыға хабарласыңыз.",
-  status: {
-    valid: "Жарамды",
-    checked_in: "Кіру тіркелген",
-    refunded: "Қайтарылған",
-    cancelled: "Бас тартылған",
-  },
+  status: commerceCopy.kk.states,
 };
 
 export const ticketsCopy: Record<Locale, TicketsCopy> = { en, kk, ru };
