@@ -6,7 +6,7 @@ import type { Locale } from "@biletflow/shared";
 import { color } from "../theme";
 import { Action, Callout, Screen } from "../ui";
 import { webCopy } from "./copy";
-import { isInternal, webOrigin } from "./model";
+import { handlesBack, isInternal, webOrigin, webSessionKey } from "./model";
 
 // The package's default generic (P = undefined) collapses its props to never under strict TS.
 const BrowserView = WebView<object>;
@@ -14,9 +14,10 @@ type BrowserView = WebView<object>;
 
 /**
  * The full BiletFlow web app inside the mobile app, for every screen that has no native
- * version yet. It keeps its own cookie session; links to other sites open in the browser.
+ * version yet. Its cookie session lasts while the same native account is signed in; links to
+ * other sites open in the browser.
  */
-export function WebScreen({ locale }: { locale: Locale }) {
+export function WebScreen({ locale, userId }: { locale: Locale; userId: string | null }) {
   const t = webCopy[locale];
   const focused = useIsFocused();
   const web = useRef<BrowserView>(null);
@@ -28,15 +29,16 @@ export function WebScreen({ locale }: { locale: Locale }) {
   useEffect(() => {
     if (!focused || Platform.OS !== "android") return;
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      if (!canGoBack) return false;
+      if (!handlesBack({ canGoBack, failed })) return false;
       web.current?.goBack();
       return true;
     });
     return () => sub.remove();
-  }, [focused, canGoBack]);
+  }, [focused, canGoBack, failed]);
 
   const reload = useCallback(() => {
     setFailed(false);
+    setCanGoBack(false);
     setAttempt((n) => n + 1);
   }, []);
 
@@ -63,11 +65,12 @@ export function WebScreen({ locale }: { locale: Locale }) {
   return (
     <View style={local.fill}>
       <BrowserView
-        key={attempt}
+        key={webSessionKey(userId, attempt)}
+        // A private jar per native identity: signing out natively also ends the web session.
+        incognito
         ref={web}
         source={{ uri: origin }}
         style={local.fill}
-        sharedCookiesEnabled
         domStorageEnabled
         pullToRefreshEnabled
         allowsBackForwardNavigationGestures

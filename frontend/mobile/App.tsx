@@ -129,7 +129,7 @@ export default function App() {
                     tabBarIcon: ({ color: tint }) => <TabIcon glyph="web" tint={tint} />,
                   }}
                 >
-                  {() => <WebScreen locale={locale} />}
+                  {() => <WebScreen locale={locale} userId={snapshot.user?.id ?? null} />}
                 </Tab.Screen>
                 <Tab.Screen
                   name="Tickets"

@@ -20,12 +20,35 @@ export const webOrigin = resolveWebOrigin(
   process.env.EXPO_PUBLIC_API_ORIGIN,
 );
 
-/** Pages of our own site stay in the web view; everything else opens in the system browser. */
+/**
+ * Pages of our own site stay in the web view; everything else opens in the system browser.
+ * Same host and port count as ours whatever the scheme, so an http → https redirect on the
+ * first load stays inside instead of leaving a blank tab.
+ */
 export function isInternal(url: string, origin: string): boolean {
   if (url === "about:blank" || url.startsWith("blob:") || url.startsWith("data:")) return true;
   try {
-    return new URL(url).origin === new URL(origin).origin;
+    const target = new URL(url);
+    const ours = new URL(origin);
+    return (
+      (target.protocol === "http:" || target.protocol === "https:") &&
+      target.hostname === ours.hostname &&
+      target.port === ours.port
+    );
   } catch {
     return false;
   }
+}
+
+/**
+ * React key for the (incognito) web view: a new native identity, or a reload, gets a fresh
+ * cookie jar, so the next person never sees the previous person's web session.
+ */
+export function webSessionKey(userId: string | null, attempt: number): string {
+  return `${userId ?? "signed-out"}:${attempt}`;
+}
+
+/** Android back walks the web history only while a page is actually shown. */
+export function handlesBack(state: { canGoBack: boolean; failed: boolean }): boolean {
+  return state.canGoBack && !state.failed;
 }
