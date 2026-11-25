@@ -1,8 +1,8 @@
 import { expect, it, vi } from "vitest";
 import { ApiError } from "@biletflow/shared";
 import type { Session } from "@biletflow/shared";
-import { CheckoutCoordinator } from "./attempt";
-import type { Order, OrderBody } from "./model";
+import { CheckoutCoordinator } from "@biletflow/shared/features/checkout/attempt";
+import type { Order, OrderBody } from "@biletflow/shared/features/checkout/model";
 const body: OrderBody = {
   event_id: "event",
   items: [{ ticket_type_id: "ticket", quantity: 1, seat_ids: [] }],
