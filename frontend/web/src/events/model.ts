@@ -228,12 +228,10 @@ export function offerSummary(tickets: Availability[]) {
     /** Only say "from" when there is more than one price on offer. */
     priceVaries: new Set(prices).size > 1,
     allFree: prices.every((p) => p === 0),
-    /** Lowest paid price, for "Free · from X" when free and paid types mix. */
+    /** Lowest paid price when free and paid types mix. */
     minPaidPrice: prices.some((p) => p > 0)
       ? Math.min(...prices.filter((p) => p > 0))
       : null,
-    /** More than one paid price, so the paid part reads "from X". */
-    paidVaries: new Set(prices.filter((p) => p > 0)).size > 1,
     soldOut: remaining === 0,
     remaining,
   };
