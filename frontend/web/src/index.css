@@ -2324,3 +2324,51 @@ a.chip-link:hover {
   color: var(--color-muted);
   font-weight: 600;
 }
+
+.title-row.spread {
+  justify-content: space-between;
+}
+
+/* Activation steps: a form inside a step is a plain row, not a card inside a card. */
+.activation-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.activation-inline .field {
+  flex: 1 1 16rem;
+  margin: 0;
+}
+.activation-inline select {
+  width: 100%;
+}
+.activation-inline p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+/* Seating setup: one row per setting (label + control + save). */
+.seating-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  padding: 1rem 1.25rem;
+  margin: 0 0 0.75rem;
+}
+.seating-row > label {
+  display: grid;
+  gap: 0.35rem;
+  flex: 1 1 16rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.seating-row select,
+.seating-row input {
+  width: 100%;
+}

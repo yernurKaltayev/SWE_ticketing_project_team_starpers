@@ -3,7 +3,6 @@ import { BackLink } from "../BackLink";
 import { useParams, useSearchParams } from "react-router-dom";
 import { formatEventDateTime } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
-import { Field } from "../auth/ui";
 import { parseEvent } from "../events/contracts";
 import { useLiveQuery } from "../support/data";
 import { dateQuery, parseHistory, categories } from "./model";
@@ -57,18 +56,21 @@ export default function History({
   const history = useLiveQuery(filter.query !== undefined ? `${root}/history?${filter.query}` : "", parseHistory, 30000, !event.isError);
   const data = event.isError || history.isError ? undefined : history.data;
   return <section className="insights">
-  <BackLink to="/organizer/events">{eventCopy[locale].back}</BackLink>
+  <BackLink to={`/organizer/events/${encodeURIComponent(eventId)}/edit`}>{eventCopy[locale].backToEvent}</BackLink>
+  <header className="title-row spread">
   <h1>
     {t("history")}
   </h1>
-  {event.data && <>
-    <h2>
-      {event.data.title}
-    </h2>
-  </>}
-  <p>
-    {t("newest")}
-  </p>
+  <button className="secondary" disabled={history.isFetching} onClick={() => {
+      void event.refetch();
+      if (filter.query !== undefined && !event.isError) void history.refetch();
+    }}>
+    {t("refresh")}
+  </button>
+  </header>
+  {event.data && <p className="page-subtitle">
+    {event.data.title}
+  </p>}
   <form className="insights-filters" key={params.toString()} noValidate onSubmit={e => {
       e.preventDefault();
       const p = new URLSearchParams();
@@ -97,7 +99,6 @@ export default function History({
         </option>)}
       </select>
     </div>
-    <Field name="action_type" label={t("exactAction")} maxLength={100} defaultValue={params.get("action_type") ?? ""} />
     <button>
       {t("apply")}
     </button>
@@ -112,33 +113,26 @@ export default function History({
     {t("invalid")}
   </p>}
   <Failure error={event.error ?? history.error} locale={locale} />
-  <button className="secondary" disabled={history.isFetching} onClick={() => {
-      void event.refetch();
-      if (filter.query !== undefined && !event.isError) void history.refetch();
-    }}>
-    {t("refresh")}
-  </button>
   {history.isPending && !filter.error && <p>
     {t("loading")}
   </p>}
   {data && <>
-    <p>
-      {t(data.lifecycle)} · {t(data.event_status)}
-    </p>
     {!data.items.length && <p>
       {t("empty")}
     </p>}
     <ol className="insights-timeline">
-      {data.items.map(row => <li className="insights-card" key={row.id}>
+      {data.items.map(row => <li className="insights-card history-row" key={row.id}>
+        <div>
+          <h3 title={row.action_type}>
+            {actionLabel(row.action_type, locale)}
+          </h3>
+          <p>
+            {row.actor_id && row.actor_id === user?.id ? t("you") : t(row.actor_role)}
+          </p>
+        </div>
         <time dateTime={row.occurred_at}>
           {formatEventDateTime(row.occurred_at, event.data?.timezone ?? "UTC", locale)}
         </time>
-        <h3 title={row.action_type}>
-          {actionLabel(row.action_type, locale)}
-        </h3>
-        <p>
-          {row.actor_id && row.actor_id === user?.id ? t("you") : t(row.actor_role)}
-        </p>
         {/* Descriptions are stored in English; other locales rely on the label above. */}
         {locale === "en" && row.description && <p>
           {row.description}

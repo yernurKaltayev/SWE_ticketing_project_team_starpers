@@ -94,10 +94,13 @@ function ActivationContent({
                 <li key={step}>
                   <div className="activation-step-heading">
                     <strong>{label}</strong>
-                    <span>{missing ? t.missing : t.done}</span>
+                    <span className="status-badge" data-tone={missing ? "warning" : "success"}>
+                      {missing ? t.missing : t.done}
+                    </span>
                   </div>
                   {missing && step === "paid_ticket_type" && (
                     <Link
+                      className="action-link ghost"
                       to={`/organizer/events/${encodeURIComponent(eventId)}/edit`}
                     >
                       {t.viewEvent}
@@ -113,7 +116,7 @@ function ActivationContent({
                   )}
                   {step === "payout_account" && !suspended && (
                     <form
-                      className="payment-form"
+                      className="activation-inline"
                       onSubmit={(e) => {
                         e.preventDefault();
                         if (selected)
@@ -427,7 +430,7 @@ export function FinancialsPage({ locale }: { locale: Locale }) {
         {eventCopy[locale].backToEvent}
       </BackLink>
       <h1>{t.eventFinances}</h1>
-      {event.data && <h2>{event.data.title}</h2>}
+      {event.data && <p className="page-subtitle">{event.data.title}</p>}
       <p className="notice">{t.demo}</p>
       <PaymentError error={query.error ?? event.error} locale={locale} />
       {query.isPending && <Status>{t.loading}</Status>}

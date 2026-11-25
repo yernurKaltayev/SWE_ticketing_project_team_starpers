@@ -364,7 +364,7 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
     <section className="operations">
       <BackLink to={`/organizer/events/${encodeURIComponent(eventId)}/edit`}>{t.back}</BackLink>
       <h1>{t.title}</h1>
-      {ev && <h2>{ev.title}</h2>}
+      {ev && <p className="page-subtitle">{ev.title}</p>}
       {ev?.status === "cancelled" && <p role="status">{t.cancelled}</p>}
       <OperationError
         error={error || event.error || orders.error}

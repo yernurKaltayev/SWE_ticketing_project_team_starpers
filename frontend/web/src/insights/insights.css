@@ -37,7 +37,16 @@
   min-width: min(100%,12rem)
 }
 .insights-filters>.field:has(input[type="datetime-local"]) {
-  min-width: min(100%,15rem)
+  min-width: min(100%,13.5rem)
+}
+.insights .field label {
+  margin-bottom: 0
+}
+.insights-filters>.field,.insights-filters>div {
+  margin: 0
+}
+.insights-filters select {
+  width: 100%
 }
 .insights-filters input {
   width: 100%;
@@ -182,4 +191,36 @@
 /* Stand-alone actions (refresh, reset) size to their label, not the page width. */
 .insights > button {
   justify-self: start;
+}
+
+.history-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-block: 0.85rem;
+}
+.history-row h3 {
+  margin: 0 0 0.15rem;
+  font-size: 1rem;
+}
+.history-row p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+.history-row > p:last-child {
+  flex-basis: 100%;
+}
+.history-row time {
+  flex: none;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+.insights-timeline {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  list-style: none;
 }

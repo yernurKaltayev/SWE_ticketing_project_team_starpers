@@ -50,9 +50,18 @@ function Content({
   const data = report.isError || event.isError ? undefined : report.data;
   return <section className="insights">
   <BackLink to={`/organizer/events/${encodeURIComponent(id)}/edit`}>{eventCopy[locale].backToEvent}</BackLink>
+  <header className="title-row spread">
   <h1>
     {t("analytics")}
   </h1>
+  <button className="secondary" disabled={report.isFetching} onClick={() => {
+      void event.refetch();
+      if (filter.query !== undefined && !event.isError) void report.refetch();
+      types.reload();
+    }}>
+    {t("refresh")}
+  </button>
+  </header>
   {event.data && <p className="page-subtitle">
     {event.data.title}
   </p>}
@@ -100,13 +109,6 @@ function Content({
     {t("invalid")}
   </p>}
   <Failure error={event.error ?? report.error ?? types.error} locale={locale} />
-  <button className="secondary" disabled={report.isFetching} onClick={() => {
-      void event.refetch();
-      if (filter.query !== undefined && !event.isError) void report.refetch();
-      types.reload();
-    }}>
-    {t("refresh")}
-  </button>
   {report.isPending && !filter.error && <p role="status">
     {t("loading")}
   </p>}
