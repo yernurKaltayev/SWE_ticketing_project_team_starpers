@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { EyeIcon } from "../icons";
+import { useEffect, useRef } from "react";
 import type { ComponentProps, ReactNode } from "react";
 import { ApiError } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
@@ -13,12 +12,9 @@ export function Field({
   ...props
 }: ComponentProps<"input"> & { label: string; error?: string; hint?: string }) {
   const id = props.id ?? props.name!;
-  const secret = props.type === "password";
-  const [shown, setShown] = useState(false);
   const input = (
       <input
         {...props}
-        type={secret && shown ? "text" : props.type}
         id={id}
         aria-invalid={error ? true : undefined}
         aria-describedby={
@@ -31,23 +27,7 @@ export function Field({
   return (
     <div className="field">
       <label htmlFor={id}>{label}</label>
-      {secret ? (
-        <div className="password-input">
-          {input}
-          <button
-            type="button"
-            className="password-toggle"
-            aria-controls={id}
-            aria-pressed={shown}
-            aria-label={revealLabel()}
-            onClick={() => setShown((v) => !v)}
-          >
-            <EyeIcon />
-          </button>
-        </div>
-      ) : (
-        input
-      )}
+      {input}
       {hint ? (
         <p className="field-hint" id={`${id}-hint`}>
           {hint}
@@ -113,13 +93,3 @@ export function Status({ children }: { children: ReactNode }) {
   );
 }
 
-/** Field has no locale prop; the document language is kept in sync by App. */
-function revealLabel() {
-  const lang =
-    typeof document === "undefined" ? "en" : document.documentElement.lang;
-  return lang === "ru"
-    ? "Показать пароль"
-    : lang === "kk"
-      ? "Құпия сөзді көрсету"
-      : "Show password";
-}
