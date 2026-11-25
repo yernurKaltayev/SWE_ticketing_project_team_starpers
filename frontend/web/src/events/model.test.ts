@@ -219,10 +219,11 @@ describe("discovery helpers", () => {
       minPaidPrice: null,
       priceVaries: false,
       allFree: true,
+      paidVaries: false,
       soldOut: false,
       remaining: 50,
     });
-    // Free and paid mixed: cards say "Free · from <cheapest paid>".
+    // Free and paid mixed: cards say "Free or <cheapest paid>".
     expect(offerSummary([row(0, 5), row(300_000, 5)])).toMatchObject({
       minPrice: 0,
       minPaidPrice: 300_000,

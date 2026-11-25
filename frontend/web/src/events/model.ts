@@ -232,6 +232,8 @@ export function offerSummary(tickets: Availability[]) {
     minPaidPrice: prices.some((p) => p > 0)
       ? Math.min(...prices.filter((p) => p > 0))
       : null,
+    /** More than one paid price, so the paid part reads "from X". */
+    paidVaries: new Set(prices.filter((p) => p > 0)).size > 1,
     soldOut: remaining === 0,
     remaining,
   };
