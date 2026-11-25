@@ -3,7 +3,12 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./src/query-client";
 import { bindAppFocus } from "./src/data";
+import * as Linking from "expo-linking";
+import { linkingConfig } from "./src/navigation/linking";
+import type { NativeTarget } from "./src/navigation/routes";
+import { navigationFor } from "./src/navigation/navigate";
 import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
+import type { NavigatorScreenParams } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -49,8 +54,8 @@ import {
 } from "./src/ui";
 
 type Screens = {
-  Tabs: undefined;
-  TicketDetail: { ticketId: string; eventTitle: string | null };
+  Tabs: NavigatorScreenParams<TabScreens> | undefined;
+  TicketDetail: { ticketId: string; eventTitle?: string | null };
   CheckIn: { eventId: string; title: string };
   Settings: undefined;
   Connection: undefined;
@@ -58,7 +63,18 @@ type Screens = {
 type TabScreens = { Web: undefined; Tickets: undefined; Home: undefined };
 const Stack = createNativeStackNavigator<Screens>();
 const Tab = createBottomTabNavigator<TabScreens>();
+const linking = { prefixes: [Linking.createURL("/")], config: linkingConfig() };
+
+
 const navigation = createNavigationContainerRef<Screens>();
+
+/** Opens the native screen that replaces a web page (route map in src/navigation/routes.ts). */
+function goNative(target: NativeTarget, signedIn: boolean) {
+  if (!navigation.isReady()) return;
+  const request = navigationFor(target, signedIn);
+  if (request.name === "Tabs") navigation.navigate("Tabs", request.params);
+  else navigation.navigate("TicketDetail", request.params);
+}
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
@@ -100,7 +116,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
     <SafeAreaProvider>
-      <NavigationContainer theme={navigationTheme} ref={navigation}>
+      <NavigationContainer theme={navigationTheme} ref={navigation} linking={linking}>
         <StatusBar style="dark" />
         <Stack.Navigator
           screenOptions={{
@@ -135,7 +151,13 @@ export default function App() {
                     tabBarIcon: ({ color: tint }) => <TabIcon glyph="web" tint={tint} />,
                   }}
                 >
-                  {() => <WebScreen locale={locale} userId={snapshot.user?.id ?? null} />}
+                  {() => (
+                    <WebScreen
+                      locale={locale}
+                      userId={snapshot.user?.id ?? null}
+                      onNativeRoute={(target) => goNative(target, signedIn)}
+                    />
+                  )}
                 </Tab.Screen>
                 <Tab.Screen
                   name="Tickets"
@@ -204,14 +226,21 @@ export default function App() {
             )}
           </Stack.Screen>
           <Stack.Screen name="TicketDetail">
-            {(props: NativeStackScreenProps<Screens, "TicketDetail">) => (
-              <TicketDetail
-                key={`${snapshot.user?.id}:${props.route.params.ticketId}`}
-                ticketId={props.route.params.ticketId}
-                eventTitle={props.route.params.eventTitle}
-                locale={locale}
-              />
-            )}
+            {(props: NativeStackScreenProps<Screens, "TicketDetail">) =>
+              // A deep link can arrive signed out: offer sign-in; the key reloads it afterwards.
+              signedIn ? (
+                <TicketDetail
+                  key={`${snapshot.user?.id}:${props.route.params.ticketId}`}
+                  ticketId={props.route.params.ticketId}
+                  eventTitle={props.route.params.eventTitle ?? null}
+                  locale={locale}
+                />
+              ) : (
+                <Screen>
+                  <SessionPanel locale={locale} />
+                </Screen>
+              )
+            }
           </Stack.Screen>
           <Stack.Screen name="CheckIn">
             {(props: NativeStackScreenProps<Screens, "CheckIn">) => (
