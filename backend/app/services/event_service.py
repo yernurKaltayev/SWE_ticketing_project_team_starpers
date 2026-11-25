@@ -81,7 +81,26 @@ async def _organizer_profile(db: AsyncSession, user: User) -> OrganizerProfile:
     return profile
 
 
+def _check_sales_close(data: EventCreate) -> None:
+    """Ticket sales stop when the event starts (ticket_type_service._registration_open), so a
+    close date after the start would only mislead buyers. Input-only: older events may still
+    hold such a date and must stay readable."""
+    if data.registration_closes_at is not None and data.registration_closes_at > data.starts_at:
+        raise UnprocessableError(
+            "Ticket sales must close by the start of the event.",
+            code="invalid_sales_window",
+            details=[
+                {
+                    "field": "registration_closes_at",
+                    "message": "ticket sales must close by the start of the event",
+                    "type": "value_error",
+                }
+            ],
+        )
+
+
 async def create_event(db: AsyncSession, user: User, data: EventCreate) -> EventOut:
+    _check_sales_close(data)
     profile = await _organizer_profile(db, user)
     await _validate_venue(db, data.venue_id, data.layout_id)
     event = Event(
@@ -245,6 +264,10 @@ async def update_event(
                 for err in exc.errors()
             ],
         ) from exc
+    # Only when the window itself changes, so editing e.g. the title of an older event whose
+    # sales close after the start keeps working.
+    if {"starts_at", "registration_closes_at"} & changes.keys():
+        _check_sales_close(merged)
     await _validate_venue(db, merged.venue_id, merged.layout_id)
     if "capacity" in changes and merged.capacity < await _ticket_quantity(db, event_id):
         raise UnprocessableError(

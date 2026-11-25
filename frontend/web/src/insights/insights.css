@@ -66,7 +66,7 @@
   min-width: 0
 }
 .insights p,.insights h1,.insights h2,.insights dd,.insights td,.insights a {
-  overflow-wrap: anywhere
+  overflow-wrap: break-word
 }
 .insights .table-scroll {
   overflow-x: auto;
@@ -93,7 +93,7 @@
 .record-details dd {
   margin: 0;
   white-space: pre-wrap;
-  overflow-wrap: anywhere
+  overflow-wrap: break-word
 }
 .insights-nav {
   display: flex;
@@ -154,7 +154,7 @@
   flex-wrap: wrap
 }
 .insights-dialog p {
-  overflow-wrap: anywhere
+  overflow-wrap: break-word
 }
 .insights textarea {
   width: 100%;

@@ -87,7 +87,7 @@ async def test_anonymous_availability_excludes_hidden_and_unpublished(client, db
     assert after.json()["ticket_types"] == []
 
 
-async def test_paid_sales_disabled_returns_zero_public_availability(client, db):
+async def test_paid_sales_disabled_reports_real_quantity_but_closed(client, db):
     owner, profile = await make_organizer(db)
     event = await make_event(db, profile, status=EventStatus.published)
     result = await client.post(
@@ -99,7 +99,8 @@ async def test_paid_sales_disabled_returns_zero_public_availability(client, db):
     available = await client.get(f"{PREFIX}/events/{event.id}/availability")
     assert available.status_code == 200, available.text
     item = available.json()["ticket_types"][0]
-    assert item["quantity_available"] == 0 and item["sales_open"] is False
+    # Not sold out, just not on sale: the count stays real so clients don't say "Sold out".
+    assert item["quantity_available"] == 10 and item["sales_open"] is False
 
 
 async def test_inventory_transitions_and_sold_out(client, db):

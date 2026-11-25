@@ -365,6 +365,9 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
                 type="datetime-local"
                 defaultValue={zonedInput(event?.[key], zone)}
                 required={key === "starts_at" || key === "ends_at"}
+                hint={
+                  key === "registration_closes_at" ? t.salesCloseHint : undefined
+                }
               />
             ))}
           </div>
@@ -625,7 +628,7 @@ function TicketEditor({
             setError(undefined);
             let body;
             try {
-              body = ticketBody(new FormData(e.currentTarget), event.timezone);
+              body = ticketBody(new FormData(e.currentTarget));
             } catch (err) {
               setError(err);
               return;
@@ -691,15 +694,6 @@ function TicketEditor({
                 required
                 defaultValue={selected?.max_per_order ?? 10}
               />
-              {(["sales_start", "sales_end"] as const).map((key) => (
-                <Field
-                  name={key}
-                  key={key}
-                  label={t[key]}
-                  type="datetime-local"
-                  defaultValue={zonedInput(selected?.[key], event.timezone)}
-                />
-              ))}
             </div>
             <label className="checkbox-field">
               <input

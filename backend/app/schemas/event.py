@@ -45,6 +45,8 @@ class EventCreate(BaseModel):
             and self.registration_opens_at > self.registration_closes_at
         ):
             raise ValueError("registration_opens_at must not be after registration_closes_at")
+        # EventOut inherits this validator, so it must also accept stored events. The stricter
+        # "close by the start" rule is checked on input only (event_service._check_sales_close).
         if self.registration_closes_at is not None and self.registration_closes_at > self.ends_at:
             raise ValueError("registration must close by the end of the event")
         if self.seating_mode == "assigned" and self.layout_id is None:

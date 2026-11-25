@@ -50,7 +50,7 @@
 }
 .seat-map-scroll [role="button"][aria-disabled="false"] { cursor: pointer; }
 .seat-map-scroll [role="button"]:focus-visible .seat-dot { stroke: var(--color-ink); stroke-width: 5; }
-.seating-handoff { max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; }
+.seating-handoff { max-width: 100%; white-space: pre-wrap; overflow-wrap: break-word; }
 
 /* White UI surfaces */
 .seating fieldset {

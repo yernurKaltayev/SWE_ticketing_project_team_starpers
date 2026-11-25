@@ -107,7 +107,8 @@ export function eventBody(form: FormData): EventInput {
     : null;
   if (
     registration_closes_at &&
-    (registration_closes_at > ends_at ||
+    // Sales stop when the event starts, so a later close date is never honoured.
+    (registration_closes_at > starts_at ||
       (registration_opens_at && registration_opens_at > registration_closes_at))
   )
     throw new InputError("registration_closes_at");
@@ -132,18 +133,9 @@ export function eventBody(form: FormData): EventInput {
 }
 export function ticketBody(
   form: FormData,
-  zone: string,
 ): TicketInput & { is_free: boolean; currency: string } {
   const value = (key: string) => String(form.get(key) ?? "").trim();
   if (!value("name")) throw new InputError("name");
-  const sales_start = value("sales_start")
-    ? toInstant(value("sales_start"), zone, "sales_start")
-    : null;
-  const sales_end = value("sales_end")
-    ? toInstant(value("sales_end"), zone, "sales_end")
-    : null;
-  if (sales_start && sales_end && sales_start > sales_end)
-    throw new InputError("sales_end");
   const price = parsePrice(value("price"));
   return {
     name: value("name"),
@@ -155,8 +147,10 @@ export function ticketBody(
     max_per_order: positive(value("max_per_order"), "max_per_order"),
     is_hidden: form.has("is_hidden"),
     price_category: null,
-    sales_start,
-    sales_end,
+    // The event's ticket sales window applies to every ticket type. Clearing old
+    // per-ticket dates on save keeps them from silently blocking sales.
+    sales_start: null,
+    sales_end: null,
   };
 }
 /**
@@ -216,7 +210,11 @@ export function categoryTone(category: string): number {
     hash = (hash * 31 + ch.codePointAt(0)!) >>> 0;
   return category.trim() ? (hash % 6) + 1 : 0;
 }
-/** Card summary from public availability: lowest visible price and stock. */
+/**
+ * Card summary from public availability: lowest visible price and stock. Availability
+ * reports real counts even while a ticket is off sale, so "sold out" means no stock left,
+ * not "sales have not opened yet".
+ */
 export function offerSummary(tickets: Availability[]) {
   if (tickets.length === 0) return null;
   const remaining = tickets.reduce((n, t) => n + Math.max(0, t.available), 0);
@@ -233,6 +231,8 @@ export function offerSummary(tickets: Availability[]) {
       ? Math.min(...prices.filter((p) => p > 0))
       : null,
     soldOut: remaining === 0,
+    /** Some ticket can be bought right now (low-stock hints only make sense then). */
+    onSale: tickets.some((t) => t.on_sale && t.available > 0),
     remaining,
   };
 }
