@@ -37,3 +37,13 @@ describe("blobToDataUri", () => {
     expect(uri).toBe("data:image/png;base64,aGk=");
   });
 });
+
+describe("ticket status labels", () => {
+  it("uses the shared ticket status labels", async () => {
+    const { commerceCopy } = await import("@biletflow/shared/features/checkout/copy");
+    const { ticketsCopy } = await import("./copy");
+    for (const locale of ["en", "ru", "kk"] as const)
+      for (const status of ["valid", "checked_in", "refunded", "cancelled"])
+        expect(ticketsCopy[locale].status[status]).toBe(commerceCopy[locale].states[status]);
+  });
+});

@@ -128,6 +128,10 @@ npm.cmd run export:mobile
 
 The mobile skeleton has native Home → Connection navigation, theme/safe-area handling, locale controls and a real health check. In development, **SecureStore · F0** probes set/read/delete using a separate temporary key, without replacing session credentials. This verifies secure-storage availability only; integrated login/refresh/logout and actual Android/iPhone evidence remain pending even though P1 now implements the backend endpoints. Access tokens stay in memory; the native session adapter persists only refresh credentials. P1 rotates refresh tokens and revokes refresh sessions on reuse, so F1 must coordinate refresh requests and avoid parallel or blindly retried refreshes.
 
+## Shared feature logic (F11 · F0.1)
+
+DOM-free logic and kk/ru/en copy for every web area live in `shared/src/features/<area>/<file>.ts` and are imported as `@biletflow/shared/features/<area>/<file>` by both the web and the mobile app. The old `web/src/<area>/<file>.ts` paths are one-line re-exports kept for existing imports; edit the shared file, never the stub. Nothing in `shared/src` may use browser or React APIs: `shared/tests/features.test.ts` enforces it. Logic tests for moved modules live in `shared/tests/features/<area>/`.
+
 ## Tooling
 
 Application workspaces use template-compatible TypeScript 6. Root code generation uses TypeScript 5.9 because the current `openapi-typescript` peer range requires TypeScript 5; npm resolves these through one lockfile. Review dependency advisories with `npm audit` rather than forcing breaking Expo/schema-tool changes.

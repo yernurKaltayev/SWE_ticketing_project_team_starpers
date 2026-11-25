@@ -30,7 +30,8 @@
 
 ## Phase 0 — Foundations (one person, before any other WP)
 
-### F0.1 Move portable logic to `shared` — size M
+### F0.1 Move portable logic to `shared` — size M — **done** (`docs/superpowers/plans/2026-11-26-f11-f0-1-shared-logic.md`)
+- As built: per-file subpaths `@biletflow/shared/features/<area>/<file>` (no per-area `index.ts`, avoids name clashes between `copy` and `model`); old web paths are re-export stubs; 26 files moved; `insights/model.test.ts` stays in web (uses web mocks).
 - Move `web/src/<area>/{model,copy,contracts,helpers}.ts` (all areas listed below) to `shared/src/features/<area>/`; web re-imports from `@biletflow/shared/features/<area>`. Tests move with them.
 - Not moved (browser-bound, stay in web): `checkout/attempt.ts` (sessionStorage), `support/data.ts`, `operations/data.ts`. Their storage needs a `KeyValueStore` interface in shared (`get/set/remove: Promise`), implemented by `localStorage` on web and SecureStore on mobile.
 - Add `"./features/*": "./src/features/*/index.ts"` to `shared/package.json` `exports`, with one `index.ts` per area.
