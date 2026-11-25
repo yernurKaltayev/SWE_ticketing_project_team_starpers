@@ -5,6 +5,7 @@ import type { NativeTarget } from "./routes";
 const tabScreens = new Set<NativeTarget["screen"]>(["Tickets"]);
 
 type LinkingConfig = {
+  initialRouteName: "Tabs";
   screens: { Tabs: { screens: Record<string, string> } } & Record<string, unknown>;
 };
 
@@ -13,7 +14,8 @@ type LinkingConfig = {
  * (exp://<host>/--/account/tickets in Expo Go) opens the same screen as a web-tab link.
  */
 export function linkingConfig(): LinkingConfig {
-  const config: LinkingConfig = { screens: { Tabs: { screens: {} } } };
+  // Tabs sits under every deep-linked screen, so a cold-start link still has a way back.
+  const config: LinkingConfig = { initialRouteName: "Tabs", screens: { Tabs: { screens: {} } } };
   for (const route of nativeRoutes) {
     const params = Object.fromEntries(
       route.pattern

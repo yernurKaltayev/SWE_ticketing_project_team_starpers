@@ -6,6 +6,7 @@ import { bindAppFocus } from "./src/data";
 import * as Linking from "expo-linking";
 import { linkingConfig } from "./src/navigation/linking";
 import type { NativeTarget } from "./src/navigation/routes";
+import { navigationFor } from "./src/navigation/navigate";
 import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
 import type { NavigatorScreenParams } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -54,7 +55,7 @@ import {
 
 type Screens = {
   Tabs: NavigatorScreenParams<TabScreens> | undefined;
-  TicketDetail: { ticketId: string; eventTitle: string | null };
+  TicketDetail: { ticketId: string; eventTitle?: string | null };
   CheckIn: { eventId: string; title: string };
   Settings: undefined;
   Connection: undefined;
@@ -64,13 +65,16 @@ const Stack = createNativeStackNavigator<Screens>();
 const Tab = createBottomTabNavigator<TabScreens>();
 const linking = { prefixes: [Linking.createURL("/")], config: linkingConfig() };
 
-/** Opens the native screen that replaces a web page (route map in src/navigation/routes.ts). */
-function goNative(target: NativeTarget) {
-  if (!navigation.isReady()) return;
-  if (target.screen === "Tickets") navigation.navigate("Tabs", { screen: "Tickets" });
-  else navigation.navigate("TicketDetail", { ticketId: target.params.ticketId, eventTitle: null });
-}
+
 const navigation = createNavigationContainerRef<Screens>();
+
+/** Opens the native screen that replaces a web page (route map in src/navigation/routes.ts). */
+function goNative(target: NativeTarget, signedIn: boolean) {
+  if (!navigation.isReady()) return;
+  const request = navigationFor(target, signedIn);
+  if (request.name === "Tabs") navigation.navigate("Tabs", request.params);
+  else navigation.navigate("TicketDetail", request.params);
+}
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
@@ -151,7 +155,7 @@ export default function App() {
                     <WebScreen
                       locale={locale}
                       userId={snapshot.user?.id ?? null}
-                      onNativeRoute={goNative}
+                      onNativeRoute={(target) => goNative(target, signedIn)}
                     />
                   )}
                 </Tab.Screen>
@@ -222,14 +226,21 @@ export default function App() {
             )}
           </Stack.Screen>
           <Stack.Screen name="TicketDetail">
-            {(props: NativeStackScreenProps<Screens, "TicketDetail">) => (
-              <TicketDetail
-                key={`${snapshot.user?.id}:${props.route.params.ticketId}`}
-                ticketId={props.route.params.ticketId}
-                eventTitle={props.route.params.eventTitle}
-                locale={locale}
-              />
-            )}
+            {(props: NativeStackScreenProps<Screens, "TicketDetail">) =>
+              // A deep link can arrive signed out: offer sign-in; the key reloads it afterwards.
+              signedIn ? (
+                <TicketDetail
+                  key={`${snapshot.user?.id}:${props.route.params.ticketId}`}
+                  ticketId={props.route.params.ticketId}
+                  eventTitle={props.route.params.eventTitle ?? null}
+                  locale={locale}
+                />
+              ) : (
+                <Screen>
+                  <SessionPanel locale={locale} />
+                </Screen>
+              )
+            }
           </Stack.Screen>
           <Stack.Screen name="CheckIn">
             {(props: NativeStackScreenProps<Screens, "CheckIn">) => (

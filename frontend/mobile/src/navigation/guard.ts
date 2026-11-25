@@ -19,10 +19,16 @@ export function nativePatternSources(): string[] {
  * Runs in the web page before its own scripts. React Router moves between pages with
  * history.pushState/replaceState, which never reaches onShouldStartLoadWithRequest, so the
  * wrapper asks the app to open a native screen instead of navigating. popstate (browser
- * back/forward) is left alone.
+ * back/forward) is left alone. It installs once per document, so it can be injected both at
+ * document start and at page end (Android's document-start injection is best-effort).
+ * Messages are untrusted (any page script can post one); the app only ever turns them into
+ * allow-listed native targets. This relies on BrowserRouter re-reading window.location after
+ * a push; a data router would need a different approach.
  */
 export function guardScript(sources: string[]): string {
   return `(function () {
+  if (window.__biletflowGuard) return;
+  window.__biletflowGuard = true;
   var patterns = ${JSON.stringify(sources)}.map(function (s) { return new RegExp(s); });
   function nativePath(url) {
     if (url === undefined || url === null) return null;

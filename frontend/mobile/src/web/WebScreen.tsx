@@ -91,6 +91,8 @@ export function WebScreen({
         setSupportMultipleWindows={false}
         startInLoadingState
         injectedJavaScriptBeforeContentLoaded={guard}
+        // Android runs the document-start script best-effort; page end installs it if missed.
+        injectedJavaScript={guard}
         onMessage={(event) => {
           const message = parseGuardMessage(event.nativeEvent.data);
           const target = message ? nativeRouteFor(message.path, origin) : null;

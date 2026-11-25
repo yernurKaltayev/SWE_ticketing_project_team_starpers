@@ -51,6 +51,24 @@ describe("guardScript", () => {
     expect(p.replaceState).toHaveBeenCalledTimes(1);
   });
 
+  it("installs once even when injected twice (document start and page end)", () => {
+    const pushState = vi.fn();
+    const postMessage = vi.fn();
+    const context = {
+      history: { pushState, replaceState: vi.fn() },
+      location: { href: "https://site.example/events", origin: "https://site.example" },
+      window: { ReactNativeWebView: { postMessage } } as Record<string, unknown>,
+      URL,
+    };
+    const script = guardScript(nativePatternSources());
+    runInNewContext(script, context);
+    runInNewContext(script, context);
+    context.history.pushState({}, "", "/account/tickets");
+    context.history.pushState({}, "", "/events");
+    expect(postMessage).toHaveBeenCalledTimes(1);
+    expect(pushState).toHaveBeenCalledTimes(1);
+  });
+
   it("evaluates to true, as the WebView requires", () => {
     expect(page().result).toBe(true);
   });
