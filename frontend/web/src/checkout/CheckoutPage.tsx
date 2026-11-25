@@ -1,5 +1,4 @@
 import { PromoEntry } from "../promotions/PromoEntry";
-import { noFinalDot } from "../auth/helpers";
 import { usePromotion } from "../promotions/usePromotion";
 import { validatePromo, selectedCart } from "../promotions/model";
 import { promoCopy, reasonText } from "../promotions/copy";
@@ -67,7 +66,7 @@ export default function CheckoutPage({ locale }: { locale: Locale }) {
             </p>
             {venue.data && (
               <p>
-                {venue.data.name} · {venue.data.address} · {venue.data.city}
+                {venue.data.name} · {venue.data.address}
               </p>
             )}
             <CommerceError
@@ -77,7 +76,6 @@ export default function CheckoutPage({ locale }: { locale: Locale }) {
                 void venue.refetch();
               }}
             />
-            <p className="field-hint">{noFinalDot(t.snapshot)}</p>
             {event.data.refund_policy?.summary && (
               <p className="notice">{event.data.refund_policy.summary}</p>
             )}
@@ -380,7 +378,7 @@ function CheckoutForm({
       {review ? (
         <section aria-labelledby="registration-review">
           <h2 id="registration-review" tabIndex={-1} ref={reviewHeading}>
-            {t.review}
+            {t.reviewTitle}
           </h2>
           <ul className="commerce-list">
             {review.items.map((item) => (
@@ -439,10 +437,9 @@ function CheckoutForm({
             </>
           )}
           <p className="checkout-total" hidden={!!review.promo_code}>
-            {selectedPaid ? p.estimate : t.total}:{" "}
-            {estimated === 0 ? t.free : formatPrice(estimated, locale)}
+            <span>{t.total}</span>
+            <strong>{estimated === 0 ? t.free : formatPrice(estimated, locale)}</strong>
           </p>
-          {selectedPaid && <p className="field-hint">{noFinalDot(p.authoritative)}</p>}
           <div className="controls">
             <button
               disabled={busy}

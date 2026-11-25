@@ -10,6 +10,7 @@ const en = {
   appHint:
     "Staff sign in to the Event Admin app with the email of their BiletFlow account. The event appears in their list right away.",
   add: "Add staff member",
+  listTitle: "Staff",
   email: "Account email",
   emailHint: "The person must already have a BiletFlow account.",
   role: "Role",
@@ -57,6 +58,7 @@ const kk: StaffCopy = {
   appHint:
     "Қызметкерлер Event Admin қолданбасына BiletFlow аккаунтының email-імен кіреді. Іс-шара олардың тізімінде бірден пайда болады.",
   add: "Қызметкер қосу",
+  listTitle: "Қызметкерлер",
   email: "Аккаунт email-і",
   emailHint: "Адамның BiletFlow аккаунты болуы керек.",
   role: "Рөлі",
@@ -98,6 +100,7 @@ const ru: StaffCopy = {
   appHint:
     "Сотрудники входят в приложение Event Admin с email своего аккаунта BiletFlow. Мероприятие сразу появляется в их списке.",
   add: "Добавить сотрудника",
+  listTitle: "Сотрудники",
   email: "Email аккаунта",
   emailHint: "У человека уже должен быть аккаунт BiletFlow.",
   role: "Роль",

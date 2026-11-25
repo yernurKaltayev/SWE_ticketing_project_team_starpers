@@ -2,11 +2,10 @@ import type { Locale } from "@biletflow/shared";
 const en = {
   cancel: "Cancel event",
   dangerZone: "Danger zone",
-  cancelHint:
-    "Cancellation stops sales. The server must confirm cancellation and any required refunds. Orders and history are retained.",
-  assignedHint:
-    "Assigned-seating configuration is managed by the seating module. This editor preserves it without changes.",
+  cancelHint: "Cancelling stops sales and refunds buyers. Orders and history are kept.",
+  assignedHint: "Seats are set up on the Seating page.",
   events: "Discover events",
+  navEvents: "Events",
   organizer: "My events",
   intro: "Find your next event. Explore what is happening near you.",
   search: "Search",
@@ -24,7 +23,7 @@ const en = {
   create: "Create event",
   edit: "Edit event",
   details: "Event details",
-  preview: "Protected preview",
+  preview: "Preview",
   title: "Title",
   description: "Description",
   venue_id: "Venue",
@@ -64,7 +63,8 @@ const en = {
   draft: "Draft",
   published: "Published",
   cancelled: "Cancelled",
-  tickets: "Ticket types",
+  tickets: "Tickets",
+  when: "Date and time",
   addTicket: "Add ticket type",
   editTicket: "Edit ticket type",
   name: "Ticket name",
@@ -128,8 +128,7 @@ const en = {
   refundable_until: "Refund deadline",
   savePolicy: "Save refund policy",
   policySaved: "Refund policy saved. Buyers see it on the event page.",
-  policyEmpty:
-    "No refund policy yet. Until you add one, buyers see no refund terms.",
+  policyEmpty: "No refund policy yet. Buyers will see it on the event page once you save it.",
   images: "Event images",
   uploadGap:
     "Image upload awaits the backend upload and attachment contract. Existing images are shown below.",
@@ -146,11 +145,10 @@ type Copy = Record<keyof typeof en, string>;
 const ru: Copy = {
   cancel: "Отменить мероприятие",
   dangerZone: "Опасная зона",
-  cancelHint:
-    "Отмена останавливает продажи. Сервер должен подтвердить отмену и необходимые возвраты. Заказы и история сохраняются.",
-  assignedHint:
-    "Нумерованные места настраиваются в модуле рассадки. Этот редактор сохраняет их без изменений.",
+  cancelHint: "Отмена останавливает продажи и возвращает деньги покупателям. Заказы и история сохраняются.",
+  assignedHint: "Места настраиваются на странице «Настройка мест».",
   events: "Найти мероприятия",
+  navEvents: "Афиша",
   organizer: "Мои мероприятия",
   intro: "Найдите интересное мероприятие рядом с вами.",
   search: "Поиск",
@@ -158,8 +156,8 @@ const ru: Copy = {
   city: "Город",
   date_from: "С даты",
   date_to: "По дату",
-  filter: "Применить фильтры",
-  reset: "Сбросить фильтры",
+  filter: "Применить",
+  reset: "Сбросить",
   previous: "Назад",
   next: "Далее",
   empty: "Мероприятий не найдено.",
@@ -168,7 +166,7 @@ const ru: Copy = {
   create: "Создать мероприятие",
   edit: "Редактировать",
   details: "О мероприятии",
-  preview: "Закрытый предпросмотр",
+  preview: "Предпросмотр",
   title: "Название",
   description: "Описание",
   venue_id: "Место проведения",
@@ -208,7 +206,8 @@ const ru: Copy = {
   draft: "Черновик",
   published: "Опубликовано",
   cancelled: "Отменено",
-  tickets: "Типы билетов",
+  tickets: "Билеты",
+  when: "Дата и время",
   addTicket: "Добавить тип билета",
   editTicket: "Изменить тип билета",
   name: "Название билета",
@@ -271,8 +270,7 @@ const ru: Copy = {
   savePolicy: "Сохранить правила возврата",
   policySaved:
     "Правила возврата сохранены. Покупатели видят их на странице мероприятия.",
-  policyEmpty:
-    "Правила возврата ещё не заданы. Пока их нет, покупатели не видят условий возврата.",
+  policyEmpty: "Правила возврата не заданы. После сохранения их увидят покупатели.",
   images: "Изображения",
   uploadGap:
     "Загрузка ожидает контракт сервера для загрузки и привязки изображений. Существующие изображения показаны ниже.",
@@ -288,11 +286,10 @@ const ru: Copy = {
 const kk: Copy = {
   cancel: "Іс-шарадан бас тарту",
   dangerZone: "Қауіпті әрекеттер",
-  cancelHint:
-    "Бас тарту сатуды тоқтатады. Сервер бас тартуды және қажетті қайтарымдарды растауы тиіс. Тапсырыстар мен тарих сақталады.",
-  assignedHint:
-    "Нөмірленген орындар отыру модулінде бапталады. Бұл өңдегіш оларды өзгертпейді.",
+  cancelHint: "Бас тарту сатуды тоқтатып, сатып алушыларға ақшаны қайтарады. Тапсырыстар мен тарих сақталады.",
+  assignedHint: "Орындар «Орындарды баптау» бетінде бапталады.",
   events: "Іс-шараларды табу",
+  navEvents: "Афиша",
   organizer: "Менің іс-шараларым",
   intro: "Жақын маңдағы қызықты іс-шараларды табыңыз.",
   search: "Іздеу",
@@ -310,7 +307,7 @@ const kk: Copy = {
   create: "Іс-шара құру",
   edit: "Өңдеу",
   details: "Іс-шара туралы",
-  preview: "Жабық алдын ала қарау",
+  preview: "Алдын ала қарау",
   title: "Атауы",
   description: "Сипаттамасы",
   venue_id: "Өтетін орын",
@@ -350,7 +347,8 @@ const kk: Copy = {
   draft: "Жоба",
   published: "Жарияланған",
   cancelled: "Бас тартылған",
-  tickets: "Билет түрлері",
+  tickets: "Билеттер",
+  when: "Күні мен уақыты",
   addTicket: "Билет түрін қосу",
   editTicket: "Билет түрін өңдеу",
   name: "Билет атауы",
@@ -413,8 +411,7 @@ const kk: Copy = {
   savePolicy: "Қайтару ережелерін сақтау",
   policySaved:
     "Қайтару ережелері сақталды. Сатып алушылар оларды іс-шара бетінде көреді.",
-  policyEmpty:
-    "Қайтару ережелері әлі жоқ. Олар қосылғанша сатып алушылар қайтару шарттарын көрмейді.",
+  policyEmpty: "Қайтару ережелері әлі жоқ. Сақтағаннан кейін оларды сатып алушылар көреді.",
   images: "Суреттер",
   uploadGap:
     "Сурет жүктеу және тіркеу үшін сервер келісімшарты қажет. Бар суреттер төменде көрсетілген.",

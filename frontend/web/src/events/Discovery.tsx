@@ -20,7 +20,7 @@ import {
 } from "./model";
 import type { Availability, Event, Page, QuickRange } from "./model";
 import { CoverArt, EventError, Image } from "./ui";
-import { commerceNavigation } from "../checkout/navigation";
+import { commerceAction } from "../checkout/navigation";
 import { parseEvents, parsePublicAvailability } from "./contracts";
 import {
   ArrowLeftIcon,
@@ -485,7 +485,7 @@ function PublicEventCard({
           offer &&
           offer.remaining <= LOW_STOCK && (
             <span className="status-badge cover-badge" data-tone="warning">
-              {d.left}: {offer.remaining}
+              {d.left(offer.remaining)}
             </span>
           )
         )}
@@ -511,7 +511,7 @@ function PublicEventCard({
         </div>
         {event.status === "published" && !offer?.soldOut && (
           <Link className="card-cta" to={`/events/${event.id}/checkout`}>
-            {commerceNavigation[locale].register}
+            {commerceAction(locale, offer?.allFree)}
             <ArrowRightIcon className="card-arrow" size={16} />
           </Link>
         )}

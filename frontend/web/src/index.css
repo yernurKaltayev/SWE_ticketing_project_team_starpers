@@ -726,7 +726,7 @@ main:focus {
 /* Organizer workspace: sidebar + content */
 .workspace {
   display: grid;
-  grid-template-columns: 236px minmax(0, 1fr);
+  grid-template-columns: 252px minmax(0, 1fr);
   gap: clamp(1.5rem, 3vw, 2.5rem);
   align-items: start;
 }
@@ -939,7 +939,7 @@ main:focus {
 }
 .event-card .card-footer {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
@@ -1057,6 +1057,13 @@ main:focus {
   font-weight: 650;
   color: var(--color-muted);
   text-transform: capitalize;
+}
+.detail-header .event-category {
+  margin: 0;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-chip);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 .event-cover .event-category {
   margin: 0;
@@ -1897,6 +1904,10 @@ button.link-button:hover {
 }
 .event-card .offer {
   min-height: 1.5rem;
+  min-width: 0;
+}
+.event-card .card-footer a.card-cta {
+  flex: none;
 }
 .event-cover .cover-badge {
   position: absolute;
@@ -2406,4 +2417,16 @@ a.chip-link:hover {
 }
 .title-row :is(h1, h2) {
   margin-block: 0;
+}
+
+/* Archive groups: the tab row already separates the list from the title. */
+.insights-group > h2 {
+  margin: 1.25rem 0 0.75rem;
+  padding-top: 0;
+}
+.insights-group:first-of-type > h2 {
+  margin-top: 0.5rem;
+}
+.staff-form > .field-hint {
+  margin: -0.35rem 0 1.1rem;
 }

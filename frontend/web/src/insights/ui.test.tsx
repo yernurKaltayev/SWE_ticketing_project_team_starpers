@@ -336,7 +336,7 @@ it("duplicates only after confirmation and leaves source transactions unchanged"
   const source = structuredClone(mockCheckoutEvent(demoEventId));
   await mount("/organizer/events");
   fireEvent.click(await screen.findByRole("button", {
-    name: "Duplicate into a new draft"
+    name: "Duplicate"
   }));
   expect(document.activeElement).toBe(within(screen.getByRole("dialog")).getByRole("button", {
     name: "Keep unchanged"
@@ -346,7 +346,7 @@ it("duplicates only after confirmation and leaves source transactions unchanged"
   }));
   const existing = new Set(mockAllEvents().map(r => r.value.id));
   expect(mockAllEvents()).toHaveLength(existing.size);
-  fireEvent.click(button("Duplicate into a new draft"));
+  fireEvent.click(button("Duplicate"));
   const submit = confirm();
   fireEvent.click(submit);
   fireEvent.click(submit);
@@ -370,7 +370,7 @@ it("blocks a second duplicate after a lost response instead of automatically ret
   }));
   await mount("/organizer/events");
   fireEvent.click(await screen.findByRole("button", {
-    name: "Duplicate into a new draft"
+    name: "Duplicate"
   }));
   fireEvent.click(confirm());
   await screen.findAllByText(/The outcome is unknown/);

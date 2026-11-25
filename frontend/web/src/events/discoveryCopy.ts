@@ -17,14 +17,14 @@ const en = {
   free: "Free",
   from: "from",
   soldOut: "Sold out",
-  left: "left",
+  left: (n: number) => `${n} left`,
   register: "Get tickets",
   emptyTitle: "Nothing matches these filters",
   emptyHint: "Try another date, city or keyword.",
   eventsCount: "events",
   filters: "Filters",
 };
-type Copy = Record<keyof typeof en, string>;
+type Copy = typeof en;
 const ru: Copy = {
   heroTitle: "Найдите своё следующее мероприятие",
   heroIntro:
@@ -43,7 +43,7 @@ const ru: Copy = {
   free: "Бесплатно",
   from: "от",
   soldOut: "Распродано",
-  left: "осталось",
+  left: (n: number) => `Осталось ${n}`,
   register: "Билеты",
   emptyTitle: "По этим фильтрам ничего нет",
   emptyHint: "Попробуйте другую дату, город или запрос.",
@@ -68,7 +68,7 @@ const kk: Copy = {
   free: "Тегін",
   from: "бастап",
   soldOut: "Сатылып кетті",
-  left: "қалды",
+  left: (n: number) => `${n} қалды`,
   register: "Билеттер",
   emptyTitle: "Бұл сүзгілер бойынша ештеңе жоқ",
   emptyHint: "Басқа күнді, қаланы немесе сұрауды көріңіз.",
