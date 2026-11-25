@@ -2798,3 +2798,49 @@ button.date-scroll {
 .featured-meta svg {
   flex: none;
 }
+
+/* Picture banner: the slide is the image; the generated cover only when there is none. */
+a.featured-slide {
+  display: flex;
+  color: #fff;
+  text-decoration: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+.featured-slide.has-image::before {
+  content: none;
+}
+.featured-art {
+  position: relative;
+  display: grid;
+  gap: 0.5rem;
+  max-width: 44rem;
+  padding: clamp(1.25rem, 4vw, 2.75rem) clamp(1.25rem, 6vw, 5.75rem);
+}
+.featured-art strong {
+  font-size: clamp(1.6rem, 3.4vw, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.featured-art span {
+  color: rgb(255 255 255 / 0.85);
+}
+.featured-track.is-dragging {
+  transition: none;
+}
+.featured {
+  touch-action: pan-y;
+}
+button.featured-arrow {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.featured:hover button.featured-arrow,
+button.featured-arrow:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  button.featured-arrow {
+    display: none;
+  }
+}

@@ -17,7 +17,6 @@ import {
   MaskIcon,
   MicIcon,
   MusicIcon,
-  PinIcon,
   SparkleIcon,
 } from "../icons";
 import { categoryLabel, knownCategories } from "./categories";
@@ -26,8 +25,6 @@ import { useResource } from "./data";
 import { discoveryCopy } from "./discoveryCopy";
 import { categoryTone, isoDay } from "./model";
 import type { Event, Page } from "./model";
-import { cityLabel } from "./venues";
-import type { VenueRef } from "./venues";
 
 type IconType = ComponentType<SVGProps<SVGSVGElement> & { size?: number }>;
 const categoryIcons: Record<string, IconType> = {
@@ -76,14 +73,16 @@ export function CategoryBar({
   );
 }
 
-/** Upcoming events as a large rotating banner (pauses on hover/focus). */
+/**
+ * Upcoming events as a picture banner: the event's own image (or a generated
+ * cover with its title when there is none) is the whole slide and opens the event.
+ * Arrows appear on mouse hover; phones swipe.
+ */
 export function FeaturedCarousel({
   city,
-  venues,
   locale,
 }: {
   city: string;
-  venues: Map<string, VenueRef>;
   locale: Locale;
 }) {
   const d = discoveryCopy[locale];
@@ -96,14 +95,16 @@ export function FeaturedCarousel({
   const slides = data?.items ?? [];
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [drag, setDrag] = useState<{ x: number; dx: number } | null>(null);
+  const moved = useRef(false);
   const count = slides.length;
   const active = count ? index % count : 0;
   useEffect(() => {
-    if (count < 2 || paused) return;
+    if (count < 2 || paused || drag) return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => setIndex((i) => (i + 1) % count), 6000);
     return () => window.clearInterval(timer);
-  }, [count, paused]);
+  }, [count, paused, drag]);
   if (!count) return null;
   const go = (next: number) => setIndex((next + count) % count);
   return (
@@ -115,56 +116,55 @@ export function FeaturedCarousel({
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
+      onTouchStart={(e) => {
+        moved.current = false;
+        setDrag({ x: e.touches[0].clientX, dx: 0 });
+      }}
+      onTouchMove={(e) => {
+        if (!drag) return;
+        const dx = e.touches[0].clientX - drag.x;
+        if (Math.abs(dx) > 8) moved.current = true;
+        setDrag({ ...drag, dx });
+      }}
+      onTouchEnd={() => {
+        if (drag && Math.abs(drag.dx) > 50) go(active + (drag.dx < 0 ? 1 : -1));
+        setDrag(null);
+      }}
     >
-      <div className="featured-track" style={{ transform: `translateX(-${active * 100}%)` }}>
+      <div
+        className={`featured-track${drag ? " is-dragging" : ""}`}
+        style={{
+          transform: `translateX(calc(${-active * 100}% + ${drag?.dx ?? 0}px))`,
+        }}
+      >
         {slides.map((event, i) => {
-          const venue = venues.get(event.venue_id);
+          const image = event.images[0];
           return (
-            <article
+            <Link
               key={event.id}
-              className="featured-slide"
+              to={`/events/${event.id}`}
+              className={`featured-slide${image ? " has-image" : ""}`}
               data-cover-tone={categoryTone(event.category) || undefined}
               aria-roledescription="slide"
-              aria-label={`${i + 1} / ${count}`}
+              aria-label={`${event.title} · ${i + 1} / ${count}`}
               aria-hidden={i !== active}
-              style={
-                event.images[0]
-                  ? { backgroundImage: `url("${encodeURI(event.images[0])}")` }
-                  : undefined
-              }
+              tabIndex={i === active ? 0 : -1}
+              draggable={false}
+              onClick={(e) => {
+                // A swipe that ends on the slide is not a click.
+                if (moved.current) e.preventDefault();
+              }}
+              style={image ? { backgroundImage: `url("${encodeURI(image)}")` } : undefined}
             >
-              <div className="featured-body">
-                {event.category && (
-                  <span className="featured-category">
-                    {categoryLabel(event.category, locale)}
+              {!image && (
+                <span className="featured-art" aria-hidden="true">
+                  <strong>{event.title}</strong>
+                  <span>
+                    {formatEventRange(event.starts_at, event.ends_at, event.timezone, locale)}
                   </span>
-                )}
-                <h2>
-                  <Link to={`/events/${event.id}`} tabIndex={i === active ? 0 : -1}>
-                    {event.title}
-                  </Link>
-                </h2>
-                <p className="featured-meta">
-                  <CalendarIcon size={16} />
-                  {formatEventRange(event.starts_at, event.ends_at, event.timezone, locale)}
-                </p>
-                {venue && (
-                  <p className="featured-meta">
-                    <PinIcon size={16} />
-                    {venue.name}
-                    {venue.city ? ` · ${cityLabel(venue.city, locale)}` : ""}
-                  </p>
-                )}
-                <Link
-                  className="action-link"
-                  to={`/events/${event.id}`}
-                  tabIndex={i === active ? 0 : -1}
-                >
-                  {d.details}
-                  <ArrowRightIcon size={16} />
-                </Link>
-              </div>
-            </article>
+                </span>
+              )}
+            </Link>
           );
         })}
       </div>

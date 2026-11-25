@@ -234,11 +234,7 @@ function PublicEventList({ locale }: { locale: Locale }) {
         onChange={(category) => update({ category })}
       />
       {browsing && (
-        <FeaturedCarousel
-          city={params.get("city") ?? ""}
-          venues={venueById}
-          locale={locale}
-        />
+        <FeaturedCarousel city={params.get("city") ?? ""} locale={locale} />
       )}
       <form
         className="discovery-search"
