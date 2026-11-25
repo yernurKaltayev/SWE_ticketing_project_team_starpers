@@ -1682,7 +1682,7 @@ nav.controls:has(> a[aria-current]) > a[aria-current] {
 }
 .discovery-intro p {
   margin: 0 0 1.5rem;
-  max-width: 46rem;
+  max-width: 62rem;
   color: var(--color-muted);
   font-size: 1.0625rem;
 }
@@ -2116,4 +2116,36 @@ button.password-toggle[aria-pressed="true"] {
 .ticket-table td,
 .ticket-table th {
   padding-inline: 0.75rem;
+}
+
+/* Wide screens: the search spans the hero and the filters share one stretched
+   row, instead of everything stopping at ~1270px with an empty right side. */
+@media (min-width: 1100px) {
+  .discovery-hero .hero-search {
+    max-width: none;
+  }
+  .discovery-filters {
+    flex-wrap: nowrap;
+  }
+  .discovery-filters > .field:not(.date-chips) {
+    flex: 1 1 0;
+    min-width: 12rem;
+  }
+  .discovery-filters > .date-chips {
+    flex: 0 0 auto;
+  }
+  .discovery-filters > .custom-dates {
+    flex: 0 0 auto;
+    align-self: flex-end;
+  }
+  .discovery-filters > .custom-dates summary {
+    min-height: 42px;
+  }
+  /* Open custom dates drop below the row instead of squeezing it. */
+  .discovery-filters:has(.custom-dates[open]) {
+    flex-wrap: wrap;
+  }
+  .discovery-filters > .custom-dates[open] {
+    flex-basis: 100%;
+  }
 }
