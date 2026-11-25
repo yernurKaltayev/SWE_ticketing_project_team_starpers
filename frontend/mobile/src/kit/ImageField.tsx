@@ -35,13 +35,10 @@ export function ImageField({
   const [problem, setProblem] = useState<string | null>(null);
   const [denied, setDenied] = useState(false);
 
+  // The system photo picker needs no library permission on current iOS/Android; asking for one
+  // would only add a prompt whose refusal blocks picking. A permission error is still handled.
   async function pick() {
     setProblem(null);
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setDenied(true);
-      return;
-    }
     setDenied(false);
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
@@ -74,7 +71,12 @@ export function ImageField({
           title={imageUri ? t.replaceImage : t.pickImage}
           busy={busy}
           disabled={busy}
-          onPress={() => void pick().catch(() => setProblem(t.loadFailed))}
+          onPress={() =>
+            void pick().catch((error: unknown) => {
+              if (/permission/i.test(String(error))) setDenied(true);
+              else setProblem(t.pickFailed);
+            })
+          }
         />
         {imageUri && onRemove ? (
           <Action title={t.removeImage} disabled={busy} onPress={onRemove} />

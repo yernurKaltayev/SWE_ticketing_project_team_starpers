@@ -7,7 +7,7 @@ import { color, radius, type } from "../theme";
 import { Action, Heading, Sheet } from "../ui";
 import { kitCopy } from "./copy";
 import { FormField } from "./FormField";
-import { instantFromWall, pickerDateFromInstant, wallFromPicker } from "./values";
+import { instantFromWall, isValidZone, pickerDateFromInstant, wallFromPicker } from "./values";
 
 /**
  * Date and time in the event's own time zone. The device picker only supplies a wall clock;
@@ -33,6 +33,8 @@ export function DateTimeField({
   const [problem, setProblem] = useState<string | null>(null);
   const [draft, setDraft] = useState<Date | null>(null);
 
+  const zoneOk = isValidZone(zone);
+
   function commit(picked: Date) {
     const result = instantFromWall(wallFromPicker(picked), zone);
     if (result.error) return setProblem(t.dateInvalid);
@@ -41,6 +43,7 @@ export function DateTimeField({
   }
 
   function open() {
+    if (!zoneOk) return;
     const start = pickerDateFromInstant(value, zone);
     if (Platform.OS === "android") {
       DateTimePickerAndroid.open({
@@ -61,15 +64,21 @@ export function DateTimeField({
     } else setDraft(start);
   }
 
-  const shown = value
-    ? formatDateTime(value, locale, { time: true, timeZone: zone })
-    : t.pickDate;
+  // Without a usable zone nothing can be shown or saved correctly: ask for the zone first.
+  const shown = !zoneOk
+    ? t.zoneMissing
+    : value
+      ? formatDateTime(value, locale, { time: true, timeZone: zone })
+      : t.pickDate;
+  const hint = zoneOk ? zoneLabel(zone, locale) : undefined;
   return (
-    <FormField label={label} hint={zoneLabel(zone, locale)} error={problem ?? error}>
+    <FormField label={label} hint={hint} error={problem ?? error}>
       <View style={local.row}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${label}: ${shown}, ${zoneLabel(zone, locale)}`}
+          accessibilityLabel={hint ? `${label}: ${shown}, ${hint}` : `${label}: ${shown}`}
+          accessibilityState={{ disabled: !zoneOk }}
+          disabled={!zoneOk}
           onPress={open}
           style={({ pressed }) => [
             local.field,
@@ -79,7 +88,7 @@ export function DateTimeField({
         >
           <Text style={[local.value, !value && local.placeholder]}>{shown}</Text>
         </Pressable>
-        {value ? (
+        {value && zoneOk ? (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`${t.clear}: ${label}`}

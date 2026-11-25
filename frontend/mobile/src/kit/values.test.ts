@@ -48,3 +48,27 @@ describe("event-zone dates", () => {
     expect(wallFromPicker(new Date(2027, 0, 5, 7, 3))).toBe("2027-01-05T07:03");
   });
 });
+
+describe("review fixes", () => {
+  it("keeps what the user typed when it means the same amount, else shows the new amount", async () => {
+    const { syncedMoneyText } = await import("./values");
+    expect(syncedMoneyText("1 500,5", 150050)).toBe("1 500,5");
+    expect(syncedMoneyText("", 150050)).toBe("1500.50");
+    expect(syncedMoneyText("10", null)).toBe("");
+    expect(syncedMoneyText("10.999", 150000)).toBe("1500.00");
+  });
+
+  it("recognises usable IANA zones", async () => {
+    const { isValidZone } = await import("./values");
+    expect(isValidZone("Europe/Moscow")).toBe(true);
+    expect(isValidZone("")).toBe(false);
+    expect(isValidZone("Mars/Base")).toBe(false);
+  });
+
+  it("refuses a malformed wall time instead of opening the picker on a wrong day", async () => {
+    const { pickerDateFromWall } = await import("./values");
+    expect(pickerDateFromWall("2027-03-10T19:00")?.getHours()).toBe(19);
+    expect(pickerDateFromWall("undefined-undefined-undefinedTundefined:undefined")).toBeNull();
+    expect(pickerDateFromWall("2027-03-10T24:00")).toBeNull();
+  });
+});

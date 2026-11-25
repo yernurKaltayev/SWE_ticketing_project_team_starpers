@@ -36,9 +36,10 @@ export function KitGallery({ locale }: { locale: Locale }) {
     ticketPaths.mine(),
     { enabled: userId !== null },
   );
-  const [zone, setZone] = useState<"Europe/Moscow" | "Asia/Almaty">("Europe/Moscow");
+  const [zone, setZone] = useState<"Europe/Moscow" | "Asia/Almaty" | "none">("Europe/Moscow");
   const [starts, setStarts] = useState<string | null>("2027-03-10T16:00:00.000Z");
   const [price, setPrice] = useState<number | null>(150050);
+  const [priceInvalid, setPriceInvalid] = useState(false);
   const [image, setImage] = useState<PickedImage | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [confirmed, setConfirmed] = useState("");
@@ -64,14 +65,23 @@ export function KitGallery({ locale }: { locale: Locale }) {
             options={[
               { value: "Europe/Moscow", label: "Europe/Moscow" },
               { value: "Asia/Almaty", label: "Asia/Almaty" },
+              { value: "none", label: "(no zone)" },
             ]}
             onChange={setZone}
             locale={locale}
           />
-          <DateTimeField label="Starts" zone={zone} value={starts} onChange={setStarts} locale={locale} />
+          <DateTimeField label="Starts" zone={zone === "none" ? "" : zone} value={starts} onChange={setStarts} locale={locale} />
           <Muted>{`Saved instant: ${starts ?? "none"}`}</Muted>
-          <MoneyInput label="Price" amount={price} onChange={setPrice} locale={locale} />
-          <Muted>{`Saved tiyn: ${price ?? "none"}`}</Muted>
+          <MoneyInput
+            label="Price"
+            amount={price}
+            onChange={(amount, invalid) => {
+              setPrice(amount);
+              setPriceInvalid(invalid);
+            }}
+            locale={locale}
+          />
+          <Muted>{`Saved tiyn: ${price ?? "none"}${priceInvalid ? " (invalid, save blocked)" : ""}`}</Muted>
           <ImageField
             label="Cover"
             imageUri={image?.uri ?? null}

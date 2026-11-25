@@ -6,6 +6,7 @@ const en = {
   done: "Done",
   cancel: "Cancel",
   pickDate: "Choose date and time",
+  zoneMissing: "Choose the event time zone first",
   clear: "Clear",
   dateInvalid: "This time does not exist in the event's time zone (clock change). Choose another.",
   priceInvalid: "Enter an amount in tenge, with at most 2 decimals.",
@@ -16,6 +17,7 @@ const en = {
   openSettings: "Open Settings",
   loading: "Loading…",
   loadFailed: "Could not load. Check the connection and try again.",
+  pickFailed: "Could not open the photo library. Try again.",
   retry: "Try again",
   loadingMore: "Loading more…",
 };
@@ -28,6 +30,7 @@ const ru: KitCopy = {
   done: "Готово",
   cancel: "Отмена",
   pickDate: "Выберите дату и время",
+  zoneMissing: "Сначала выберите часовой пояс события",
   clear: "Очистить",
   dateInvalid: "Такого времени нет в часовом поясе события (перевод часов). Выберите другое.",
   priceInvalid: "Введите сумму в тенге, не более 2 знаков после запятой.",
@@ -38,6 +41,7 @@ const ru: KitCopy = {
   openSettings: "Открыть Настройки",
   loading: "Загрузка…",
   loadFailed: "Не удалось загрузить. Проверьте подключение и попробуйте снова.",
+  pickFailed: "Не удалось открыть фотографии. Попробуйте снова.",
   retry: "Повторить",
   loadingMore: "Загружаем ещё…",
 };
@@ -48,6 +52,7 @@ const kk: KitCopy = {
   done: "Дайын",
   cancel: "Бас тарту",
   pickDate: "Күн мен уақытты таңдаңыз",
+  zoneMissing: "Алдымен іс-шараның уақыт белдеуін таңдаңыз",
   clear: "Тазалау",
   dateInvalid: "Бұл уақыт іс-шараның уақыт белдеуінде жоқ (сағат ауысуы). Басқасын таңдаңыз.",
   priceInvalid: "Соманы теңгемен енгізіңіз, үтірден кейін 2 таңбадан аспасын.",
@@ -58,6 +63,7 @@ const kk: KitCopy = {
   openSettings: "Баптауларды ашу",
   loading: "Жүктелуде…",
   loadFailed: "Жүктеу мүмкін болмады. Байланысты тексеріп, қайталаңыз.",
+  pickFailed: "Фотоларды ашу мүмкін болмады. Қайталап көріңіз.",
   retry: "Қайталау",
   loadingMore: "Тағы жүктелуде…",
 };
