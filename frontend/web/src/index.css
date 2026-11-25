@@ -391,6 +391,9 @@ label {
   border-radius: 50%;
   background: var(--color-primary);
 }
+.activation-notice p {
+  margin: 0 0 0.6rem;
+}
 .form-error {
   display: flex;
   align-items: flex-start;

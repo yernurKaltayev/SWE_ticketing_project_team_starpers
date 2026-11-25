@@ -530,6 +530,23 @@ function TicketEditor({
       <EventError error={tickets.error} t={t} retry={tickets.reload} />
       {!tickets.data && !tickets.error && <Status>{t.loading}</Status>}
       {tickets.data?.items.length === 0 && <p>{t.ticketEmpty}</p>}
+      {/* Paid tickets stay "not on sale" until the per-event activation checklist is done;
+          say so here, where the organizer adds them, instead of leaving them to guess. */}
+      {event.status !== "cancelled" &&
+        event.paid_sales_status !== "active" &&
+        tickets.data?.items.some((ticket) => (ticket.price_amount ?? 0) > 0) && (
+          <div className="notice activation-notice" role="status">
+            <div>
+              <p>{t.activationNeeded}</p>
+              <Link
+                className="action-link ghost"
+                to={`/organizer/events/${encodeURIComponent(event.id)}/activation`}
+              >
+                {t.activationLink}
+              </Link>
+            </div>
+          </div>
+        )}
       {/* Four columns fit a laptop without sideways scrolling; reserved, refunded
           and checked-in counts live on the analytics page. */}
       {!!tickets.data?.items.length && (

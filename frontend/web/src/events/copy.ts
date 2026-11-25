@@ -94,6 +94,9 @@ const en = {
   notOpen: "Ticket sales have not opened yet",
   ended: "Sales have ended",
   paidBlocked: "Not on sale yet",
+  activationNeeded:
+    "Paid tickets are not on sale until paid sales are activated for this event.",
+  activationLink: "Complete paid-sales activation",
   unavailable: "Currently unavailable",
   onSale: "On sale",
   ticketEmpty: "No ticket types are available.",
@@ -242,6 +245,9 @@ const ru: Copy = {
   notOpen: "Продажа билетов ещё не открыта",
   ended: "Продажи завершены",
   paidBlocked: "Пока не в продаже",
+  activationNeeded:
+    "Платные билеты не поступят в продажу, пока для этого мероприятия не активированы платные продажи.",
+  activationLink: "Завершить активацию платных продаж",
   unavailable: "Сейчас недоступно",
   onSale: "В продаже",
   ticketEmpty: "Доступных типов билетов нет.",
@@ -388,6 +394,9 @@ const kk: Copy = {
   notOpen: "Билет сатылымы әлі ашылмады",
   ended: "Сату аяқталды",
   paidBlocked: "Әзірге сатылымда жоқ",
+  activationNeeded:
+    "Осы іс-шара үшін ақылы сату белсендірілмейінше, ақылы билеттер сатылымға шықпайды.",
+  activationLink: "Ақылы сатуды белсендіруді аяқтау",
   unavailable: "Қазір қолжетімсіз",
   onSale: "Сатылымда",
   ticketEmpty: "Қолжетімді билет түрлері жоқ.",
