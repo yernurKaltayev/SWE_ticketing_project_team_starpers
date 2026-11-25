@@ -320,7 +320,6 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
                 }
                 maxLength={128}
                 required
-                hint={kind === "login" ? undefined : t.passwordHint}
                 value={values.password}
                 error={errors.password ?? errors.new_password}
                 onChange={(e) => change("password", e.target.value)}
