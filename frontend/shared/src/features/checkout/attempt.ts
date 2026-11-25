@@ -18,9 +18,16 @@ export class CheckoutCoordinator {
   private userId: string | null;
   private session: Session;
   private storage: KeyValueStore | null;
-  constructor(session: Session, storage: KeyValueStore | null) {
+  private newId: () => string;
+  /** `newId` defaults to `crypto.randomUUID`; React Native passes its own (Expo has no global crypto). */
+  constructor(
+    session: Session,
+    storage: KeyValueStore | null,
+    newId: () => string = () => crypto.randomUUID(),
+  ) {
     this.session = session;
     this.storage = storage;
+    this.newId = newId;
     this.userId = session.getSnapshot().user?.id ?? null;
     session.subscribe(() => {
       const next = session.getSnapshot().user?.id ?? null;
@@ -137,7 +144,7 @@ export class CheckoutCoordinator {
       attempt = {
         body: structuredClone(body),
         serialized,
-        key: crypto.randomUUID(),
+        key: this.newId(),
       };
       try {
         this.persist(eventId, { key: attempt.key });

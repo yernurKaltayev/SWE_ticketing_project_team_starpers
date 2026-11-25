@@ -167,3 +167,11 @@ it("requires a confirmed server result before starting another registration", as
   await coordinator.startAnother("event");
   expect(coordinator.recovery("event")).toBeNull();
 });
+
+it("uses the injected id generator for the idempotency key (no global crypto needed)", async () => {
+  const { request, session, store, storage } = setup();
+  const coordinator = new CheckoutCoordinator(session, store, () => "injected-key");
+  request.mockResolvedValue(order);
+  await coordinator.submit(body);
+  expect([...storage.values()].join()).toContain("injected-key");
+});

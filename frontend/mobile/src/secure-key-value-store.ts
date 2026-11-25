@@ -4,7 +4,6 @@ import type { KeyValueStore } from "@biletflow/shared";
 export interface SyncSecureStore {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
-  deleteItemAsync(key: string): Promise<void>;
 }
 
 /**
@@ -16,17 +15,14 @@ export function secureKey(key: string): string {
 }
 
 /**
- * SecureStore has no synchronous delete: removal first overwrites the value with "",
- * which reads back as missing, then deletes in the background.
+ * SecureStore has no synchronous delete, so removal overwrites the value with "", which
+ * reads back as missing. There is deliberately no background delete: one that lands after a
+ * newer setItem for the same key would erase checkout recovery data.
  */
 export function createSecureKeyValueStore(store: SyncSecureStore): KeyValueStore {
   return {
     getItem: (key) => store.getItem(secureKey(key)) || null,
     setItem: (key, value) => store.setItem(secureKey(key), value),
-    removeItem: (key) => {
-      const encoded = secureKey(key);
-      store.setItem(encoded, "");
-      void store.deleteItemAsync(encoded).catch(() => undefined);
-    },
+    removeItem: (key) => store.setItem(secureKey(key), ""),
   };
 }
