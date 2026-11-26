@@ -1167,7 +1167,8 @@ main:focus {
   align-items: start;
 }
 .facts .fact-icon {
-  grid-row: span 2;
+  grid-column: 1;
+  grid-row: 1 / span 2;
   display: grid;
   place-items: center;
   width: 36px;
@@ -1175,6 +1176,12 @@ main:focus {
   border-radius: 10px;
   background: var(--color-primary-soft);
   color: var(--color-primary);
+}
+/* Label and every value stay in the text column, so a fact with several values
+   (ticket sales open and close) lines up instead of wrapping under the icon. */
+.facts dt,
+.facts dd {
+  grid-column: 2;
 }
 .facts dt {
   font-size: 0.75rem;
