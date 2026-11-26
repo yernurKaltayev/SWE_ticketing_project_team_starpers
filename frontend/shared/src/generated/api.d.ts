@@ -251,6 +251,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/events/{event_id}/volunteers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List an event's volunteer check-in accounts
+         * @description Owner: P1. Access: event owner, platform admin, or staff (manager). Passwords are never listed.
+         */
+        get: operations["get_events_event_id_volunteers"];
+        put?: never;
+        /**
+         * Create a volunteer check-in account for this event
+         * @description Owner: P1. Access: event owner, platform admin, or staff (manager). The server generates the login and password and returns them once. The account can only check in this event's tickets and is anonymized volunteer_grace_hours after the event ends (or when the event is cancelled). 409 event_ended, volunteer_limit_reached.
+         */
+        post: operations["post_events_event_id_volunteers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{event_id}/volunteers/{user_id}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Issue a new password for a volunteer
+         * @description Owner: P1. Access: event owner, platform admin, or staff (manager). Signs the volunteer out of every device. 409 event_ended.
+         */
+        post: operations["post_events_event_id_volunteers_user_id_reset_password"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{event_id}/volunteers/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a volunteer now (anonymizes the account)
+         * @description Owner: P1. Access: event owner, platform admin, or staff (manager). The account can no longer sign in; its check-in history is kept under "Former volunteer".
+         */
+        delete: operations["delete_events_event_id_volunteers_user_id"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/events": {
         parameters: {
             query?: never;
@@ -3274,6 +3338,60 @@ export interface components {
             /** Can Check In */
             can_check_in: boolean;
         };
+        /** VolunteerCreate */
+        VolunteerCreate: {
+            /** Full Name */
+            full_name: string;
+        };
+        /**
+         * VolunteerOut
+         * @description A volunteer check-in account on an event. The password is never listed.
+         */
+        VolunteerOut: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Full Name */
+            full_name: string;
+            /** Login */
+            login: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Last Login At */
+            last_login_at: string | null;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
+        /**
+         * VolunteerCredentialsOut
+         * @description Returned once, on creation or password reset: pass these to the volunteer.
+         */
+        VolunteerCredentialsOut: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Full Name */
+            full_name: string;
+            /** Login */
+            login: string;
+            /** Password */
+            password: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+        };
         /** StaffMemberOut */
         StaffMemberOut: {
             /**
@@ -4354,6 +4472,116 @@ export interface operations {
         };
     };
     delete_events_event_id_staff_user_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    get_events_event_id_volunteers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VolunteerOut"][];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    post_events_event_id_volunteers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VolunteerCreate"];
+            };
+        };
+        responses: {
+            /** @description Created. Show the credentials to the organizer once. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VolunteerCredentialsOut"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    post_events_event_id_volunteers_user_id_reset_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VolunteerCredentialsOut"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    delete_events_event_id_volunteers_user_id: {
         parameters: {
             query?: never;
             header?: never;

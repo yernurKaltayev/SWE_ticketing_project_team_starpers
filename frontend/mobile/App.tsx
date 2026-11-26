@@ -109,6 +109,8 @@ export default function App() {
   const c = checkInCopy[locale];
   const snapshot = useSessionSnapshot();
   const signedIn = snapshot.user !== null;
+  // A volunteer account can only scan tickets for its event: show the check-in tab alone.
+  const isVolunteer = snapshot.user?.role === "volunteer";
 
   useEffect(() => bindAppFocus(), []);
 
@@ -155,7 +157,8 @@ export default function App() {
           >
             {() => (
               <Tab.Navigator
-                initialRouteName="Discover"
+                key={isVolunteer ? "volunteer" : "full"}
+                initialRouteName={isVolunteer ? "Home" : "Discover"}
                 screenOptions={{
                   headerShown: false,
                   tabBarActiveTintColor: color.primary,
@@ -163,6 +166,7 @@ export default function App() {
                   tabBarStyle: { backgroundColor: color.surface, borderTopColor: color.line },
                 }}
               >
+                {isVolunteer ? null : <>
                 <Tab.Screen
                   name="Discover"
                   options={{
@@ -201,6 +205,7 @@ export default function App() {
                     </Screen>
                   )}
                 </Tab.Screen>
+                </>}
                 <Tab.Screen
                   name="Home"
                   options={{
@@ -361,9 +366,11 @@ function AccountScreen({ locale, tabNav }: { locale: Locale; tabNav: {
     <Screen>
       {user ? (
         <>
-        <Action title={supportCopy[locale].notifications} onPress={() => openPath("/account/notifications")} />
-        <Action title={commerceCopy[locale].orders} onPress={() => openPath("/account/orders")} />
-        <Action title={supportCopy[locale].title} onPress={() => openPath("/support")} />
+        {user.role !== "volunteer" ? <>
+          <Action title={supportCopy[locale].notifications} onPress={() => openPath("/account/notifications")} />
+          <Action title={commerceCopy[locale].orders} onPress={() => openPath("/account/orders")} />
+          <Action title={supportCopy[locale].title} onPress={() => openPath("/support")} />
+        </> : null}
         {user.role === "organizer" ? <>
           <Action title={eventCopy[locale].organizer} onPress={() => openPath("/organizer/events")} />
           <Action title={authCopy[locale].organizer} onPress={() => openPath("/organizer/profile")} />
