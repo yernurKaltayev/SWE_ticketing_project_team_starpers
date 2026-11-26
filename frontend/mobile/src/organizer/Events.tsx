@@ -4,6 +4,7 @@ import { useSessionSnapshot } from "../session";
 import { formatEventRange, formatPrice } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { categoryLabel, knownCategories } from "@biletflow/shared/features/events/categories";
+import { cityLabel, knownCities } from "@biletflow/shared/features/events/venues";
 import { parseEvent, parseTicketTypes, parseVenue, parseVenues } from "@biletflow/shared/features/events/contracts";
 import { eventCopy } from "@biletflow/shared/features/events/copy";
 import { eventBody, findVenue, InputError, ticketBody, venueLabel, zonedInput } from "@biletflow/shared/features/events/model";
@@ -196,7 +197,10 @@ function Editor({ event, locale, open }: OrganizerProps & { event?: Event }) {
       {venueId === "new" ? <>
         <AuthField label={t.venue_new_name} value={venueName} onChangeText={update(setVenueName)} editable={!blocked} />
         <AuthField label={t.venue_address} value={venueAddress} onChangeText={update(setVenueAddress)} editable={!blocked} />
-        <AuthField label={t.venue_city} value={venueCity} onChangeText={update(setVenueCity)} editable={!blocked} />
+        <Select label={t.venue_city} locale={locale} value={venueCity || null} onChange={update(setVenueCity)} disabled={blocked}
+          placeholder={t.chooseCity}
+          options={[...knownCities].sort((a, b) => cityLabel(a, locale).localeCompare(cityLabel(b, locale), locale))
+            .map((value) => ({ value, label: cityLabel(value, locale) }))} />
       </> : null}
       <Action title={t.previous} onPress={() => setStep("details")} />
       <Action title={t.save} variant="primary" busy={write.busy} disabled={blocked} onPress={() => save("tickets")} />
