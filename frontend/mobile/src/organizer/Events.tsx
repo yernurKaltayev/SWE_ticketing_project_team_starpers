@@ -20,6 +20,7 @@ import { AuthField, useDiscardChanges } from "../auth/Fields";
 import { Read, Failure, request, useResource } from "../features/resource";
 import { PageNav } from "../features/PageNav";
 import { useWrite } from "../features/use-write";
+import { resourceKey } from "../features/resource-key";
 import { ConfirmSheet } from "../kit/ConfirmSheet";
 import { DateTimeField } from "../kit/DateTimeField";
 import { ImageField } from "../kit/ImageField";
@@ -90,7 +91,9 @@ function Editor({ event, locale, open }: OrganizerProps & { event?: Event }) {
   const cache = useQueryClient();
   function saved(value: Event) {
     setCurrent(value);
-    cache.setQueryData(["mobile", user?.id, eventRoot(value.id)], value);
+    cache.setQueryData(resourceKey(user?.id, eventRoot(value.id), parseEvent), value);
+    // Other screens may hold the same event under another parser: refresh those too.
+    void cache.invalidateQueries({ queryKey: ["mobile", user?.id, eventRoot(value.id)] });
     void cache.invalidateQueries({ queryKey: ["mobile-owned-events", user?.id] });
   }
   const [step, setStep] = useState<Step>("details");
