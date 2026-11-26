@@ -224,3 +224,21 @@
   padding: 0;
   list-style: none;
 }
+/* The grid gap already spaces these pages; children's own margins would double it. */
+.insights > * {
+  margin-block: 0;
+}
+.insights > .back-link {
+  margin-bottom: -0.25rem;
+}
+.insights > :is(.title-row, h1) + .page-subtitle {
+  margin-top: -0.85rem;
+}
+/* Filters fit on one row with both buttons on a normal laptop width. */
+.insights-filters > .field,
+.insights-filters > div {
+  min-width: min(100%, 9rem);
+}
+.insights-filters > .field:has(input[type="datetime-local"]) {
+  min-width: min(100%, 11.5rem);
+}
