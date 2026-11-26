@@ -403,7 +403,8 @@ it("renders payout and financial empty states and localized simulation notices",
   first.view.unmount();
   const second = await mount(`/organizer/events/${demoEventId}/financials`);
   await screen.findByText("Estimated payout");
-  expect(screen.getAllByText(/0\.00/).length).toBe(4);
+  // Whole tenge drop the ",00": four zero totals.
+  expect(screen.getAllByText(/^(KZT|₸)?\s?0\s?(₸|KZT)?$/).length).toBe(4);
   second.view.unmount();
   await mount("/organizer/payouts", "organizer@example.com", "kk");
   await screen.findByText(/Әзірге төлем жоқ/);

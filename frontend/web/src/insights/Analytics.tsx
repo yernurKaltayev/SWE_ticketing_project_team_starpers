@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { BackLink } from "../BackLink";
 import { useParams, useSearchParams } from "react-router-dom";
-import { formatMoney } from "@biletflow/shared";
+import { formatPrice } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { parseEvent } from "../events/contracts";
 import { useLiveQuery } from "../support/data";
@@ -143,7 +143,7 @@ function Content({
             {t(k)}
           </dt>
           <dd>
-            {formatMoney(data[k], locale)}
+            {formatPrice(data[k], locale)}
           </dd>
         </div>)}
       </dl>
@@ -152,13 +152,10 @@ function Content({
       <h2>
         {t("sales")}
       </h2>
-      <p>
-        {t("seriesHint")}
-      </p>
       <Bars values={data.sales_over_time.map(v => v.tickets)} title={t("sales")} />
       <div className="table-scroll">
         <table>
-          <caption>
+          <caption className="visually-hidden">
             {t("sales")}
           </caption>
           <thead>
@@ -177,7 +174,7 @@ function Content({
                 {r.tickets}
               </td>
               <td>
-                {formatMoney(r.revenue, locale)}
+                {formatPrice(r.revenue, locale)}
               </td>
             </tr>)}
           </tbody>
@@ -194,7 +191,7 @@ function Content({
       <Bars values={data.by_ticket_type.map(v => v.sold)} title={t("comparison")} />
       <div className="table-scroll">
         <table>
-          <caption>
+          <caption className="visually-hidden">
             {t("comparison")}
           </caption>
           <thead>
@@ -213,7 +210,7 @@ function Content({
                 {r.sold}
               </td>
               <td>
-                {formatMoney(r.revenue, locale)}
+                {formatPrice(r.revenue, locale)}
               </td>
             </tr>)}
           </tbody>
@@ -275,7 +272,7 @@ function Campaign({
      ·
     {t("revenue")}
     :
-    {formatMoney(value.revenue, locale)}
+    {formatPrice(value.revenue, locale)}
   </p>
   <button className="secondary" aria-expanded={open} onClick={() => setOpen(v => !v)}>
     {t(open ? "close" : "details")}
@@ -297,7 +294,7 @@ function Campaign({
             {t(k === "redemptions" ? "redemptions_count" : k)}
           </dt>
           <dd>
-            {["redemptions", "tickets_sold"].includes(k) ? report.data[k] : formatMoney(report.data[k], locale)}
+            {["redemptions", "tickets_sold"].includes(k) ? report.data[k] : formatPrice(report.data[k], locale)}
           </dd>
         </div>)}
       </dl>

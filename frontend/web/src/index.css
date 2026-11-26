@@ -2995,3 +2995,9 @@ button.danger-text {
     display: none;
   }
 }
+/* Event sections: the event name under the page title reads the same on every page. */
+.workspace-main :is(h1, .title-row) + p:not([class]) {
+  margin: -0.25rem 0 1.25rem;
+  color: var(--color-muted);
+  font-weight: 600;
+}
