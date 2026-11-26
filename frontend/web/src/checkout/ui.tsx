@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { ApiError } from "@biletflow/shared";
+import type { Locale } from "@biletflow/shared";
 import type { CommerceCopy } from "./copy";
 import { toneFor } from "../tone";
 export function CommerceError({
@@ -55,5 +56,28 @@ export function CommerceStatus({
   return (
     <span className="status-badge" data-tone={toneFor(value)}>
       {t.states[value] ?? t.unknownStatus}</span>
+  );
+}
+
+/** Calendar-style day and month of the event, so the list reads like a set of tickets. */
+export function DateTile({
+  value,
+  zone,
+  locale,
+}: {
+  value?: string;
+  zone?: string;
+  locale: Locale;
+}) {
+  const date = value ? new Date(value) : null;
+  const part = (options: Intl.DateTimeFormatOptions) =>
+    date
+      ? new Intl.DateTimeFormat(locale, { ...options, timeZone: zone }).format(date)
+      : "";
+  return (
+    <span className="date-tile" aria-hidden="true">
+      <strong>{part({ day: "numeric" }) || "—"}</strong>
+      <span>{part({ month: "short" }).replace(".", "")}</span>
+    </span>
   );
 }

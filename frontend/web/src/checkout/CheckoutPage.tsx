@@ -4,6 +4,7 @@ import { validatePromo, selectedCart } from "../promotions/model";
 import { promoCopy, reasonText } from "../promotions/copy";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { ReceiptIcon } from "../icons";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ApiError, formatEventDateTime, formatPrice } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
@@ -303,13 +304,12 @@ function CheckoutForm({
 
   if (recovery?.orderId)
     return (
-      <div>
-        <Status>{t.existing}</Status>
-        <p>
-          <Link className="action-link" to={`/account/orders/${encodeURIComponent(recovery.orderId)}`}>
-            {t.view}
-          </Link>
-        </p>
+      <div className="checkout-form checkout-state" role="status">
+        <span className="checkout-state-icon" aria-hidden="true">
+          <ReceiptIcon size={22} />
+        </span>
+        <h2>{t.existingTitle}</h2>
+        <p>{t.existingHint}</p>
         {error instanceof ApiError &&
         (error.code.startsWith("promo_") || error.code === "promo_changed") ? (
           <p role="alert">
@@ -320,6 +320,10 @@ function CheckoutForm({
         ) : (
           <CommerceError error={error} t={t} />
         )}
+        <div className="checkout-state-actions">
+        <Link className="action-link" to={`/account/orders/${encodeURIComponent(recovery.orderId)}`}>
+          {t.view}
+        </Link>
         <button
           disabled={busy}
           className="secondary"
@@ -346,14 +350,21 @@ function CheckoutForm({
         >
           {busy ? t.working : t.another}
         </button>
+        </div>
       </div>
     );
 
   if (recovery && !frozen)
     return (
-      <div>
-        <Status>{t.lost}</Status>
-        <Link className="action-link ghost" to="/account/orders">{t.orders}</Link>
+      <div className="checkout-form checkout-state" role="status">
+        <span className="checkout-state-icon" aria-hidden="true">
+          <ReceiptIcon size={22} />
+        </span>
+        <h2>{t.lostTitle}</h2>
+        <p>{t.lost}</p>
+        <div className="checkout-state-actions">
+          <Link className="action-link" to="/account/orders">{t.orders}</Link>
+        </div>
       </div>
     );
 

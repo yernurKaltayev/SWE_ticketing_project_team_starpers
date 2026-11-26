@@ -10,6 +10,7 @@ import { session, useSessionSnapshot } from "../session";
 import { color, type } from "../theme";
 import { Action, Body, Callout, Card, Muted, Pill, styles as ui, Title } from "../ui";
 import { ticketsCopy } from "./copy";
+import { commerceCopy } from "@biletflow/shared/features/checkout/copy";
 import { ticketPaths, ticketTone } from "./model";
 import type { MyTicket, TicketPage } from "./model";
 
@@ -117,7 +118,7 @@ export function TicketsScreen({
             {seat ? <Muted>{`${t.seat}: ${seat}`}</Muted> : null}
             <View style={local.pills}>
               <Pill label={t.status[item.status] ?? item.status} tone={ticketTone(item.status)} />
-              <Pill label={item.ticket_number} />
+              <Pill label={`${commerceCopy[locale].ticketNumber}: ${item.ticket_number}`} />
             </View>
             <View style={local.action}>
               <Action

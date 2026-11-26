@@ -144,6 +144,7 @@ export function TicketDetail({
       </View> : null}
       {ticket ? (
         <Card>
+          <Muted>{commerceCopy[locale].ticketNumber}</Muted>
           <Text style={local.number}>{ticket.ticket_number}</Text>
           <Muted>{`${t.attendee}: ${ticket.attendee_name}`}</Muted>
           {seat ? <Muted>{`${t.seat}: ${seat}`}</Muted> : null}

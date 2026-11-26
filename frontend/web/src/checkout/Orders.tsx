@@ -7,7 +7,7 @@ import type { Locale } from "@biletflow/shared";
 import { Status } from "../auth/ui";
 import { commerceCopy } from "./copy";
 import type { CommerceCopy } from "./copy";
-import { CommerceError, CommerceStatus } from "./ui";
+import { CommerceError, CommerceStatus, DateTile } from "./ui";
 import {
   eventPath,
   orderPath,
@@ -106,33 +106,37 @@ export default function Orders({ locale }: { locale: Locale }) {
             </div>
           )}
           <ul className="commerce-list">
-            {query.data.items.map((order) => (
-              <li key={order.id}>
+            {query.data.items.map((order) => {
+              const event = eventOf(order) ? events.get(eventOf(order)!)?.data : undefined;
+              return (
+              <li key={order.id} className="ticket-row">
+                <DateTile value={event?.starts_at} zone={event?.timezone} locale={locale} />
                 <div>
                   <Link
                     className="row-link"
                     to={`/account/orders/${encodeURIComponent(order.id)}`}
                   >
-                    {(eventOf(order) &&
-                      events.get(eventOf(order)!)?.data?.title) ||
-                      order.order_number}
+                    {event?.title || order.order_number}
                   </Link>
-                  <p>
-                    <span className="commerce-identifier">
-                      {order.order_number}
-                    </span>{" "}
-                    · {t.tickets}: {order.tickets.length}
-                  </p>
-                  {order.is_simulated && order.total > 0 && (
-                    <span className="status-badge">{t.simulated}</span>
+                  {event && (
+                    <p>{formatEventDateTime(event.starts_at, event.timezone, locale)}</p>
                   )}
+                  <p>
+                    {t.ticketCount}: {order.tickets.length}
+                    {order.is_simulated && order.total > 0 && ` · ${t.simulated}`}
+                  </p>
+                  <p>
+                    {t.orderNumber}:{" "}
+                    <span className="commerce-identifier">{order.order_number}</span>
+                  </p>
                 </div>
-                <CommerceStatus value={order.status} t={t} />
-                <strong>
-                  {formatPrice(order.total, locale, order.currency)}
-                </strong>
+                <div className="order-row-side">
+                  <CommerceStatus value={order.status} t={t} />
+                  <strong>{formatPrice(order.total, locale, order.currency)}</strong>
+                </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
           <Pagination {...pagination} total={query.data.total} t={t} />
         </>
@@ -217,6 +221,7 @@ function OrderContent({
             <OrderEvent eventId={eventOf(order)!} locale={locale} calendar={false} />
           )}
           <div className="order-meta">
+            <span className="order-meta-label">{t.orderNumber}</span>
             <span className="commerce-identifier">{order.order_number}</span>
             <span className="order-badges">
               <CommerceStatus value={order.status} t={t} />
@@ -334,7 +339,7 @@ function OrderContent({
                     {ticket.attendee_name}
                   </Link>
                   <p>
-                    {ticket.ticket_type} ·{" "}
+                    {ticket.ticket_type} · {t.ticketNumber}:{" "}
                     <span className="commerce-identifier">{ticket.ticket_number}</span>
                   </p>
                 </div>

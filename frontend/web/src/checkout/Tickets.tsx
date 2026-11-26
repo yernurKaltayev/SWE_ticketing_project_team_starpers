@@ -8,7 +8,7 @@ import type { Locale } from "@biletflow/shared";
 import { useSession } from "../auth/session";
 import { Status } from "../auth/ui";
 import { commerceCopy } from "./copy";
-import { CommerceError, CommerceStatus } from "./ui";
+import { CommerceError, CommerceStatus, DateTile } from "./ui";
 import {
   eventPath,
   parseEvent,
@@ -100,7 +100,10 @@ export default function Tickets({ locale }: { locale: Locale }) {
                     </Link>
                   )}
                   <p>
-                    {ticket.ticket_type} · {ticket.attendee_name} ·{" "}
+                    {ticket.ticket_type} · {ticket.attendee_name}
+                  </p>
+                  <p>
+                    {t.ticketNumber}:{" "}
                     <span className="commerce-identifier">
                       {ticket.ticket_number}
                     </span>
@@ -114,29 +117,6 @@ export default function Tickets({ locale }: { locale: Locale }) {
         </>
       )}
     </section>
-  );
-}
-
-/** Calendar-style day and month of the event, so the list reads like a set of tickets. */
-function DateTile({
-  value,
-  zone,
-  locale,
-}: {
-  value?: string;
-  zone?: string;
-  locale: Locale;
-}) {
-  const date = value ? new Date(value) : null;
-  const part = (options: Intl.DateTimeFormatOptions) =>
-    date
-      ? new Intl.DateTimeFormat(locale, { ...options, timeZone: zone }).format(date)
-      : "";
-  return (
-    <span className="date-tile" aria-hidden="true">
-      <strong>{part({ day: "numeric" }) || "—"}</strong>
-      <span>{part({ month: "short" }).replace(".", "")}</span>
-    </span>
   );
 }
 
@@ -253,7 +233,10 @@ function TicketContent({
       {ticket && (
         <div className="checkout-layout ticket-detail">
           <div>
-            <p className="commerce-identifier">{ticket.ticket_number}</p>
+            <p className="ticket-number-line">
+              <span className="order-meta-label">{t.ticketNumber}</span>
+              <span className="commerce-identifier">{ticket.ticket_number}</span>
+            </p>
             <CommerceStatus value={ticket.status} t={t} />
             <CommerceError
               error={event.error}

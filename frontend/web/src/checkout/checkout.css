@@ -697,3 +697,84 @@
   background: var(--color-danger-soft);
   color: var(--color-danger);
 }
+
+/* Checkout states without a form (an order already exists, a lost attempt). */
+.checkout-state {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+}
+.checkout-state h2 {
+  margin: 0.25rem 0 0;
+  font-size: 1.2rem;
+}
+.checkout-state > p {
+  margin: 0;
+  color: var(--color-muted);
+  max-width: 46ch;
+}
+.checkout-state-icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 12px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.checkout-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+/* With no form, the state card and the event card share one height. */
+.checkout-layout:has(> .checkout-state) {
+  align-items: stretch;
+}
+.checkout-layout:has(> .checkout-state) > .checkout-context {
+  position: static;
+}
+
+/* Small caption above an order or ticket number. */
+.order-meta-label {
+  display: block;
+  margin-bottom: -0.3rem;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ticket-number-line {
+  display: grid;
+  gap: 0.35rem;
+}
+.ticket-number-line .order-meta-label {
+  margin: 0;
+}
+
+/* My orders: status and amount stacked on the right, like My tickets. */
+.order-row-side {
+  display: grid;
+  justify-items: end;
+  gap: 0.4rem;
+  flex: none;
+}
+.order-row-side strong {
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 480px) {
+  .order-row-side {
+    justify-items: start;
+    margin-left: 4.75rem;
+  }
+}
+@media (max-width: 480px) {
+  .order-row-side {
+    max-width: calc(100% - 4.75rem);
+  }
+  .order-row-side .status-badge {
+    white-space: normal;
+  }
+}
