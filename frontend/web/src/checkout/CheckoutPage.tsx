@@ -3,6 +3,7 @@ import { usePromotion } from "../promotions/usePromotion";
 import { validatePromo, selectedCart } from "../promotions/model";
 import { promoCopy, reasonText } from "../promotions/copy";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ApiError, formatEventDateTime, formatPrice } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
@@ -29,6 +30,7 @@ export default function CheckoutPage({ locale }: { locale: Locale }) {
   const { eventId = "" } = useParams();
   const { user } = useSession();
   const t = commerceCopy[locale];
+  const [cartSlot, setCartSlot] = useState<HTMLDivElement | null>(null);
   const event = useCommerceQuery(eventPath(eventId), parseEvent);
   const availability = useCommerceQuery(
     `/api/v1/events/${encodeURIComponent(eventId)}/availability`,
@@ -80,8 +82,10 @@ export default function CheckoutPage({ locale }: { locale: Locale }) {
             {event.data.refund_policy?.summary && (
               <p className="notice">{event.data.refund_policy.summary}</p>
             )}
+            <div ref={setCartSlot} />
           </aside>
           <CheckoutForm
+            cartSlot={cartSlot}
             key={`${user.id}:${eventId}`}
             event={event.data}
             availability={availability.data}
@@ -102,7 +106,9 @@ function CheckoutForm({
   availability,
   locale,
   reload,
+  cartSlot,
 }: {
+  cartSlot: HTMLElement | null;
   event: Event;
   availability: Availability;
   locale: Locale;
@@ -358,8 +364,40 @@ function CheckoutForm({
       </Status>
     );
 
+  // Order summary in the side card: what is picked so far and what it costs.
+  const picked = choices.filter((c) => (quantities[c.id] ?? 0) > 0);
+  const cart = (
+    <div className="checkout-cart">
+      {picked.length === 0 ? (
+        <p className="checkout-cart-empty">{t.noTickets}</p>
+      ) : (
+        <ul>
+          {picked.map((c) => (
+            <li key={c.id}>
+              <span>
+                {c.name} × {quantities[c.id]}
+              </span>
+              <span>
+                {c.free || !c.price
+                  ? t.free
+                  : formatPrice(c.price * (quantities[c.id] ?? 0), locale)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {picked.length > 0 && (
+        <p className="checkout-cart-total">
+          <span>{t.total}</span>
+          <strong>{estimated === 0 ? t.free : formatPrice(estimated, locale)}</strong>
+        </p>
+      )}
+    </div>
+  );
+
   return (
     <div className="checkout-form">
+      {cartSlot && createPortal(cart, cartSlot)}
       {error instanceof ApiError &&
       (error.code.startsWith("promo_") || error.code === "promo_changed") ? (
         <p role="alert">

@@ -39,9 +39,12 @@ export function SupportError({ error, t }: { error: unknown; t: SupportCopy }) {
 export function ContextDetails({
   context,
   t,
+  own = false,
 }: {
   context: Context;
   t: SupportCopy;
+  /** The requester's own order/ticket: link to it instead of showing a raw id. */
+  own?: boolean;
 }) {
   // Nothing attached (e.g. a case opened from the Support nav link): skip
   // the card instead of rendering a heading over an empty list.
@@ -70,6 +73,13 @@ export function ContextDetails({
                 {k === "event_id" ? (
                   <Link className="chip-link" to={`/events/${encodeURIComponent(context[k]!)}`}>
                     {t.openEvent}
+                  </Link>
+                ) : own ? (
+                  <Link
+                    className="chip-link"
+                    to={`/account/${k === "order_id" ? "orders" : "tickets"}/${encodeURIComponent(context[k]!)}`}
+                  >
+                    {k === "order_id" ? t.openOrder : t.openTicket}
                   </Link>
                 ) : (
                   <code title={context[k]}>#{context[k]!.slice(0, 8)}</code>

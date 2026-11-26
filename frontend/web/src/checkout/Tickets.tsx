@@ -66,7 +66,12 @@ export default function Tickets({ locale }: { locale: Locale }) {
           )}
           <ul className="commerce-list">
             {query.data.items.map((ticket) => (
-              <li key={ticket.id}>
+              <li key={ticket.id} className="ticket-row">
+                <DateTile
+                  value={events.get(ticket.event_id)?.data?.starts_at}
+                  zone={events.get(ticket.event_id)?.data?.timezone}
+                  locale={locale}
+                />
                 <div>
                   {events.get(ticket.event_id)?.data ? (
                     <>
@@ -109,6 +114,29 @@ export default function Tickets({ locale }: { locale: Locale }) {
         </>
       )}
     </section>
+  );
+}
+
+/** Calendar-style day and month of the event, so the list reads like a set of tickets. */
+function DateTile({
+  value,
+  zone,
+  locale,
+}: {
+  value?: string;
+  zone?: string;
+  locale: Locale;
+}) {
+  const date = value ? new Date(value) : null;
+  const part = (options: Intl.DateTimeFormatOptions) =>
+    date
+      ? new Intl.DateTimeFormat(locale, { ...options, timeZone: zone }).format(date)
+      : "";
+  return (
+    <span className="date-tile" aria-hidden="true">
+      <strong>{part({ day: "numeric" }) || "—"}</strong>
+      <span>{part({ month: "short" }).replace(".", "")}</span>
+    </span>
   );
 }
 

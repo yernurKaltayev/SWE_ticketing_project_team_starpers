@@ -266,3 +266,75 @@
     align-items: stretch;
   }
 }
+
+/* New request: form on the left, attached context and a writing hint on the right. */
+.support-page:has(.support-new-layout) {
+  max-width: 1100px;
+}
+.support-new-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+  gap: clamp(1rem, 3vw, 1.75rem);
+  align-items: start;
+}
+.support-new-main {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.support-new-main > div:empty {
+  display: none;
+}
+.support-new-aside {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  gap: 1rem;
+  position: sticky;
+  top: calc(var(--header-offset, 4.5rem) + 1.25rem);
+}
+.support-new-main {
+  grid-column: 1;
+  grid-row: 1;
+}
+.support-new-aside .support-context h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+.support-new-aside .support-context dl {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+.support-new-aside .support-context dl > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+.support-new-aside .support-context dt {
+  color: var(--color-muted);
+}
+.support-new-hint {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-card, 12px);
+  background: var(--color-primary-soft, #edf0ff);
+  color: var(--color-ink);
+  font-size: 0.925rem;
+  line-height: 1.5;
+}
+@media (max-width: 860px) {
+  .support-new-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .support-new-aside,
+  .support-new-main {
+    grid-column: 1;
+    grid-row: auto;
+    position: static;
+  }
+}
+.support-compose fieldset > .field {
+  margin: 0;
+}

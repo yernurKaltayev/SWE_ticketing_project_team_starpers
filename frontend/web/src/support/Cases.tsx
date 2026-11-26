@@ -1,3 +1,4 @@
+import { ChatIcon } from "../icons";
 import { Link, useSearchParams } from "react-router-dom";
 import type { Locale } from "@biletflow/shared";
 import { useLiveQuery } from "./data";
@@ -89,7 +90,20 @@ export default function Cases({ locale }: { locale: Locale }) {
       {records.isPending && <p role="status">{t.loading}</p>}
       {records.data && !records.isError && (
         <>
-          {!records.data.items.length && <p>{t.empty}</p>}
+          {!records.data.items.length && (
+            <div className="empty-state" role="status">
+              <span className="empty-icon">
+                <ChatIcon size={24} />
+              </span>
+              <strong>{status || role ? t.empty : t.emptyCasesTitle}</strong>
+              {!status && !role && <p>{t.emptyCasesHint}</p>}
+              {!status && !role && (
+                <Link className="action-link" to="/support/new">
+                  {t.newCase}
+                </Link>
+              )}
+            </div>
+          )}
           <ul className="support-list">
             {records.data.items.map((c) => (
               <li className="support-card case-row" key={c.id}>

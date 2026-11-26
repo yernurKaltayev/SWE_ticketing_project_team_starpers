@@ -550,10 +550,21 @@ function Application() {
             <Route
               path="*"
               element={
-                <>
+                <div className="not-found">
+                  <p className="not-found-code" aria-hidden="true">404</p>
                   <h1>{t.notFound}</h1>
-                  <Link className="action-link" to="/">{t.home}</Link>
-                </>
+                  <p>{t.notFoundHint}</p>
+                  <div className="not-found-actions">
+                    <Link className="action-link" to="/">{t.home}</Link>
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => window.history.back()}
+                    >
+                      {t.goBack}
+                    </button>
+                  </div>
+                </div>
               }
             />
           </Routes>

@@ -24,6 +24,7 @@ import { DemoCardPayment } from "../payments/DemoCardPayment";
 import { paymentCopy } from "../payments/copy";
 import "./checkout.css";
 import { BackLink } from "../BackLink";
+import { cityLabel } from "../events/venues";
 
 // Older API builds sent no event_id; tickets of one order share one event.
 const eventOf = (order: Order): string | undefined =>
@@ -170,7 +171,7 @@ function OrderContent({
     return () => window.clearTimeout(timer);
   }, [poll, polls, dataUpdatedAt, isFetching, refetch]);
   return (
-    <section className="reading-page">
+    <section className="order-page">
       <BackLink to="/account/orders">{t.orders}</BackLink>
       <h1>{order?.status === "free_confirmed" ? t.confirmed : t.order}</h1>
       <CommerceError
@@ -182,19 +183,24 @@ function OrderContent({
       />
       {query.isPending && <Status>{t.loading}</Status>}
       {order && (
-        <>
+        <div className="order-layout">
+          <aside className="order-summary">
           {eventOf(order) && (
             <OrderEvent eventId={eventOf(order)!} locale={locale} calendar={false} />
           )}
-          <p>
-            <span className="commerce-identifier">{order.order_number}</span>{" "}
-            <CommerceStatus value={order.status} t={t} />{" "}
-            {/* Free registrations involve no money, simulated or not. */}
-            {order.is_simulated && order.total > 0 && (
-              <span className="status-badge" data-tone="neutral">{t.simulated}</span>
-            )}
-          </p>
+          <div className="order-meta">
+            <span className="commerce-identifier">{order.order_number}</span>
+            <span className="order-badges">
+              <CommerceStatus value={order.status} t={t} />
+              {/* Free registrations involve no money, simulated or not. */}
+              {order.is_simulated && order.total > 0 && (
+                <span className="status-badge" data-tone="neutral">{t.simulated}</span>
+              )}
+            </span>
+          </div>
           {order.subtotal > 0 && <OrderTotals order={order} locale={locale} />}
+          </aside>
+          <div className="order-main">
           {preparing && <Status>{t.preparing}</Status>}
           {order.status === "pending" && order.total === 0 && (
             <Status>{paymentCopy[locale].pending}</Status>
@@ -265,7 +271,8 @@ function OrderContent({
           <p className="quiet-help">
             <SupportLink locale={locale} context={{ order_id: order.id }} />
           </p>
-        </>
+          </div>
+        </div>
       )}
     </section>
   );
@@ -294,8 +301,10 @@ function OrderEvent({
     return calendar ? (
       <CalendarActions event={event.data} venue={venue.data} locale={locale} />
     ) : null;
+  const cover = event.data.images[0];
   return (
-    <>
+    <div className="order-event-card">
+      {cover && <img className="order-event-cover" src={cover} alt="" />}
       <h2 className="order-event">
         <Link to={`/events/${encodeURIComponent(event.data.id)}`}>
           {event.data.title}
@@ -303,12 +312,14 @@ function OrderEvent({
       </h2>
       <p>
         {formatEventDateTime(event.data.starts_at, event.data.timezone, locale)}
-        {venue.data && ` · ${venue.data.name}`}
       </p>
+      {venue.data && (
+        <p>{[venue.data.name, cityLabel(venue.data.city, locale)].join(" · ")}</p>
+      )}
       {calendar && (
         <CalendarActions event={event.data} venue={venue.data} locale={locale} />
       )}
-    </>
+    </div>
   );
 }
 
