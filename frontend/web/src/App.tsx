@@ -4,6 +4,7 @@ import { NotificationLink } from "./support/NotificationLink";
 import { supportCopy } from "./support/copy";
 import { promoCopy } from "./promotions/copy";
 import { lazy, Suspense, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 import {
   BrowserRouter,
@@ -43,7 +44,7 @@ import {
   BellIcon,
   BoltIcon,
   BrandMark,
-  ChevronDownIcon,
+  MenuIcon,
   ChartIcon,
   EditIcon,
   EyeIcon,
@@ -131,6 +132,7 @@ function Application() {
   const [locale, setLocale] = useState<Locale>(readLocale);
   const [logoutError, setLogoutError] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [menuSlot, setMenuSlot] = useState<HTMLElement | null>(null);
   const { user, controller } = useSession();
   const t = authCopy[locale];
   const location = useLocation();
@@ -167,6 +169,7 @@ function Application() {
             : "Skip to content"}
       </a>
       <header className="site-header">
+        <div ref={setMenuSlot} className="header-menu-slot" />
         <Link className="brand" to="/">
           <BrandMark />
           BiletFlow
@@ -250,7 +253,7 @@ function Application() {
         {logoutError ? <Status>{t.logoutFailed}</Status> : null}
         <div className={showWorkspace ? "workspace" : undefined}>
           {showWorkspace ? (
-            <OrganizerNav locale={locale} pathname={location.pathname} />
+            <OrganizerNav locale={locale} pathname={location.pathname} slot={menuSlot} />
           ) : null}
           <div className={showWorkspace ? "workspace-main" : undefined}>
         <PageErrorBoundary
@@ -562,12 +565,15 @@ function Application() {
   );
 }
 
+/** On narrow screens the sections button is portalled into the header, left of the logo. */
 function OrganizerNav({
   locale,
   pathname,
+  slot,
 }: {
   locale: Locale;
   pathname: string;
+  slot: HTMLElement | null;
 }) {
   const ev = eventCopy[locale];
   const pay = paymentCopy[locale];
@@ -661,16 +667,19 @@ function OrganizerNav({
       data-open={open || undefined}
       aria-label={authCopy[locale].organizerRole}
     >
-      <button
-        type="button"
-        className="workspace-nav-toggle secondary"
-        aria-expanded={open}
-        onClick={() => setOpenOn(open ? null : pathname)}
-      >
-        {current?.icon}
-        <span>{current?.label ?? authCopy[locale].organizerRole}</span>
-        <ChevronDownIcon />
-      </button>
+      {slot &&
+        createPortal(
+          <button
+            type="button"
+            className="workspace-nav-toggle"
+            aria-expanded={open}
+            aria-label={`${authCopy[locale].organizerRole}: ${current?.label ?? ""}`}
+            onClick={() => setOpenOn(open ? null : pathname)}
+          >
+            <MenuIcon size={22} />
+          </button>,
+          slot,
+        )}
       <div
         className="workspace-backdrop"
         aria-hidden="true"

@@ -167,6 +167,12 @@ export const AlertIcon = (p: P) => (
     <path d="M12 7.5v5.5M12 16.5h.01" />
   </Icon>
 );
+export const MenuIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M4 7h16M4 12h16M4 17h16" />
+  </Icon>
+);
+
 export const CloseIcon = (p: P) => (
   <Icon {...p}>
     <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />

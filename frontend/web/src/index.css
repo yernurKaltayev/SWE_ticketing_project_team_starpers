@@ -792,6 +792,9 @@ main:focus {
 .workspace-backdrop {
   display: none;
 }
+.header-menu-slot {
+  display: contents;
+}
 .workspace-drawer {
   display: contents;
 }
@@ -1274,23 +1277,21 @@ main:focus {
     background: none;
     border: 0;
   }
-  .workspace-nav-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    max-width: 100%;
-    min-height: 42px;
-    padding: 0 0.9rem;
-    border-radius: 999px;
+  .site-header .workspace-nav-toggle {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    min-height: 40px;
+    margin-left: -0.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: var(--color-ink);
+    box-shadow: none;
   }
-  .workspace-nav-toggle span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .workspace-nav-toggle svg:last-child {
-    transform: rotate(-90deg);
-    color: var(--color-muted);
+  .site-header .workspace-nav-toggle:hover {
+    background: var(--color-canvas);
   }
   .workspace-backdrop {
     position: fixed;
@@ -2948,5 +2949,13 @@ button.danger-text {
   .workspace-drawer,
   .workspace-backdrop {
     animation: none;
+  }
+}
+/* Phones with the organizer menu button: drop the decorative chevrons so the header stays one row. */
+@media (max-width: 440px) {
+  .site-header:has(.workspace-nav-toggle) .city-trigger svg:last-child,
+  .site-header:has(.workspace-nav-toggle) .language-trigger svg:last-child,
+  .site-header:has(.workspace-nav-toggle) .account-trigger svg:last-child {
+    display: none;
   }
 }
