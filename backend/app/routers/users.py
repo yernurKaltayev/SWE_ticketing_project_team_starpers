@@ -20,8 +20,11 @@ from app.schemas.user import (
     StaffMemberOut,
     UserOut,
     UserUpdate,
+    VolunteerCreate,
+    VolunteerCredentialsOut,
+    VolunteerOut,
 )
-from app.services import phone_verification, user_service
+from app.services import phone_verification, user_service, volunteer_service
 
 router = APIRouter(tags=["users"])
 
@@ -93,3 +96,39 @@ async def remove_staff(
     user_id: uuid.UUID, event: ManagedEvent, actor: CurrentUser, db: DbSession
 ) -> None:
     await user_service.remove_staff(db, event, actor, user_id)
+
+
+# Volunteer check-in accounts: created here, scoped to this event, anonymized after it.
+
+
+@router.get("/events/{event_id}/volunteers", response_model=list[VolunteerOut])
+async def list_volunteers(event: ManagedEvent, db: DbSession) -> list[VolunteerOut]:
+    return await volunteer_service.list_volunteers(db, event)
+
+
+@router.post(
+    "/events/{event_id}/volunteers",
+    response_model=VolunteerCredentialsOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_volunteer(
+    data: VolunteerCreate, event: ManagedEvent, actor: CurrentUser, db: DbSession
+) -> VolunteerCredentialsOut:
+    return await volunteer_service.create_volunteer(db, event, actor, data.full_name)
+
+
+@router.post(
+    "/events/{event_id}/volunteers/{user_id}/reset-password",
+    response_model=VolunteerCredentialsOut,
+)
+async def reset_volunteer_password(
+    user_id: uuid.UUID, event: ManagedEvent, actor: CurrentUser, db: DbSession
+) -> VolunteerCredentialsOut:
+    return await volunteer_service.reset_password(db, event, actor, user_id)
+
+
+@router.delete("/events/{event_id}/volunteers/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_volunteer(
+    user_id: uuid.UUID, event: ManagedEvent, actor: CurrentUser, db: DbSession
+) -> None:
+    await volunteer_service.remove_volunteer(db, event, actor, user_id)

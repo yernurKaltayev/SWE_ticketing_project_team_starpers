@@ -4,11 +4,12 @@ import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.errors import ForbiddenError, NotFoundError, UnauthorizedError
 from app.core.security import InvalidTokenError, decode_access_token
 from app.db.session import SessionFactory
@@ -33,9 +34,35 @@ async def get_db() -> AsyncIterator[AsyncSession]:
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
 
+# The only routes a volunteer account may call: its profile, its event, and check-in. Everything
+# else (buying, support, profile edits, organizer tools) is refused here, in one place, so a new
+# endpoint is closed to volunteers by default. Paths are route templates under api_v1_prefix.
+VOLUNTEER_ROUTES: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("GET", "/me"),
+        ("GET", "/me/staff-events"),
+        ("POST", "/checkin/verify"),
+        ("POST", "/checkin/manual"),
+        ("POST", "/checkin/{ticket_id}/undo"),
+        ("GET", "/events/{event_id}/checkin/stats"),
+        # Attendee search for manual check-in; the service limits it to check-in staff.
+        ("GET", "/events/{event_id}/attendees"),
+    }
+)
+
+
+def _volunteer_may_call(request: Request) -> bool:
+    # The matched route's template. Included routers are mounted lazily, so depending on the
+    # FastAPI version it may or may not carry the /api/v1 prefix.
+    path = getattr(request.scope.get("route"), "path", "")
+    path = path.removeprefix(get_settings().api_v1_prefix)
+    return (request.method, path) in VOLUNTEER_ROUTES
+
+
 async def get_current_user(
     db: DbSession,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
+    request: Request = None,  # type: ignore[assignment]  # injected by FastAPI; None when called directly
 ) -> User:
     if credentials is None:
         raise UnauthorizedError()
@@ -51,6 +78,11 @@ async def get_current_user(
         raise UnauthorizedError("The access token is invalid or expired.", code="invalid_token")
     if user.is_suspended:
         raise ForbiddenError("This account is suspended.", code="account_suspended")
+    # Direct calls (request=None, e.g. logout with a body token) only identify the account.
+    if user.role == UserRole.volunteer and request is not None and not _volunteer_may_call(request):
+        raise ForbiddenError(
+            "Volunteer accounts can only check in tickets.", code="volunteer_scope"
+        )
     return user
 
 

@@ -15,6 +15,9 @@ class UserRole(enum.StrEnum):
     attendee = "attendee"
     organizer = "organizer"
     platform_admin = "platform_admin"
+    # A throwaway account an organizer creates for one event: it may only scan that event's
+    # tickets, and is anonymized after the event (app/services/volunteer_service.py).
+    volunteer = "volunteer"
 
 
 class EmailTokenPurpose(enum.StrEnum):
@@ -52,6 +55,9 @@ class User(UUIDPrimaryKey, Timestamps, Base):
     email_verified_at: Mapped[datetime | None]
     is_suspended: Mapped[FalseByDefault]
     last_login_at: Mapped[datetime | None]
+    # Set when the account is anonymized (volunteers after their event). The row stays because
+    # check-in records and the append-only audit log point to it.
+    deleted_at: Mapped[datetime | None]
 
 
 class RefreshToken(UUIDPrimaryKey, Timestamps, Base):
