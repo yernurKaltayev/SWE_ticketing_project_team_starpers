@@ -19,6 +19,17 @@ export function EventError({
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (error) ref.current?.focus();
+    // Outline the field a form check rejected until the organizer edits it.
+    if (!(error instanceof InputError)) return;
+    const input = document.getElementById(error.field);
+    if (!input) return;
+    input.setAttribute("aria-invalid", "true");
+    const clear = () => input.removeAttribute("aria-invalid");
+    input.addEventListener("input", clear, { once: true });
+    return () => {
+      input.removeEventListener("input", clear);
+      clear();
+    };
   }, [error]);
   if (!error) return null;
   const codes: Record<string, string> = {
@@ -72,7 +83,7 @@ export function EventError({
     return (
       <div className="form-error" tabIndex={-1} ref={ref} role="alert">
         <p>
-          <a href={`#${error.field}`}>{label(error.field)}</a>
+          <strong>{label(error.field)}</strong>
           {": "}
           {fieldMessages[error.field] ?? t.invalid}
         </p>

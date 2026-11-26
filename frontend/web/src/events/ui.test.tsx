@@ -150,7 +150,7 @@ it("retains draft fields after failed save and allows explicit recovery without 
   );
   await screen.findByRole("heading", { name: "Edit event" });
 });
-it("reports invalid wall-time fields with a focused, linked error and sends no create request", async () => {
+it("reports invalid wall-time fields with a focused error on the marked field and sends no create request", async () => {
   const user = userEvent.setup();
   const { fill } = await editor();
   let writes = 0;
@@ -170,7 +170,10 @@ it("reports invalid wall-time fields with a focused, linked error and sends no c
   );
   const alert = await screen.findByRole("alert");
   expect(document.activeElement).toBe(alert);
-  expect(alert.querySelector("a")?.getAttribute("href")).toBe("#starts_at");
+  expect(alert.textContent).toContain("Starts");
+  expect(
+    screen.getByLabelText("Starts", { exact: true }).getAttribute("aria-invalid"),
+  ).toBe("true");
   expect(writes).toBe(0);
 });
 it("creates an event with live P4 venue arrays, then saves and edits a paid ticket using live P3 arrays", async () => {
