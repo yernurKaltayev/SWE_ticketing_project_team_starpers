@@ -2112,6 +2112,27 @@ export interface components {
             /** On Sale */
             on_sale: boolean;
         };
+        EventAvailability: {
+            /** Format: uuid */
+            event_id: string;
+            registration_open: boolean;
+            ticket_types: components["schemas"]["PublicTicketAvailability"][];
+        };
+        PublicTicketAvailability: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description?: string | null;
+            is_free: boolean;
+            /** @description Integer tiyn serialized as a decimal string. */
+            price_amount: string;
+            currency: string;
+            max_per_order: number;
+            quantity_available: number;
+            /** @description Seat-map category required by this ticket type. */
+            price_category?: string | null;
+            sales_open: boolean;
+        };
         /** CampaignIn */
         CampaignIn: {
             /** Name */
@@ -4945,7 +4966,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AvailabilityOut"][];
+                    "application/json": components["schemas"]["EventAvailability"];
                 };
             };
             404: components["responses"]["Error"];

@@ -77,7 +77,7 @@ export function toInstant(wall: string, zone: string, field: string): string {
     throw new InputError(field);
   }
 }
-export function eventBody(form: FormData): EventInput {
+export function eventBody(form: Pick<FormData, "get">): EventInput {
   const value = (key: string) => String(form.get(key) ?? "").trim();
   for (const key of [
     "title",
@@ -132,7 +132,7 @@ export function eventBody(form: FormData): EventInput {
   };
 }
 export function ticketBody(
-  form: FormData,
+  form: Pick<FormData, "get" | "has">,
 ): TicketInput & { is_free: boolean; currency: string } {
   const value = (key: string) => String(form.get(key) ?? "").trim();
   if (!value("name")) throw new InputError("name");

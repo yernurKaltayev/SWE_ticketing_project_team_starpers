@@ -44,6 +44,7 @@ it("understands implemented P3 availability without converting paid prices into 
         currency: "KZT",
         quantity_available: 3,
         max_per_order: 2,
+        price_category: "standard",
         sales_open: false,
       },
     ],
@@ -51,6 +52,7 @@ it("understands implemented P3 availability without converting paid prices into 
   expect(result.choices[0]).toEqual({ ...choice, available: 2, limit: 1 });
   expect(result.choices[1]?.free).toBe(false);
   expect(result.choices[1]?.open).toBe(false);
+  expect(result.choices[1]?.priceCategory).toBe("standard");
   expect(
     parseAvailability([
       {

@@ -61,7 +61,7 @@ export class CheckoutCoordinator {
   }
   draft(eventId: string): OrderBody | undefined {
     const body = this.attempts.get(eventId)?.body;
-    return body ? structuredClone(body) : undefined;
+    return body ? JSON.parse(JSON.stringify(body)) as OrderBody : undefined;
   }
   private persist(eventId: string, value: Recovery) {
     if (!this.storage)
@@ -142,7 +142,7 @@ export class CheckoutCoordinator {
       );
     if (!attempt) {
       attempt = {
-        body: structuredClone(body),
+        body: JSON.parse(serialized) as OrderBody,
         serialized,
         key: this.newId(),
       };

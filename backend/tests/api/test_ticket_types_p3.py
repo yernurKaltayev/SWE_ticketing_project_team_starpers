@@ -87,6 +87,24 @@ async def test_anonymous_availability_excludes_hidden_and_unpublished(client, db
     assert after.json()["ticket_types"] == []
 
 
+async def test_public_availability_includes_ticket_seat_category(client, db):
+    owner, profile = await make_organizer(db)
+    event = await make_event(db, profile, status=EventStatus.published)
+    created = await client.post(
+        f"{PREFIX}/events/{event.id}/ticket-types",
+        headers=auth_header(owner),
+        json=payload(price_category="standard"),
+    )
+    assert created.status_code == 201, created.text
+
+    response = await client.get(f"{PREFIX}/events/{event.id}/availability")
+    assert response.status_code == 200, response.text
+    choices = response.json()["ticket_types"]
+    assert [(row["id"], row["price_category"]) for row in choices] == [
+        (created.json()["id"], "standard")
+    ]
+
+
 async def test_paid_sales_disabled_reports_real_quantity_but_closed(client, db):
     owner, profile = await make_organizer(db)
     event = await make_event(db, profile, status=EventStatus.published)

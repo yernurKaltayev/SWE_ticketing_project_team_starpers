@@ -136,12 +136,11 @@ Data loading (F0.2): mobile screens use `useAuthedQuery(key, path)` / `useAuthed
 
 ## Adding a native mobile screen (F11)
 
-The BiletFlow web tab shows every page that has no native screen yet. To replace a page:
+The mobile app uses native screens for the website routes. The route inventory is checked against `web/src/App.tsx`, including email redirects and wildcard routes.
 
-1. Build the screen in `mobile/src/<area>/` from the kit (`mobile/src/kit`: form fields, select, date/time in the event zone, KZT money, cover image, confirm sheet, list/empty/error states, `downloadAndShare`), the shared logic (`@biletflow/shared/features/...`) and `useAuthedQuery`. Try kit pieces on a phone via Settings → UI kit (development builds only).
-2. Add `{ pattern, to }` to `nativeRoutes` in `mobile/src/navigation/routes.ts`. Copy `pattern` exactly from `web/src/App.tsx` (a test fails otherwise) and extend `NativeTarget`.
-3. Handle the new target in `goNative` (`mobile/App.tsx`); if the screen is a tab, add it to `tabScreens` in `mobile/src/navigation/linking.ts`.
-4. Check it: tap the matching link inside the web tab, and open `exp://<computer-ip>:8081/--/<path>` on the phone (deep link in Expo Go).
+1. Build the screen in `mobile/src/<area>/` using `mobile/src/kit`, `@biletflow/shared/features/…` and the mobile resource hooks. The UI kit gallery is available from Settings in development.
+2. Register the screen and route in `mobile/src/navigation/features.ts` and connect it in `mobile/src/features/FeatureScreen.tsx`. The route map also builds the Expo Go and native linking configuration.
+3. Check navigation with `exp://<computer-ip>:8081/--/<path>` and run the affected scenarios in [F11_CHECKLIST.md](docs/F11_CHECKLIST.md#native-mobile-rebuild).
 
 ## Tooling
 

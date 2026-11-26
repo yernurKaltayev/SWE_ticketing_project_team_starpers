@@ -3,21 +3,21 @@ import { navigationFor } from "./navigate";
 
 describe("navigationFor", () => {
   it("opens the Tickets tab", () => {
-    expect(navigationFor({ screen: "Tickets" }, true)).toEqual({
+    expect(navigationFor({ screen: "Tickets" })).toEqual({
       name: "Tabs",
       params: { screen: "Tickets" },
     });
   });
-  it("opens one ticket for a signed-in user", () => {
-    expect(navigationFor({ screen: "TicketDetail", params: { ticketId: "t" } }, true)).toEqual({
+  it("keeps the ticket destination so sign-in can render in place", () => {
+    expect(navigationFor({ screen: "TicketDetail", params: { ticketId: "t" } })).toEqual({
       name: "TicketDetail",
       params: { ticketId: "t", eventTitle: null },
     });
   });
-  it("sends a signed-out user to the Tickets tab, where the sign-in panel is", () => {
-    expect(navigationFor({ screen: "TicketDetail", params: { ticketId: "t" } }, false)).toEqual({
+  it("opens account in its tab", () => {
+    expect(navigationFor({ screen: "Account" })).toEqual({
       name: "Tabs",
-      params: { screen: "Tickets" },
+      params: { screen: "Account" },
     });
   });
 });

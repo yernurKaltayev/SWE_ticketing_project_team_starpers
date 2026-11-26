@@ -179,7 +179,7 @@ export function parseSettings(v: unknown): Settings {
   if (!count(s.activation_fee_amount) || !s.activation_fee_amount || !count(s.payout_delay_days) || !count(s.hold_minutes) || !s.hold_minutes || typeof s.processing_fee_percent !== "number" || !Number.isFinite(s.processing_fee_percent) || s.processing_fee_percent < 0 || s.processing_fee_percent > 100) return invalidResponse();
   return s as Settings;
 }
-export function settingsBody(form: FormData, current: Settings) {
+export function settingsBody(form: Pick<FormData, "get">, current: Settings) {
   const f = (key: string) => String(form.get(key) ?? "").trim();
   const fee = parsePrice(f("activation_fee_amount"));
   const percent = f("processing_fee_percent");
