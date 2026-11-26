@@ -233,6 +233,12 @@ export const FrameIcon = (p: P) => (
     <circle cx="15" cy="9" r="1.5" />
   </Icon>
 );
+export const FilmIcon = (p: P) => (
+  <Icon {...p}>
+    <rect x="3.5" y="5" width="17" height="14" rx="2" />
+    <path d="M7.5 5v14M16.5 5v14M3.5 9.5h4M3.5 14.5h4M16.5 9.5h4M16.5 14.5h4" />
+  </Icon>
+);
 export const BalloonIcon = (p: P) => (
   <Icon {...p}>
     <path d="M12 15.5c-3.3 0-6-3-6-6.5a6 6 0 0 1 12 0c0 3.5-2.7 6.5-6 6.5Z" />
