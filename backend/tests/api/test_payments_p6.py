@@ -111,6 +111,7 @@ async def _ticket_count(db, order_id) -> int:
     )
 
 
+@pytest.mark.usefixtures("require_activation")
 async def test_activation_checklist_enables_only_this_event(client, db, scene):
     s = scene
     other = await make_event(db, s["profile"], status=EventStatus.published)
@@ -454,3 +455,66 @@ async def test_free_only_event_cannot_complete_activation(client, db):
     ).json()
     assert "paid_ticket_type" in body["missing_steps"]
     assert await db.scalar(select(func.count(TicketType.id))) >= 1
+
+
+# --- Demo checkout (PAID_SALES_REQUIRE_ACTIVATION=false, the default) ---
+
+
+async def test_demo_checkout_pays_without_activation_and_binds_tickets_to_buyer(client, db, scene):
+    s = scene
+    assert s["event"].paid_sales_status == PaidSalesStatus.disabled  # organizer never activated
+
+    availability = await client.get(f"{API}/events/{s['event_id']}/availability")
+    assert availability.status_code == 200, availability.text
+
+    order_id = await _pending_order(client, s, quantity=2)
+    payment = await _start_payment(client, s, order_id)
+    assert payment["is_simulated"] is True
+
+    done = await client.post(
+        f"{API}/payments/{payment['id']}/simulate",
+        json={"outcome": "succeeded"},
+        headers=s["h"]["buyer"],
+    )
+    assert done.status_code == 200, done.text
+    assert done.json()["status"] == "succeeded"
+
+    order = (await client.get(f"{API}/orders/{order_id}", headers=s["h"]["buyer"])).json()
+    assert order["status"] == "paid"
+    assert len(order["tickets"]) == 2
+
+    mine = await client.get(f"{API}/me/tickets", headers=s["h"]["buyer"])
+    assert mine.status_code == 200, mine.text
+    ids = {t["id"] for t in mine.json()["items"]}
+    assert {t["id"] for t in order["tickets"]} <= ids
+    others = await client.get(f"{API}/me/tickets", headers=s["h"]["stranger"])
+    assert others.json()["items"] == []
+
+
+async def test_demo_checkout_repeated_simulate_issues_one_ticket_set(client, db, scene):
+    s = scene
+    order_id = await _pending_order(client, s)
+    payment = await _start_payment(client, s, order_id)
+    for _ in range(2):
+        done = await client.post(
+            f"{API}/payments/{payment['id']}/simulate",
+            json={"outcome": "succeeded"},
+            headers=s["h"]["buyer"],
+        )
+        assert done.status_code == 200, done.text
+        assert done.json()["status"] == "succeeded"
+    assert await _ticket_count(db, order_id) == 1
+
+
+async def test_demo_checkout_still_blocks_suspended_event(client, db, scene):
+    s = scene
+    await suspend_paid_sales(db, s["event"], "admin review")
+    await db.commit()
+    response = await client.post(
+        f"{API}/orders",
+        json=_order_payload(s["event_id"], s["paid_id"]),
+        headers=s["h"]["buyer"],
+    )
+    assert response.status_code == 409
+    # Blocked either by the sales-window check or the paid-sales gate itself.
+    assert response.json()["code"] in {"sales_closed", "paid_sales_inactive"}

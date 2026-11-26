@@ -43,6 +43,22 @@ def _no_real_telegram_bot(monkeypatch):
     monkeypatch.setattr(settings, "telegram_bot_username", None)
 
 
+@pytest.fixture(autouse=True)
+def _demo_checkout_default(monkeypatch):
+    """Tests run against the demo checkout default, whatever a developer's .env says."""
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "paid_sales_require_activation", False)
+
+
+@pytest.fixture
+def require_activation(monkeypatch):
+    """Opt a test into the activation-gated mode (PAID_SALES_REQUIRE_ACTIVATION=true)."""
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "paid_sales_require_activation", True)
+
+
 @pytest.fixture(scope="session")
 async def engine():
     database = make_url(TEST_DATABASE_URL).database or ""

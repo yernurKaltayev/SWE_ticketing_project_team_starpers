@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.core.errors import ConflictError, NotFoundError, UnprocessableError
 from app.models.event import Event, EventStatus, EventVisibility
 from app.models.ticket_type import TicketType
@@ -72,8 +73,17 @@ def _registration_open(event: Event, now: datetime) -> bool:
 
 
 def _paid_sales_active(event: Event) -> bool:
-    # Fail closed for new/unknown P6 states. Confirm exact enum in live repo.
+    """Whether buyers may purchase paid tickets for this event.
+
+    An admin suspension always blocks. Otherwise, unless activation is required (see
+    `paid_sales_require_activation`), the demo checkout sells paid tickets straight away.
+    """
     value = getattr(event.paid_sales_status, "value", event.paid_sales_status)
+    if value == "suspended":
+        return False
+    if not get_settings().paid_sales_require_activation:
+        return True
+    # Fail closed for new/unknown P6 states.
     return value in {"active", "enabled"}
 
 

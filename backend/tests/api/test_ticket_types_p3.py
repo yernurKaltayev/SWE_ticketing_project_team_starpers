@@ -2,6 +2,7 @@
 
 from uuid import UUID
 
+import pytest
 from sqlalchemy import select
 
 from app.models.audit import AuditLog
@@ -105,6 +106,7 @@ async def test_public_availability_includes_ticket_seat_category(client, db):
     ]
 
 
+@pytest.mark.usefixtures("require_activation")
 async def test_paid_sales_disabled_reports_real_quantity_but_closed(client, db):
     owner, profile = await make_organizer(db)
     event = await make_event(db, profile, status=EventStatus.published)
@@ -160,6 +162,7 @@ async def test_cannot_reduce_quantity_below_allocated(client, db):
     await db.rollback()
 
 
+@pytest.mark.usefixtures("require_activation")
 async def test_paid_reservations_remain_blocked_until_p6_activation(client, db):
     owner, profile = await make_organizer(db)
     event = await make_event(db, profile, status=EventStatus.published)

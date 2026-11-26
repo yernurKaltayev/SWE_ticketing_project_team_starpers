@@ -71,6 +71,13 @@ errors, unknown routes and crashes. Validation errors never echo submitted value
 **Simulation.** Payments, payouts and identity checks are simulated. `is_simulated` is stored on
 each such record and must reach API responses.
 
+**Demo checkout.** With `PAID_SALES_REQUIRE_ACTIVATION=false` (the default), paid tickets go on sale
+as soon as an event is published. The buyer fills in attendee details, then the order page shows a
+demo card form whose values never leave the browser. Pay chains `POST /orders/{id}/payments` and
+`POST /payments/{id}/simulate {"outcome":"succeeded"}`, so the signed sandbox webhook confirms the
+order and issues tickets owned by the buyer (`orders.buyer_user_id`, listed at `/me/tickets`).
+An admin suspension still blocks paid sales. Set the flag to `true` to require the activation checklist.
+
 ## Shared service interfaces
 
 Agreed in P0 so parts can be built in parallel. The signatures are in place; each owner fills in
