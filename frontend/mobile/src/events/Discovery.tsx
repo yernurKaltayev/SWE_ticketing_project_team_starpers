@@ -15,10 +15,10 @@ import { ListScreen } from "../kit/ListScreen";
 import { api } from "../session";
 import { color, radius } from "../theme";
 import { Action, Card, Heading, Input, Muted, Pill, Title } from "../ui";
-import { webOrigin } from "../public-origin";
 import { discoveryFilters, withSheetValues } from "./discovery-filters";
 import type { DiscoveryParams } from "./discovery-filters";
 import { DiscoveryFilterSheet } from "./DiscoveryFilterSheet";
+import { coverUri, FeaturedBanner } from "./FeaturedBanner";
 
 const venuePath = "/api/v1/venues";
 const pageSize = 12;
@@ -95,6 +95,7 @@ export function Discovery({ locale, initial, onOpen }: {
         header={
           <>
             <Title>{t.events}</Title>
+            <FeaturedBanner city={filters.city} locale={locale} onOpen={onOpen} />
             <Input value={search} onChangeText={setSearch} accessibilityLabel={t.search}
               placeholder={d.searchPlaceholder} maxLength={200} returnKeyType="search" onSubmitEditing={submitSearch} />
             <Action title={d.searchSubmit} variant="primary" onPress={submitSearch} />
@@ -111,8 +112,7 @@ export function Discovery({ locale, initial, onOpen }: {
         empty={<EmptyState title={d.emptyTitle} body={d.emptyHint} />}
         renderItem={({ item }) => {
           const venue = venueById.get(item.venue_id);
-          const cover = item.images[0];
-          const uri = cover?.startsWith("/") && webOrigin ? `${webOrigin}${cover}` : cover;
+          const uri = coverUri(item);
           return (
             <Card style={local.card}>
               {uri ? <Image source={{ uri }} style={local.cover} accessibilityIgnoresInvertColors /> : null}

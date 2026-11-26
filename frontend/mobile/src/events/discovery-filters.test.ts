@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { discoveryFilters, discoveryParams } from "./discovery-filters";
+import { discoveryFilters, discoveryParams, featuredSlides } from "./discovery-filters";
 
 describe("discovery filters", () => {
   it("reads only supported URL filters and trims search text", () => {
@@ -26,5 +26,13 @@ describe("filter sheet", () => {
     const { withSheetValues } = await import("./discovery-filters");
     const current = discoveryFilters({ q: "jazz" });
     expect(withSheetValues(current, { city: "Almaty" })).toMatchObject({ q: "jazz", city: "Almaty" });
+  });
+});
+
+describe("featuredSlides", () => {
+  it("puts events with a cover first and keeps at most five", () => {
+    const e = (id: string, images: string[] = []) => ({ id, images });
+    const slides = featuredSlides([e("a"), e("b", ["/b.webp"]), e("c"), e("d", ["/d.webp"]), e("e"), e("f"), e("g")]);
+    expect(slides.map((s) => s.id)).toEqual(["b", "d", "a", "c", "e"]);
   });
 });

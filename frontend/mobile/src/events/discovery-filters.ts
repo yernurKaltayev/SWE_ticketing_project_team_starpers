@@ -28,3 +28,11 @@ function dateOnly(value?: string): string {
 export function withSheetValues(current: DiscoveryFilters, values: DiscoveryParams): DiscoveryFilters {
   return discoveryFilters({ ...values, q: current.q });
 }
+
+/** Banner slides: soonest events with a cover photo first; events without one only fill the gaps (as on the web). */
+export function featuredSlides<T extends { images: string[] }>(events: T[], limit = 5): T[] {
+  return [
+    ...events.filter((e) => e.images.length > 0),
+    ...events.filter((e) => e.images.length === 0),
+  ].slice(0, limit);
+}
