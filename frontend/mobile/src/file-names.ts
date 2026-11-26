@@ -24,3 +24,19 @@ export function safeFileName(base: string, extension: ShareExtension): string {
 export function mimeFor(extension: ShareExtension): string {
   return mimes[extension];
 }
+
+/** Why a download cannot start: no API configured, or a protected file with nobody signed in. */
+export function downloadProblem(state: {
+  configured: boolean;
+  signedIn: boolean;
+  publicFile: boolean;
+}): "not_configured" | "session_expired" | null {
+  if (!state.configured) return "not_configured";
+  if (!state.signedIn && !state.publicFile) return "session_expired";
+  return null;
+}
+
+/** Share folders left by earlier shares (each share gets its own `share-…` folder). */
+export function oldShareFolders(names: string[]): string[] {
+  return names.filter((name) => name.startsWith("share-"));
+}
