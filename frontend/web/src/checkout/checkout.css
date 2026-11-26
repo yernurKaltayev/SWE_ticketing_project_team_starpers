@@ -697,3 +697,34 @@
   background: var(--color-danger-soft);
   color: var(--color-danger);
 }
+
+/* Checkout states without a form (an order already exists, a lost attempt). */
+.checkout-state {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+}
+.checkout-state h2 {
+  margin: 0.25rem 0 0;
+  font-size: 1.2rem;
+}
+.checkout-state > p {
+  margin: 0;
+  color: var(--color-muted);
+  max-width: 46ch;
+}
+.checkout-state-icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 12px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.checkout-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
