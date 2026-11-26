@@ -393,7 +393,7 @@ it("reuses a saved venue entered again as new without creating a copy", async ()
   fill("Venue", "__new__");
   fill("Venue name", "demo campus auditorium");
   fill("Venue address", "Demo venue address");
-  fill("Venue city", "astana");
+  fill("Venue city", "Astana");
   await userEvent.click(
     screen.getByRole("button", { name: /^Save (draft|changes)$/ }),
   );

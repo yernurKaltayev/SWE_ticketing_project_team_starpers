@@ -25,6 +25,7 @@ import {
 import type { Event, Page, Ticket, Venue } from "./model";
 import { EventError, SelectField, TextArea } from "./ui";
 import { ArrowLeftIcon } from "../icons";
+import { cityLabel, knownCities } from "./venues";
 import {
   parseEvent,
   parseVenue,
@@ -313,12 +314,20 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
                 maxLength={300}
                 required
               />
-              <Field
-                name="venue_city"
-                label={t.venue_city}
-                maxLength={100}
-                required
-              />
+              <SelectField name="venue_city" label={t.venue_city} required>
+                <option value="" disabled>
+                  —
+                </option>
+                {[...knownCities]
+                  .sort((a, b) =>
+                    cityLabel(a, locale).localeCompare(cityLabel(b, locale)),
+                  )
+                  .map((city) => (
+                    <option key={city} value={city}>
+                      {cityLabel(city, locale)}
+                    </option>
+                  ))}
+              </SelectField>
             </div>
           )}
           {moreVenues.data &&

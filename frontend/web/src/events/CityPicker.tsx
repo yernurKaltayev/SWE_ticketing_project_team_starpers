@@ -3,7 +3,6 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { Locale } from "@biletflow/shared";
 import { usePopover } from "../popover";
 import { ChevronDownIcon, PinIcon } from "../icons";
-import { useResource } from "./data";
 import { eventCopy } from "./copy";
 import {
   cityChosenByHand,
@@ -17,10 +16,8 @@ import {
   defaultCity,
   knownCities,
   nearestCity,
-  parseVenueRefs,
   sameCity,
 } from "./venues";
-import type { VenueRef } from "./venues";
 
 const discoveryPaths = new Set(["/", "/events"]);
 
@@ -36,13 +33,10 @@ export function CityPicker({ locale }: { locale: Locale }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [params] = useSearchParams();
-  const venues = useResource<VenueRef[]>("/api/v1/venues", parseVenueRefs);
   const onDiscovery = discoveryPaths.has(location.pathname);
   const current = (onDiscovery ? params.get("city") : readCity()) ?? "";
-  // Kazakhstan's cities plus any other city a venue uses, one entry per city, labelled in the UI language.
+  // Only the fixed list of Kazakhstan's cities; venue cities outside it never show up here.
   const cities = [...knownCities];
-  for (const c of [...(venues.data ?? []).map((v) => v.city), current])
-    if (c && !cities.some((known) => sameCity(known, c))) cities.push(c);
   cities.sort((a, b) => cityLabel(a, locale).localeCompare(cityLabel(b, locale)));
   const asked = useRef(false);
   useEffect(() => {
