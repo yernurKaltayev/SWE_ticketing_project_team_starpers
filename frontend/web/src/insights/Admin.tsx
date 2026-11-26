@@ -299,6 +299,9 @@ function Search({
         {["active", "suspended"].includes(String(row.paid_sales_status)) && <button disabled={write.busy || write.uncertain || row.status === "suspended"} onClick={() => suspend(row, true)}>
           {t(row.paid_sales_status === "suspended" ? "resumeSales" : "suspendSales")}
         </button>}
+        {!["deleted", "cancelled"].includes(String(row.status)) && <Link className="action-link ghost" to={`/organizer/events/${row.id}/edit`}>
+          {t("editEvent")}
+        </Link>}
         {row.status !== "deleted" && <button className="danger" disabled={write.busy || write.uncertain} onClick={() => remove(row)}>
           {t("deleteEvent")}
         </button>}

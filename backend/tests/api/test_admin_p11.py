@@ -556,3 +556,12 @@ def test_csv_safe_defuses_formula_prefixes():
     assert csv_safe("plain") == "plain"
     assert csv_safe(None) == ""
     assert csv_safe(42) == "42"
+
+
+async def test_admins_can_edit_any_event(client, db):
+    admin = await _admin(db)
+    event = await _published_event(db)
+    response = await client.patch(
+        f"{PREFIX}/events/{event.id}", json={"title": "Fixed by admin"}, headers=auth_header(admin)
+    )
+    assert response.status_code == 200 and response.json()["title"] == "Fixed by admin"

@@ -63,6 +63,8 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
   const navigate = useNavigate();
   const request = useEventRequest();
   const { user } = useSession();
+  // An admin editing someone else's event: organizer-only pages and actions are hidden.
+  const admin = user?.role === "platform_admin";
   const [event, setEvent] = useState(initial);
   const [revision, setRevision] = useState(0);
   const [dirty, setDirty] = useState(false);
@@ -138,7 +140,7 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
   }
   return (
     <section>
-      <Link className="back-link" to="/organizer/events">
+      <Link className="back-link" to={admin ? "/admin/events" : "/organizer/events"}>
         <ArrowLeftIcon size={16} />
         {t.back}
       </Link>
@@ -404,7 +406,7 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
             {!dirty && (
               <Link
                 className="action-link ghost"
-                to={`/organizer/events/${event.id}/preview`}
+                to={admin ? `/events/${event.id}` : `/organizer/events/${event.id}/preview`}
               >
                 {t.preview}
               </Link>
@@ -423,12 +425,14 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
                 {event.status === "published" ? t.unpublish : t.publish}
               </button>
             )}
-            <DuplicateEvent
-              id={event.id}
-              title={event.title}
-              locale={locale}
-              disabled={pending || dirty}
-            />
+            {!admin && (
+              <DuplicateEvent
+                id={event.id}
+                title={event.title}
+                locale={locale}
+                disabled={pending || dirty}
+              />
+            )}
           </div>
           {!user?.email_verified_at && <p>{t.verified}</p>}
           <dialog
@@ -485,7 +489,7 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
             locale={locale}
             locked={pending || dirty || event.status === "cancelled"}
           />
-          {event.status !== "cancelled" && (
+          {event.status !== "cancelled" && !admin && (
             // Kept apart from publish/duplicate so a slip cannot cancel an event.
             <section className="danger-zone" aria-labelledby="danger-title">
               <h2 id="danger-title">{t.dangerZone}</h2>

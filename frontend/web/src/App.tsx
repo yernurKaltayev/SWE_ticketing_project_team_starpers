@@ -488,7 +488,8 @@ function Application() {
             <Route
               path="/organizer/events/:eventId/edit"
               element={
-                <RequireSession locale={locale} roles={["organizer"]}>
+                // Platform admins may edit any event (the API allows it; edits are audited).
+                <RequireSession locale={locale} roles={["organizer", "platform_admin"]}>
                   <EventEditor key={user?.id} locale={locale} />
                 </RequireSession>
               }
