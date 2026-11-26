@@ -311,6 +311,7 @@ async def test_assigned_seat_checkout_consumes_existing_p4_hold(client, db, orde
 
 
 @pytest.mark.asyncio
+@pytest.mark.usefixtures("require_activation")
 async def test_paid_sale_requires_activation_and_cancel_restores_reservation(
     client, db, order_scene
 ):

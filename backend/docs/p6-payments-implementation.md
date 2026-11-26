@@ -36,6 +36,9 @@ it through the same code as `POST /payments/webhooks/sandbox` (header `X-Sandbox
 
 ## Paid-sales activation (organizer, per event)
 
+Only enforced when `PAID_SALES_REQUIRE_ACTIVATION=true`. By default (demo checkout) buyers can pay
+for paid tickets on any published, non-suspended event; see `docs/architecture.md`.
+
 `GET /events/{id}/activation` returns `missing_steps` from:
 `paid_ticket_type`, `identity_verification`, `payout_account`, `activation_fee`, `terms`.
 

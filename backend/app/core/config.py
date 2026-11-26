@@ -61,6 +61,9 @@ class Settings(BaseSettings):
     payout_delay_days: int = 3  # after the event ends
     # Lets a buyer or organizer finish a sandbox payment via /payments/{id}/simulate.
     payment_simulation_enabled: bool = True
+    # Demo checkout: paid tickets sell as soon as the event is published. Set true to require the
+    # per-event paid-sales activation checklist first. A suspended event never sells either way.
+    paid_sales_require_activation: bool = False
 
     smtp_host: str = "localhost"
     smtp_port: int = 1025

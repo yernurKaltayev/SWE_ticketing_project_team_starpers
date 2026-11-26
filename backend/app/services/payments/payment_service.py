@@ -23,7 +23,7 @@ from app.core.errors import (
     UnprocessableError,
 )
 from app.core.money import Money
-from app.models.event import Event, PaidSalesStatus
+from app.models.event import Event
 from app.models.notification import NotificationType
 from app.models.order import Order, OrderStatus
 from app.models.payment import (
@@ -42,6 +42,7 @@ from app.services.notification_service import notify
 from app.services.payments import DEFAULT_PROVIDER, get_provider
 from app.services.payments.fees import processing_fee
 from app.services.payments.sandbox import InvalidWebhookError, SandboxProvider, checkout_url_for
+from app.services.ticket_type_service import _paid_sales_active
 
 VOIDED_REASON = "order_no_longer_payable_voided"
 
@@ -134,7 +135,7 @@ async def start_order_payment(
         return to_payment_out(existing)
 
     event = await db.get(Event, order.event_id)
-    if event is None or event.paid_sales_status != PaidSalesStatus.active:
+    if event is None or not _paid_sales_active(event):
         raise ConflictError("Paid sales are not active.", code="paid_sales_inactive")
 
     amount = Money(order.total, order.currency)
