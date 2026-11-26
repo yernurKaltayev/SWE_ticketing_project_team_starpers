@@ -134,55 +134,45 @@ function paymentFixture(loseResponse = false) {
   );
   return { value, payment, starts: () => starts };
 }
-it("pays only after an explicit sandbox outcome and recovers a lost response from the backend", async () => {
+it("pays with the demo card in one click, sends no card data and recovers a lost response", async () => {
   const fixture = paymentFixture(true);
+  const bodies: string[] = [];
+  server.events.on("request:start", ({ request }) => {
+    if (request.method === "POST")
+      void request.clone().text().then((t) => bodies.push(t));
+  });
   await mount("/account/orders/paid-order", "attendee@example.com");
-  expect(
-    await screen.findByRole("button", {
-      name: "Pay",
-    }),
-  ).toBeDefined();
+  const pay = await screen.findByRole("button", { name: /^Pay\b/ });
   expect(fixture.starts()).toBe(0);
-  await userEvent.click(
-    screen.getByRole("button", { name: "Pay" }),
-  );
-  await screen.findByRole("button", { name: "Simulate success" });
-  expect(fixture.value.status).toBe("pending");
-  expect(screen.queryByRole("link", { name: /checkout/i })).toBeNull();
-  await userEvent.click(
-    screen.getByRole("button", { name: "Simulate success" }),
-  );
+  expect(
+    (screen.getByLabelText("Card number") as HTMLInputElement).value,
+  ).toBe("4242 4242 4242 4242");
+  // Two back-to-back clicks still open a single payment.
+  fireEvent.click(pay);
+  fireEvent.click(pay);
   await waitFor(() => expect(fixture.value.status).toBe("paid"));
-  await waitFor(() =>
-    expect(
-      screen.queryByRole("button", { name: "Simulate success" }),
-    ).toBeNull(),
-  );
   expect(fixture.starts()).toBe(1);
-  expect(localStorage.length).toBe(1);
-  expect(localStorage.getItem(localStorage.key(0)!)).toBe("payment-1");
+  expect(screen.queryByRole("button", { name: "Simulate success" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Simulate failure" })).toBeNull();
+  // The simulate response was lost; the order page reads the paid order from the backend.
+  await screen.findByText(/Payment successful/);
+  expect(screen.queryByRole("button", { name: /^Pay\b/ })).toBeNull();
+  await waitFor(() => expect(bodies.length).toBeGreaterThan(0));
+  for (const body of bodies) {
+    expect(body).not.toMatch(/4242|cvc|card|12\/34/i);
+  }
+  server.events.removeAllListeners();
 });
-it("restores a pending payment after remount without creating a second intent, and handles failure", async () => {
+it("rejects malformed card details without contacting the payment API", async () => {
   const fixture = paymentFixture();
-  const first = await mount(
-    "/account/orders/paid-order",
-    "attendee@example.com",
-  );
-  await userEvent.click(
-    await screen.findByRole("button", {
-      name: "Pay",
-    }),
-  );
-  await screen.findByRole("button", { name: "Simulate failure" });
-  first.view.unmount();
   await mount("/account/orders/paid-order", "attendee@example.com");
-  await screen.findByRole("button", { name: "Simulate failure" });
-  expect(fixture.starts()).toBe(1);
-  await userEvent.click(
-    screen.getByRole("button", { name: "Simulate failure" }),
-  );
-  await waitFor(() => expect(fixture.value.status).toBe("failed"));
-  expect(fixture.value.tickets).toHaveLength(0);
+  const number = await screen.findByLabelText("Card number");
+  await userEvent.clear(number);
+  await userEvent.type(number, "1234");
+  await userEvent.click(screen.getByRole("button", { name: /^Pay\b/ }));
+  expect(await screen.findByText("Check the card details")).toBeDefined();
+  expect(fixture.starts()).toBe(0);
+  expect(fixture.value.status).toBe("pending");
 });
 it("creates a masked payout account, rejects a bad checksum and blocks linked-account removal", async () => {
   const { session } = await mount("/organizer/payout-accounts");
@@ -323,7 +313,7 @@ it("keeps a suspended activation blocked while showing the server's checklist", 
     screen.queryByRole("button", { name: "Review activation fee" }),
   ).toBeNull();
 });
-it("blocks unavailable paid selections and preserves free registration", async () => {
+it("blocks paid selections only when paid sales are suspended and preserves free registration", async () => {
   const mounted = await mount(
     `/events/${demoEventId}/checkout`,
     "attendee@example.com",
@@ -350,12 +340,18 @@ it("blocks unavailable paid selections and preserves free registration", async (
       }),
     ),
   );
+  // Demo checkout: no activation needed, the paid ticket is selectable.
+  const open = await mount(`/events/${demoEventId}/checkout`, "attendee@example.com");
+  expect(
+    await screen.findByRole("spinbutton", { name: "Quantity · Paid admission" }),
+  ).toBeDefined();
+  open.view.unmount();
+  mockPaidSales(demoEventId, "suspended");
   await mount(`/events/${demoEventId}/checkout`, "attendee@example.com");
-  // Paid tickets without active sales show a badge instead of a quantity control.
   expect(await screen.findByText("Not on sale yet")).toBeDefined();
   expect(screen.queryByRole("spinbutton")).toBeNull();
 });
-it("registers an active paid ticket, shows the authoritative order, then issues tickets after payment", async () => {
+it("sells a paid ticket without activation: checkout, pay once, tickets issued", async () => {
   const setup = await mount(`/organizer/events/${demoEventId}/activation`);
   await setup.session.request(`/api/v1/events/${demoEventId}/ticket-types`, {
     method: "POST",
@@ -367,7 +363,6 @@ it("registers an active paid ticket, shows the authoritative order, then issues 
       is_hidden: false,
     },
   });
-  mockPaidSales(demoEventId, "active");
   setup.view.unmount();
   await mount(`/events/${demoEventId}/checkout`, "attendee@example.com");
   const quantity = await screen.findByRole("spinbutton", {
@@ -382,16 +377,11 @@ it("registers an active paid ticket, shows the authoritative order, then issues 
     screen.getByRole("button", { name: "Go to payment" }),
   );
   await userEvent.click(
-    await screen.findByRole("button", {
-      name: "Pay",
-    }),
-  );
-  expect(screen.queryByRole("link", { name: /MOCK-TICKET/ })).toBeNull();
-  await userEvent.click(
-    await screen.findByRole("button", { name: "Simulate success" }),
+    await screen.findByRole("button", { name: /^Pay\b/ }),
   );
   await screen.findByText(/MOCK-TICKET/);
   expect(screen.getByText("Paid", { exact: true })).toBeDefined();
+  expect(screen.getByRole("link", { name: "Open My tickets" })).toBeDefined();
 });
 it("renders payout and financial empty states and localized simulation notices", async () => {
   const first = await mount(

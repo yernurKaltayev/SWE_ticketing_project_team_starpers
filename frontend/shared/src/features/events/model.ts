@@ -256,6 +256,13 @@ export function searchQuery(params: URLSearchParams) {
   query.set("limit", "12");
   return query.toString();
 }
+/** Demo checkout: paid tickets sell unless an admin suspended this event's paid sales. When the
+ * backend requires activation (PAID_SALES_REQUIRE_ACTIVATION), its availability reports the ticket
+ * as not on sale, so callers still check `on_sale` / `open`. */
+export function paidSalesOpen(event: { paid_sales_status: string }) {
+  return event.paid_sales_status !== "suspended";
+}
+
 export function salesState(
   event: Event,
   ticket: Availability,
@@ -280,8 +287,7 @@ export function salesState(
     Date.parse(event.registration_closes_at) <= now
   )
     return "ended";
-  if (ticket.price_amount > 0 && event.paid_sales_status !== "active")
-    return "paidBlocked";
+  if (ticket.price_amount > 0 && !paidSalesOpen(event)) return "paidBlocked";
   if (!ticket.on_sale) return "unavailable";
   return ticket.available <= 0 ? "soldOut" : "onSale";
 }
