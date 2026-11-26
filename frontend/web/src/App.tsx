@@ -176,10 +176,10 @@ function Application() {
         </Link>
         <CityPicker locale={locale} />
         <div className="account-nav">
+          {user ? <NotificationLink locale={locale} /> : null}
           <LanguagePicker locale={locale} onChange={setLocale} />
           {user ? (
             <>
-              <NotificationLink locale={locale} />
               <AccountMenu
                 locale={locale}
                 name={user.full_name}
