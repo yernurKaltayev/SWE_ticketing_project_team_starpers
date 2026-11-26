@@ -51,7 +51,7 @@ def _issue_tokens(db: AsyncSession, user_id: uuid.UUID) -> TokenOut:
     return TokenOut(access_token=create_access_token(user_id), refresh_token=refresh_token)
 
 
-async def _revoke_all_refresh_tokens(db: AsyncSession, user_id: uuid.UUID) -> None:
+async def revoke_all_refresh_tokens(db: AsyncSession, user_id: uuid.UUID) -> None:
     await db.execute(
         update(RefreshToken)
         .where(RefreshToken.user_id == user_id, RefreshToken.revoked_at.is_(None))
@@ -139,7 +139,7 @@ async def refresh(db: AsyncSession, refresh_token: str) -> TokenOut:
             )
         )
         if reused_by is not None:
-            await _revoke_all_refresh_tokens(db, reused_by)
+            await revoke_all_refresh_tokens(db, reused_by)
             await db.commit()
         raise invalid_refresh_token()
 
@@ -202,7 +202,8 @@ async def resend_verification(db: AsyncSession, email: str) -> tuple[str, str] |
 async def forgot_password(db: AsyncSession, email: str) -> tuple[str, str] | None:
     """Return (address, token), or None if the account does not exist."""
     user = await db.scalar(select(User).where(User.email == email))
-    if user is None:
+    # Volunteer logins are generated addresses nobody reads: the organizer resets them instead.
+    if user is None or user.role == UserRole.volunteer:
         return None
     token = await issue_email_token(db, user.id, EmailTokenPurpose.reset)
     await db.commit()
@@ -219,5 +220,5 @@ async def reset_password(db: AsyncSession, token: str, new_password: str) -> Non
         raise _invalid_email_token()
     user = await db.get_one(User, user_id)
     user.password_hash = await asyncio.to_thread(hash_password, new_password)
-    await _revoke_all_refresh_tokens(db, user_id)
+    await revoke_all_refresh_tokens(db, user_id)
     await db.commit()

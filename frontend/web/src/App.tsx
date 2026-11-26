@@ -137,6 +137,8 @@ function Application() {
   const t = authCopy[locale];
   const location = useLocation();
   const isOrganizer = hasRole(user, ["organizer"]);
+  // Volunteer accounts may only scan tickets, in the mobile app; the API refuses the rest.
+  const isVolunteer = hasRole(user, ["volunteer"]);
   const showWorkspace =
     isOrganizer && location.pathname.startsWith("/organizer/");
   useEffect(() => {
@@ -176,7 +178,7 @@ function Application() {
         </Link>
         <CityPicker locale={locale} />
         <div className="account-nav">
-          {user ? <NotificationLink locale={locale} /> : null}
+          {user && !isVolunteer ? <NotificationLink locale={locale} /> : null}
           <LanguagePicker locale={locale} onChange={setLocale} />
           {user ? (
             <>
@@ -184,7 +186,7 @@ function Application() {
                 locale={locale}
                 name={user.full_name}
                 email={user.email}
-                links={[
+                links={isVolunteer ? [{ to: "/account", label: t.account, kind: "account" }] : [
                   ...(isOrganizer
                     ? [
                         {
@@ -251,6 +253,11 @@ function Application() {
           <DemoNotice locale={locale} text={t.mockNotice} />
         ) : null}
         {logoutError ? <Status>{t.logoutFailed}</Status> : null}
+        {isVolunteer ? (
+          <p className="environment-notice" role="status">
+            <span>{staffCopy[locale].volunteers.signedInNotice}</span>
+          </p>
+        ) : null}
         <div className={showWorkspace ? "workspace" : undefined}>
           {showWorkspace ? (
             <OrganizerNav locale={locale} pathname={location.pathname} slot={menuSlot} />

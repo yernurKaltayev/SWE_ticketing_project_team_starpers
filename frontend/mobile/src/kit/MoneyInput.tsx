@@ -54,6 +54,8 @@ export function MoneyInput({
           onBlur={() => {
             setProblem(moneyValue(text).error ? t.priceInvalid : null);
           }}
+          selectTextOnFocus
+          placeholder="0"
           keyboardType="decimal-pad"
           inputMode="decimal"
           style={[local.input, (problem ?? error) ? local.inputError : null]}

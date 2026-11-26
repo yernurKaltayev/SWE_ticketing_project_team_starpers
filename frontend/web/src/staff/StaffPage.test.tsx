@@ -126,3 +126,46 @@ it("refuses other accounts", async () => {
     /Only the organizer or a manager/,
   );
 });
+
+it("creates a volunteer and shows the generated sign-in details once", async () => {
+  const user = userEvent.setup();
+  await mount();
+  expect(await screen.findByText("No volunteers yet.")).toBeTruthy();
+
+  await user.click(screen.getByRole("button", { name: "Create volunteer" }));
+  expect(await screen.findByText("Enter the volunteer's name")).toBeTruthy();
+
+  await user.type(screen.getByLabelText("Volunteer's name"), "Aru Nurlan");
+  await user.click(screen.getByRole("button", { name: "Create volunteer" }));
+
+  const details = await screen.findByRole("region", { name: /Sign-in details for Aru Nurlan/ });
+  expect(within(details).getByText("v-mock1@volunteers.biletflow.kz")).toBeTruthy();
+  expect(within(details).getByText("mock-pass-1")).toBeTruthy();
+  const row = await screen.findByRole("row", { name: /Aru Nurlan/ });
+  expect(within(row).getByText("Never")).toBeTruthy();
+  expect(within(row).queryByText("mock-pass-1")).toBeNull();
+
+  await user.click(within(details).getByRole("button", { name: "Done" }));
+  expect(screen.queryByText("mock-pass-1")).toBeNull();
+  // Volunteers are not mixed into the staff list.
+  expect(screen.getByText("No staff assigned yet.")).toBeTruthy();
+});
+
+it("issues a new volunteer password and deletes the account after confirmation", async () => {
+  const user = userEvent.setup();
+  await mount();
+  await screen.findByText("No volunteers yet.");
+  await user.type(screen.getByLabelText("Volunteer's name"), "Dana");
+  await user.click(screen.getByRole("button", { name: "Create volunteer" }));
+  await screen.findByText("mock-pass-1");
+
+  await user.click(screen.getByRole("button", { name: "New password: Dana" }));
+  expect(await screen.findByText("mock-pass-2")).toBeTruthy();
+  expect(screen.getByRole("status").textContent).toMatch(/New password issued/);
+
+  await user.click(screen.getByRole("button", { name: "Delete: Dana" }));
+  await user.click(screen.getByRole("button", { name: "Delete account" }));
+  expect(await screen.findByText("Volunteer account deleted.")).toBeTruthy();
+  expect(await screen.findByText("No volunteers yet.")).toBeTruthy();
+  expect(screen.queryByText("mock-pass-2")).toBeNull();
+});

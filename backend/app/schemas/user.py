@@ -101,3 +101,28 @@ class StaffEventOut(BaseModel):
     venue_city: str
     role: Literal["owner", "manager", "checkin", "support"]
     can_check_in: bool
+
+
+class VolunteerCreate(BaseModel):
+    full_name: Name
+
+
+class VolunteerOut(BaseModel):
+    """A volunteer check-in account on an event. The password is never listed."""
+
+    user_id: UUID
+    full_name: str
+    login: str
+    created_at: datetime
+    last_login_at: datetime | None
+    expires_at: datetime  # when the account is anonymized automatically
+
+
+class VolunteerCredentialsOut(BaseModel):
+    """Returned once, on creation or password reset: pass these to the volunteer."""
+
+    user_id: UUID
+    full_name: str
+    login: str
+    password: str
+    expires_at: datetime
