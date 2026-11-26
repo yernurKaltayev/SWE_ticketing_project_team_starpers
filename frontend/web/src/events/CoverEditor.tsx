@@ -42,12 +42,18 @@ export function CoverEditor({
   function upload(file: File | undefined) {
     setProblem("");
     if (!file || busy) return;
-    const problem = coverProblem(file);
-    if (problem === "type") return setProblem(t.coverType);
-    if (problem === "size") return setProblem(t.coverSize);
-    const body = new FormData();
-    body.append("file", file);
-    send(`/api/v1/events/${event.id}/images`, { method: "POST", body });
+    if (coverProblem({ type: file.type }) === "type") return setProblem(t.coverType);
+    setPending(true);
+    // Large photos are shrunk before upload so covers load fast everywhere.
+    void shrinkImage(file).then((small) => {
+      if (coverProblem(small) === "size") {
+        setPending(false);
+        return setProblem(t.coverSize);
+      }
+      const body = new FormData();
+      body.append("file", small);
+      send(`/api/v1/events/${event.id}/images`, { method: "POST", body });
+    });
   }
 
   return (
@@ -129,4 +135,33 @@ export function CoverEditor({
       )}
     </section>
   );
+}
+
+const MAX_COVER_WIDTH = 1920;
+/**
+ * Re-encode a cover as WebP at most 1920px wide. Keeps the original when the browser
+ * cannot decode or encode it, or when the result would not be smaller.
+ */
+async function shrinkImage(file: File): Promise<File> {
+  try {
+    if (typeof createImageBitmap !== "function") return file;
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_COVER_WIDTH / bitmap.width);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const context = canvas.getContext("2d");
+    if (!context) return file;
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/webp", 0.82),
+    );
+    if (!blob || blob.type !== "image/webp" || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".webp", {
+      type: "image/webp",
+    });
+  } catch {
+    return file;
+  }
 }
