@@ -137,6 +137,7 @@ async def test_free_checkout_issues_tickets_once(client, db, order_scene):
     assert response.status_code == 201, response.text
     order = response.json()
     assert order["status"] == "free_confirmed"
+    assert order["expires_at"] is None
     assert order["total"] == 0
     assert len(order["tickets"]) == 2
     assert order["is_simulated"] is True
@@ -199,6 +200,8 @@ async def test_paid_pending_and_p6_hook(client, db, order_scene):
     response = await client.post("/api/v1/orders", json=payload)
     assert response.status_code == 201, response.text
     assert response.json()["status"] == "pending"
+    # A pending paid order tells the client how long its tickets stay reserved.
+    assert response.json()["expires_at"] is not None
     assert response.json()["total"] == 250000
     assert response.json()["tickets"] == []
     order_id = response.json()["id"]

@@ -518,3 +518,182 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+/* Order page tickets: icon, holder, type and number, status, arrow. */
+.order-tickets-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.15rem;
+}
+.order-tickets-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 0.85rem;
+}
+.commerce-list.order-tickets li {
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.9rem;
+}
+.commerce-list.order-tickets li > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.commerce-list.order-tickets p {
+  margin-top: 0.2rem;
+}
+.order-ticket-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 10px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.order-ticket-arrow {
+  flex: none;
+  color: var(--color-muted);
+}
+.commerce-list.order-tickets li:hover .order-ticket-arrow {
+  color: var(--color-primary);
+}
+@media (max-width: 480px) {
+  .commerce-list.order-tickets li {
+    flex-wrap: wrap;
+  }
+  .commerce-list.order-tickets li > div {
+    flex-basis: calc(100% - 3.4rem);
+  }
+  .order-ticket-arrow {
+    display: none;
+  }
+}
+.order-event-cover {
+  max-width: none;
+}
+.order-main .calendar-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+}
+@media (max-width: 480px) {
+  .commerce-list.order-tickets li > .status-badge {
+    margin-left: 3.4rem;
+  }
+}
+
+/* Paid order: success banner with a quiet link to all tickets. */
+.order-success {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  padding: 1rem 1.15rem;
+  background: var(--color-success-soft);
+  border: 1px solid color-mix(in srgb, var(--color-success) 22%, transparent);
+  border-radius: var(--radius-card);
+}
+.order-success > div {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.order-success strong {
+  display: block;
+  color: var(--color-success);
+  font-size: 1.05rem;
+}
+.order-success p {
+  margin: 0.15rem 0 0;
+  color: var(--color-ink);
+  font-size: 0.925rem;
+}
+.order-success-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--color-success);
+  color: #fff;
+}
+.order-success-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 650;
+  color: var(--color-success);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.order-success-link:hover {
+  text-decoration: underline;
+}
+@media (max-width: 480px) {
+  .order-success-link {
+    margin-left: 3.5rem;
+  }
+}
+
+.order-success[data-tone="danger"] {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-line);
+}
+.order-success[data-tone="danger"] strong,
+.order-success[data-tone="danger"] .order-success-link {
+  color: var(--color-danger);
+}
+.order-success[data-tone="danger"] .order-success-icon {
+  background: var(--color-danger);
+}
+.order-success[data-tone="warning"] {
+  background: var(--color-warning-soft);
+  border-color: color-mix(in srgb, var(--color-warning) 25%, transparent);
+}
+.order-success[data-tone="warning"] strong,
+.order-success[data-tone="warning"] .order-success-link {
+  color: var(--color-warning);
+}
+.order-success[data-tone="warning"] .order-success-icon {
+  background: var(--color-warning);
+}
+@media (max-width: 480px) {
+  .order-success > .action-link {
+    margin-left: 3.5rem;
+  }
+}
+
+/* Reservation countdown above the payment form. */
+.order-timer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  margin: 0 0 1rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius-card);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.order-timer strong {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.1rem;
+}
+.order-timer small {
+  flex-basis: 100%;
+  margin-left: 1.6rem;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+.order-timer[data-urgent] {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
