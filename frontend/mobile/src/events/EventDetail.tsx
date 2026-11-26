@@ -60,8 +60,8 @@ export function EventDetail({ id, locale, search, open, preview }: Props) {
                 {data.status !== "cancelled" ? (
                   <>
                     <Heading>{t.salesWindow}</Heading>
-                    {data.registration_opens_at ? <Muted>{t.registration_opens_at} {formatEventDateTime(data.registration_opens_at, data.timezone, locale)}</Muted> : null}
-                    <Muted>{t.registration_closes_at} {formatEventDateTime(data.registration_closes_at ?? data.starts_at, data.timezone, locale)}</Muted>
+                    {data.registration_opens_at ? <Muted>{t.salesOpens}: {formatEventDateTime(data.registration_opens_at, data.timezone, locale)}</Muted> : null}
+                    <Muted>{t.salesCloses}: {formatEventDateTime(data.registration_closes_at ?? data.starts_at, data.timezone, locale)}</Muted>
                   </>
                 ) : null}
               </Card>

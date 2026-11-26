@@ -20,3 +20,11 @@ describe("discovery filters", () => {
     });
   });
 });
+
+describe("filter sheet", () => {
+  it("applies the sheet without running search text that was never submitted", async () => {
+    const { withSheetValues } = await import("./discovery-filters");
+    const current = discoveryFilters({ q: "jazz" });
+    expect(withSheetValues(current, { city: "Almaty" })).toMatchObject({ q: "jazz", city: "Almaty" });
+  });
+});
