@@ -83,10 +83,8 @@ describe("event time and baseline locales", () => {
     expect(formatEventDateTime(instant, "UTC", "en")).not.toBe(
       formatEventDateTime(instant, "Asia/Qyzylorda", "en"),
     );
-    // Kazakhstan zones read as their city; any other zone keeps its IANA id.
-    expect(formatEventDateTime(instant, "Asia/Qyzylorda", "en")).toContain(
-      "Kyzylorda",
-    );
+    // Kazakhstan times carry no suffix (one zone people read as local); others keep the IANA id.
+    expect(formatEventDateTime(instant, "Asia/Qyzylorda", "en")).not.toContain("·");
     expect(formatEventDateTime(instant, "Europe/Berlin", "en")).toContain(
       "Europe/Berlin",
     );
@@ -123,7 +121,7 @@ describe("event time and baseline locales", () => {
 
     it("writes the event date with Kazakh month names", () => {
       expect(formatEventDateTime("2027-03-01T14:00:00Z", "Asia/Almaty", "kk")).toBe(
-        "2027 ж. 1 нау., 19:00 · Алматы",
+        "2027 ж. 1 нау., 19:00",
       );
     });
 

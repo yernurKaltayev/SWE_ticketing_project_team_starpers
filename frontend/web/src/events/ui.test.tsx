@@ -6,6 +6,7 @@ import {
   fireEvent,
   waitFor,
   cleanup,
+  within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { setupServer } from "msw/node";
@@ -103,7 +104,9 @@ it("renders the free-event journey with corrective publication errors and protec
   );
   await screen.findByRole("heading", { name: "Edit event" });
   await user.click(screen.getByRole("button", { name: "Publish" }));
-  await user.click(screen.getByRole("button", { name: "Confirm" }));
+  await user.click(
+    within(screen.getByRole("dialog")).getByRole("button", { name: "Publish" }),
+  );
   await screen.findByText("Add a ticket type before publishing.");
   await user.click(screen.getByRole("button", { name: "Add ticket type" }));
   fireEvent.change(screen.getByLabelText("Ticket name", { exact: true }), {
@@ -112,7 +115,9 @@ it("renders the free-event journey with corrective publication errors and protec
   await user.click(screen.getByRole("button", { name: "Save ticket type" }));
   await screen.findByRole("rowheader", { name: "Free admission" });
   await user.click(screen.getByRole("button", { name: "Publish" }));
-  await user.click(screen.getByRole("button", { name: "Confirm" }));
+  await user.click(
+    within(screen.getByRole("dialog")).getByRole("button", { name: "Publish" }),
+  );
   await screen.findByRole("button", { name: "Return to draft" });
   await user.click(screen.getByRole("link", { name: "Preview" }));
   await screen.findByRole("heading", { name: "Dias demonstration" });
@@ -145,9 +150,9 @@ it("retains draft fields after failed save and allows explicit recovery without 
   );
   await screen.findByRole("heading", { name: "Edit event" });
 });
-it("reports invalid wall-time fields with a focused, linked error and sends no create request", async () => {
+it("reports invalid wall-time fields with a focused error on the marked field and sends no create request", async () => {
   const user = userEvent.setup();
-  const { fill } = await editor();
+  await editor();
   let writes = 0;
   server.use(
     http.post("*/api/v1/events", () => {
@@ -155,17 +160,18 @@ it("reports invalid wall-time fields with a focused, linked error and sends no c
       return HttpResponse.error();
     }),
   );
-  // The picker only offers real zones; a stale or tampered value must still be caught.
-  (screen.getByLabelText("Time zone", { exact: true }) as HTMLSelectElement).add(
-    new Option("Invalid/Zone", "Invalid/Zone"),
-  );
-  fill("Time zone", "Invalid/Zone");
+  // The zone is not editable any more, but a stale or tampered value must still be caught.
+  (document.querySelector('input[name="timezone"]') as HTMLInputElement).value =
+    "Invalid/Zone";
   await user.click(
     screen.getByRole("button", { name: /^Save (draft|changes)$/ }),
   );
   const alert = await screen.findByRole("alert");
   expect(document.activeElement).toBe(alert);
-  expect(alert.querySelector("a")?.getAttribute("href")).toBe("#starts_at");
+  expect(alert.textContent).toContain("Starts");
+  expect(
+    screen.getByLabelText("Starts", { exact: true }).getAttribute("aria-invalid"),
+  ).toBe("true");
   expect(writes).toBe(0);
 });
 it("creates an event with live P4 venue arrays, then saves and edits a paid ticket using live P3 arrays", async () => {

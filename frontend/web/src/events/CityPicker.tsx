@@ -5,16 +5,30 @@ import { usePopover } from "../popover";
 import { ChevronDownIcon, PinIcon } from "../icons";
 import { useResource } from "./data";
 import { eventCopy } from "./copy";
-import { readCity, writeCity } from "./city";
-import { cityLabel, defaultCity, nearestCity, parseVenueRefs } from "./venues";
+import {
+  cityChosenByHand,
+  locatedThisVisit,
+  markCityChosenByHand,
+  readCity,
+  writeCity,
+} from "./city";
+import {
+  cityLabel,
+  defaultCity,
+  knownCities,
+  nearestCity,
+  parseVenueRefs,
+  sameCity,
+} from "./venues";
 import type { VenueRef } from "./venues";
 
 const discoveryPaths = new Set(["/", "/events"]);
 
 /**
  * Header city switch (next to the logo); filters the event listing by city.
- * With no city chosen yet, the browser is asked for the visitor's location once
- * and the nearest city is picked (Almaty when location is refused).
+ * On each visit the browser is asked for the visitor's location and the nearest city is
+ * picked, unless the visitor chose a city by hand. Refused location falls back to Almaty
+ * when no city is set yet.
  */
 export function CityPicker({ locale }: { locale: Locale }) {
   const { open, setOpen, root, button } = usePopover();
@@ -25,40 +39,39 @@ export function CityPicker({ locale }: { locale: Locale }) {
   const venues = useResource<VenueRef[]>("/api/v1/venues", parseVenueRefs);
   const onDiscovery = discoveryPaths.has(location.pathname);
   const current = (onDiscovery ? params.get("city") : readCity()) ?? "";
-  // One entry per case-insensitive city, labelled in the UI language.
-  const cities = [
-    ...new Map(
-      [...(venues.data ?? []).map((v) => v.city), current]
-        .filter(Boolean)
-        .map((c) => [c.toLowerCase(), c] as const),
-    ).values(),
-  ].sort((a, b) => cityLabel(a, locale).localeCompare(cityLabel(b, locale)));
+  // Kazakhstan's cities plus any other city a venue uses, one entry per city, labelled in the UI language.
+  const cities = [...knownCities];
+  for (const c of [...(venues.data ?? []).map((v) => v.city), current])
+    if (c && !cities.some((known) => sameCity(known, c))) cities.push(c);
+  cities.sort((a, b) => cityLabel(a, locale).localeCompare(cityLabel(b, locale)));
   const asked = useRef(false);
-  const ready = venues.data !== undefined;
   useEffect(() => {
-    if (current || !ready || !cities.length || asked.current) return;
-    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    if (asked.current) return;
     asked.current = true;
-    const apply = (city: string | undefined) => {
-      if (!city || readCity()) return;
+    if (cityChosenByHand() || locatedThisVisit()) return;
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    const apply = (city: string | undefined, override: boolean) => {
+      if (!city || cityChosenByHand() || (!override && readCity())) return;
       writeCity(city);
-      if (!onDiscovery) return;
+      if (!discoveryPaths.has(window.location.pathname)) return;
       const next = new URLSearchParams(window.location.search);
-      if (next.get("city")) return;
+      if (next.get("city") && sameCity(next.get("city")!, city)) return;
       next.set("city", city);
-      navigate(`${location.pathname}?${next}`, { replace: true });
+      next.delete("offset");
+      navigate(`${window.location.pathname}?${next}`, { replace: true });
     };
     navigator.geolocation.getCurrentPosition(
       (pos) =>
-        apply(nearestCity(cities, pos.coords.latitude, pos.coords.longitude) ?? defaultCity(cities)),
-      () => apply(defaultCity(cities)),
+        apply(nearestCity(knownCities, pos.coords.latitude, pos.coords.longitude), true),
+      () => apply(defaultCity(knownCities), false),
       { maximumAge: 3600_000, timeout: 10_000 },
     );
-  });
+  }, [navigate]);
   function choose(city: string) {
     setOpen(false);
     button.current?.focus();
     writeCity(city);
+    markCityChosenByHand();
     const next = onDiscovery ? new URLSearchParams(params) : new URLSearchParams();
     next.delete("offset");
     if (city) next.set("city", city);
@@ -87,7 +100,7 @@ export function CityPicker({ locale }: { locale: Locale }) {
             <li key={city}>
               <button
                 type="button"
-                aria-pressed={city.toLowerCase() === current.toLowerCase()}
+                aria-pressed={!!current && sameCity(city, current)}
                 onClick={() => choose(city)}
               >
                 <span>{cityLabel(city, locale)}</span>

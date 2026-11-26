@@ -4,6 +4,7 @@ import { NotificationLink } from "./support/NotificationLink";
 import { supportCopy } from "./support/copy";
 import { promoCopy } from "./promotions/copy";
 import { lazy, Suspense, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 import {
   BrowserRouter,
@@ -43,7 +44,7 @@ import {
   BellIcon,
   BoltIcon,
   BrandMark,
-  ChevronDownIcon,
+  MenuIcon,
   ChartIcon,
   EditIcon,
   EyeIcon,
@@ -131,6 +132,7 @@ function Application() {
   const [locale, setLocale] = useState<Locale>(readLocale);
   const [logoutError, setLogoutError] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [menuSlot, setMenuSlot] = useState<HTMLElement | null>(null);
   const { user, controller } = useSession();
   const t = authCopy[locale];
   const location = useLocation();
@@ -167,28 +169,17 @@ function Application() {
             : "Skip to content"}
       </a>
       <header className="site-header">
+        <div ref={setMenuSlot} className="header-menu-slot" />
         <Link className="brand" to="/">
           <BrandMark />
           BiletFlow
         </Link>
         <CityPicker locale={locale} />
-        <nav className="site-nav" aria-label="BiletFlow">
-          <NavLink to="/events">{eventCopy[locale].navEvents}</NavLink>
-          {user ? (
-            <NavLink to="/support">{supportCopy[locale].title}</NavLink>
-          ) : null}
-          {isOrganizer && (
-            <NavLink to="/organizer">{eventCopy[locale].organizer}</NavLink>
-          )}
-          {hasRole(user, ["platform_admin"]) && (
-            <NavLink to="/admin">{insightLabel(locale, "admin")}</NavLink>
-          )}
-        </nav>
         <div className="account-nav">
+          {user ? <NotificationLink locale={locale} /> : null}
           <LanguagePicker locale={locale} onChange={setLocale} />
           {user ? (
             <>
-              <NotificationLink locale={locale} />
               <AccountMenu
                 locale={locale}
                 name={user.full_name}
@@ -203,6 +194,15 @@ function Application() {
                         },
                       ]
                     : []),
+                  ...(hasRole(user, ["platform_admin"])
+                    ? [
+                        {
+                          to: "/admin",
+                          label: insightLabel(locale, "admin"),
+                          kind: "admin" as const,
+                        },
+                      ]
+                    : []),
                   {
                     to: "/account/tickets",
                     label: commerceNavigation[locale].tickets,
@@ -214,6 +214,11 @@ function Application() {
                     kind: "orders",
                   },
                   { to: "/account", label: t.account, kind: "account" },
+                  {
+                    to: "/support",
+                    label: supportCopy[locale].title,
+                    kind: "support",
+                  },
                 ]}
                 logoutLabel={loggingOut ? t.working : t.logout}
                 busy={loggingOut}
@@ -248,7 +253,7 @@ function Application() {
         {logoutError ? <Status>{t.logoutFailed}</Status> : null}
         <div className={showWorkspace ? "workspace" : undefined}>
           {showWorkspace ? (
-            <OrganizerNav locale={locale} pathname={location.pathname} />
+            <OrganizerNav locale={locale} pathname={location.pathname} slot={menuSlot} />
           ) : null}
           <div className={showWorkspace ? "workspace-main" : undefined}>
         <PageErrorBoundary
@@ -560,12 +565,15 @@ function Application() {
   );
 }
 
+/** On narrow screens the sections button is portalled into the header, left of the logo. */
 function OrganizerNav({
   locale,
   pathname,
+  slot,
 }: {
   locale: Locale;
   pathname: string;
+  slot: HTMLElement | null;
 }) {
   const ev = eventCopy[locale];
   const pay = paymentCopy[locale];
@@ -645,22 +653,39 @@ function OrganizerNav({
       return pathname === path || (!("end" in link) && pathname.startsWith(`${path}/`));
     })
     .sort((a, b) => b.to.length - a.to.length)[0];
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpenOn(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
   return (
     <nav
       className="workspace-nav"
       data-open={open || undefined}
       aria-label={authCopy[locale].organizerRole}
     >
-      <button
-        type="button"
-        className="workspace-nav-toggle secondary"
-        aria-expanded={open}
-        onClick={() => setOpenOn(open ? null : pathname)}
-      >
-        {current?.icon}
-        <span>{current?.label ?? authCopy[locale].organizerRole}</span>
-        <ChevronDownIcon />
-      </button>
+      {slot &&
+        createPortal(
+          <button
+            type="button"
+            className="workspace-nav-toggle"
+            aria-expanded={open}
+            aria-label={`${authCopy[locale].organizerRole}: ${current?.label ?? ""}`}
+            onClick={() => setOpenOn(open ? null : pathname)}
+          >
+            <MenuIcon size={22} />
+          </button>,
+          slot,
+        )}
+      <div
+        className="workspace-backdrop"
+        aria-hidden="true"
+        onClick={() => setOpenOn(null)}
+      />
+      <div className="workspace-drawer">
       {groups.map((group) => (
         <section key={group.id}>
           <p className="nav-label" id={group.id}>
@@ -678,6 +703,7 @@ function OrganizerNav({
           </ul>
         </section>
       ))}
+      </div>
     </nav>
   );
 }

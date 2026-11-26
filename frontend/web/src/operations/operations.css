@@ -84,3 +84,12 @@
     flex-basis: auto;
   }
 }
+/* Fields share the row; both buttons stay on it. */
+.operation-filters > label,
+.operation-filters > .field {
+  flex: 1 1 11rem;
+  min-width: 0;
+}
+.operation-filters > button {
+  flex: none;
+}

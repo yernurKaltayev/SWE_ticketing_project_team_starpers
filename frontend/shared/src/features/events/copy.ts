@@ -60,12 +60,12 @@ const en = {
   unpublish: "Return to draft",
   duplicate: "Duplicate into new draft",
   confirm: "Confirm",
-  dismiss: "Keep current status",
+  dismiss: "Go back",
   confirmTitle: "Change publication status?",
   publishHint:
-    "Publish the saved version. At least one ticket type is required; total ticket quantities must fit the capacity.",
+    "The saved version appears in listings and ticket sales open.",
   unpublishHint:
-    "This stops discovery and registration. Events with orders may require the cancellation workflow instead.",
+    "The event leaves listings and registration stops. If it already has orders, cancel it instead.",
   draft: "Draft",
   published: "Published",
   cancelled: "Cancelled",
@@ -104,13 +104,14 @@ const en = {
   error:
     "The request could not be completed. Check your connection and try again.",
   denied: "This event is missing or you do not have access.",
-  invalid: "Check this field, including its time zone and date order.",
+  invalid: "Check this field and the order of the dates.",
   needsTickets: "Add a ticket type before publishing.",
   capacityError: "Capacity must cover the total ticket quantities.",
   verified: "Verify your email before publishing.",
   statusError: "The event status has changed. Reload and review it.",
   salesWindowError:
-    "Ticket sales must start and end before the event ends. Check the sales dates.",
+    "Sales must close by the start of the event (and after they open).",
+  endsBeforeStart: "The end must be later than the start.",
   ticketCapacityError:
     "Ticket quantities add up to more than the event capacity. Lower a quantity or raise the capacity.",
   quantityAllocated:
@@ -217,12 +218,12 @@ const ru: Copy = {
   unpublish: "Вернуть в черновики",
   duplicate: "Создать копию в черновиках",
   confirm: "Подтвердить",
-  dismiss: "Оставить текущий статус",
+  dismiss: "Назад",
   confirmTitle: "Изменить статус публикации?",
   publishHint:
-    "Публикуется сохранённая версия. Нужен хотя бы один тип билета; общее количество не должно превышать вместимость.",
+    "Сохранённая версия появится в афише, и откроется продажа билетов.",
   unpublishHint:
-    "Мероприятие станет недоступно для поиска и регистрации. При наличии заказов может потребоваться отмена с возвратом.",
+    "Мероприятие пропадёт из афиши, регистрация остановится. Если заказы уже есть, лучше отменить его с возвратом.",
   draft: "Черновик",
   published: "Опубликовано",
   cancelled: "Отменено",
@@ -260,13 +261,14 @@ const ru: Copy = {
     "Все даты и время указаны в часовом поясе мероприятия. Неоднозначное или несуществующее время перехода на летнее время нужно изменить.",
   error: "Не удалось выполнить запрос. Проверьте соединение и повторите.",
   denied: "Мероприятие не найдено или доступ запрещён.",
-  invalid: "Проверьте поле, часовой пояс и порядок дат.",
+  invalid: "Проверьте поле и порядок дат.",
   needsTickets: "Добавьте тип билета перед публикацией.",
   capacityError: "Вместимость должна покрывать общее количество билетов.",
   verified: "Подтвердите email перед публикацией.",
   statusError: "Статус изменился. Обновите данные.",
   salesWindowError:
-    "Продажи билетов должны начинаться и заканчиваться до окончания мероприятия. Проверьте даты продаж.",
+    "Продажи должны закрыться до начала мероприятия (и после их открытия).",
+  endsBeforeStart: "Окончание должно быть позже начала.",
   ticketCapacityError:
     "Сумма билетов превышает вместимость мероприятия. Уменьшите количество или увеличьте вместимость.",
   quantityAllocated:
@@ -372,12 +374,12 @@ const kk: Copy = {
   unpublish: "Жобаға қайтару",
   duplicate: "Жаңа жобаға көшіру",
   confirm: "Растау",
-  dismiss: "Қазіргі күйін сақтау",
+  dismiss: "Артқа",
   confirmTitle: "Жариялау күйін өзгерту керек пе?",
   publishHint:
-    "Сақталған нұсқа жарияланады. Кемінде бір билет түрі қажет; жалпы билет саны сыйымдылықтан аспауы тиіс.",
+    "Сақталған нұсқа афишада пайда болып, билет сатылымы ашылады.",
   unpublishHint:
-    "Іздеу және тіркелу тоқтатылады. Тапсырыстар болса, қайтарыммен бірге бас тарту қажет болуы мүмкін.",
+    "Іс-шара афишадан жойылып, тіркелу тоқтайды. Тапсырыстар бар болса, қайтарыммен бас тартқан дұрыс.",
   draft: "Жоба",
   published: "Жарияланған",
   cancelled: "Бас тартылған",
@@ -415,13 +417,14 @@ const kk: Copy = {
     "Барлық күн мен уақыт іс-шараның уақыт белдеуінде. Маусымдық ауысудағы екіұшты немесе жоқ уақытты өзгертіңіз.",
   error: "Сұрауды орындау мүмкін болмады. Байланысты тексеріп, қайталаңыз.",
   denied: "Іс-шара табылмады немесе кіруге рұқсат жоқ.",
-  invalid: "Өрісті, уақыт белдеуін және күндер ретін тексеріңіз.",
+  invalid: "Өрісті және күндер ретін тексеріңіз.",
   needsTickets: "Жарияламас бұрын билет түрін қосыңыз.",
   capacityError: "Сыйымдылық билеттердің жалпы санын қамтуы керек.",
   verified: "Жарияламас бұрын email-ді растаңыз.",
   statusError: "Күй өзгерді. Деректерді жаңартыңыз.",
   salesWindowError:
-    "Билет сатылымы іс-шара аяқталғанға дейін басталып, аяқталуы керек. Сату күндерін тексеріңіз.",
+    "Сатылым іс-шара басталғанға дейін жабылуы керек (ашылғаннан кейін).",
+  endsBeforeStart: "Аяқталуы басталуынан кейін болуы керек.",
   ticketCapacityError:
     "Билеттер саны іс-шараның сыйымдылығынан асады. Санды азайтыңыз немесе сыйымдылықты көбейтіңіз.",
   quantityAllocated:

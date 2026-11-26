@@ -4,6 +4,8 @@ import { NavLink } from "react-router-dom";
 import { isLocale, localeLabels, locales, messages } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import {
+  ChartIcon,
+  ChatIcon,
   ChevronDownIcon,
   CloseIcon,
   GlobeIcon,
@@ -102,7 +104,7 @@ export function AccountMenu({
   links: {
     to: string;
     label: string;
-    kind: "events" | "tickets" | "orders" | "account";
+    kind: "events" | "admin" | "tickets" | "orders" | "account" | "support";
   }[];
   logoutLabel: string;
   busy: boolean;
@@ -113,9 +115,11 @@ export function AccountMenu({
   const menuId = useId();
   const icons = {
     events: GridIcon,
+    admin: ChartIcon,
     tickets: TicketIcon,
     orders: ReceiptIcon,
     account: UserIcon,
+    support: ChatIcon,
   };
   return (
     <div className="account-menu" ref={root}>

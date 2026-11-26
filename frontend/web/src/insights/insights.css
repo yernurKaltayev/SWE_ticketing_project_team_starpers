@@ -224,3 +224,11 @@
   padding: 0;
   list-style: none;
 }
+/* Filters fit on one row with both buttons on a normal laptop width. */
+.insights-filters > .field,
+.insights-filters > div {
+  min-width: min(100%, 9rem);
+}
+.insights-filters > .field:has(input[type="datetime-local"]) {
+  min-width: min(100%, 11.5rem);
+}

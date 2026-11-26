@@ -19,6 +19,7 @@ test("organizer creates a free event, corrects publication, previews, publishes,
 }) => {
   await start(page);
   await login(page);
+  await page.getByRole("button", { name: "Account menu" }).click();
   await page.getByRole("link", { name: "My events", exact: true }).click();
   await page.getByRole("link", { name: "Create event" }).click();
   await page
@@ -38,7 +39,10 @@ test("organizer creates a free event, corrects publication, previews, publishes,
     page.getByRole("heading", { name: "Edit event", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Publish", exact: true }).click();
-  await page.getByRole("button", { name: "Confirm", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Publish", exact: true })
+    .click();
   await expect(page.getByRole("alert")).toContainText("Add a ticket type");
   await page.getByRole("button", { name: "Add ticket type" }).click();
   await page.getByLabel("Ticket name", { exact: true }).fill("Free admission");
@@ -59,18 +63,20 @@ test("organizer creates a free event, corrects publication, previews, publishes,
     .getByRole("link", { name: "Edit event", exact: true })
     .click();
   await page.getByRole("button", { name: "Publish", exact: true }).click();
-  await page.getByRole("button", { name: "Confirm", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Publish", exact: true })
+    .click();
   await expect(
     page.getByRole("button", { name: "Return to draft" }),
   ).toBeVisible();
-  await page
-    .getByRole("link", { name: "Events", exact: true })
-    .click();
+  await page.getByRole("link", { name: "BiletFlow", exact: true }).click();
   await page.getByLabel("Search", { exact: true }).fill("Dias");
   await page.getByRole("button", { name: "Search", exact: true }).click();
   await expect(page).toHaveURL(/q=Dias/);
   await page.getByRole("link", { name: "Demo · Dias free event" }).click();
   await expect(page.getByText("Free admission", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Account menu" }).click();
   await page.getByRole("link", { name: "My events", exact: true }).click();
   await page.getByRole("link", { name: "Demo · Dias free event" }).click();
   await page

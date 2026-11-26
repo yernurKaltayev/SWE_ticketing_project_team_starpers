@@ -413,9 +413,20 @@ label {
 .form-error > div {
   min-width: 0;
 }
+/* Focus is moved here only so screen readers announce it; no ring needed. */
 .form-error:focus {
-  outline: 2px solid var(--color-danger);
-  outline-offset: 2px;
+  outline: none;
+}
+.form-error {
+  flex-wrap: wrap;
+}
+.form-error > p,
+.form-error > ul,
+.form-error > button {
+  flex-basis: 100%;
+}
+.form-error > button {
+  flex-basis: auto;
 }
 .form-error p {
   font-weight: 500;
@@ -561,17 +572,42 @@ th[scope="row"] {
   font-weight: 650;
 }
 
+/* The global margin reset removes the UA "margin: auto" that centres modal dialogs. */
 dialog {
+  margin: auto;
+  width: min(28rem, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
   color: var(--color-ink);
   background: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: 16px;
   padding: 1.5rem;
-  max-width: min(92vw, 520px);
-  box-shadow: var(--shadow-raise);
+  box-shadow: 0 24px 64px rgb(15 23 42 / 0.24);
+}
+dialog[open] {
+  animation: dialog-in 180ms var(--ease-out);
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
 }
 dialog h2:first-child {
-  margin-top: 0;
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+dialog p {
+  color: var(--color-muted);
+}
+dialog .controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
 }
 dialog::backdrop {
   background: rgb(20 36 58 / 0.42);
@@ -788,8 +824,15 @@ main:focus {
 .workspace-main {
   min-width: 0;
 }
-.workspace-nav-toggle {
+.workspace-nav-toggle,
+.workspace-backdrop {
   display: none;
+}
+.header-menu-slot {
+  display: contents;
+}
+.workspace-drawer {
+  display: contents;
 }
 
 /* ---------- Auth ---------- */
@@ -1262,32 +1305,59 @@ main:focus {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
   }
+  /* Narrow screens: a compact button opens the sections as a sheet from the left. */
   .workspace-nav {
     position: static;
-    gap: 1rem;
-    padding: 0.5rem;
+    display: block;
+    padding: 0;
+    background: none;
+    border: 0;
   }
-  .workspace-nav-toggle {
-    display: flex;
-    width: 100%;
-    justify-content: flex-start;
-    gap: 0.6rem;
+  .site-header .workspace-nav-toggle {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    min-height: 40px;
+    margin-left: -0.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: var(--color-ink);
+    box-shadow: none;
   }
-  .workspace-nav-toggle span {
-    flex: 1;
-    text-align: left;
+  .site-header .workspace-nav-toggle:hover {
+    background: var(--color-canvas);
   }
-  .workspace-nav-toggle svg:last-child {
-    transition: transform 160ms var(--ease-out);
+  .workspace-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    background: rgb(15 23 42 / 0.4);
+    animation: sheet-fade 180ms var(--ease-out);
   }
-  .workspace-nav[data-open] .workspace-nav-toggle svg:last-child {
-    transform: rotate(180deg);
-  }
-  .workspace-nav:not([data-open]) section {
+  .workspace-drawer {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 71;
     display: none;
+    gap: 1.25rem;
+    align-content: start;
+    width: min(20rem, 86vw);
+    padding: 1.25rem 0.75rem calc(1.25rem + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    background: var(--color-surface);
+    border-right: 1px solid var(--color-line);
+    box-shadow: 12px 0 32px rgb(15 23 42 / 0.14);
+    animation: sheet-in 220ms var(--ease-out);
   }
-  .workspace-nav section {
-    padding-inline: 0.25rem;
+  .workspace-nav[data-open] .workspace-backdrop {
+    display: block;
+  }
+  .workspace-nav[data-open] .workspace-drawer {
+    display: grid;
   }
 }
 @media (max-width: 760px) {
@@ -1336,7 +1406,7 @@ main:focus {
       transform 80ms var(--ease-out);
   }
   .page > * {
-    animation: page-in 380ms var(--ease-out) both;
+    animation: page-in 380ms var(--ease-out) backwards;
   }
 }
 @keyframes page-in {
@@ -1972,11 +2042,6 @@ button.link-button:hover {
   }
   .organizer-link {
     display: none !important;
-  }
-}
-@media (min-width: 761px) {
-  .account-panel li:has(a[href="/organizer/events"]) {
-    display: none;
   }
 }
 @media (max-width: 440px) {
@@ -2905,4 +2970,54 @@ button.cover-empty:hover,
 }
 button.danger-text {
   color: var(--color-danger);
+}
+@keyframes sheet-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes sheet-fade {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace-drawer,
+  .workspace-backdrop {
+    animation: none;
+  }
+}
+/* Phones with the organizer menu button: drop the decorative chevrons so the header stays one row. */
+@media (max-width: 440px) {
+  .site-header:has(.workspace-nav-toggle) .city-trigger svg:last-child,
+  .site-header:has(.workspace-nav-toggle) .language-trigger svg:last-child,
+  .site-header:has(.workspace-nav-toggle) .account-trigger svg:last-child {
+    display: none;
+  }
+}
+/* Event sections: the event name under the page title reads the same on every page. */
+.workspace-main :is(h1, .title-row) + p:not([class]) {
+  margin: -0.25rem 0 1.25rem;
+  color: var(--color-muted);
+  font-weight: 600;
+}
+/* Organizer pages laid out as a grid: the gap spaces the blocks, so their own margins
+   would double it. Dialogs keep margin: auto (it centres them). */
+:is(.insights, .operations, .promotions, .support-page, .seating) > :not(dialog) {
+  margin-block: 0;
+}
+:is(.insights, .operations, .promotions, .support-page, .seating) > .back-link {
+  margin-bottom: -0.25rem;
+}
+:is(.insights, .operations, .promotions, .support-page, .seating) > :is(.title-row, h1, header) + .page-subtitle {
+  margin-top: -0.85rem;
+}
+:is(.insights, .operations, .promotions, .support-page, .seating) > .danger-zone {
+  margin-top: 1.5rem;
+}
+.detail-aside > .calendar-actions {
+  margin-block: 0;
+}
+.seating > h2 {
+  margin-top: 0.75rem;
 }

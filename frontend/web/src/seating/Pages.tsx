@@ -104,7 +104,7 @@ function SetupForm({
         <fieldset disabled={busy || !draft} className="seating-row">
           <legend className="visually-hidden">{t.setup}</legend>
           <label>
-            {t.setup}
+            {t.mode}
             <select
               value={assigned ? "assigned" : "general_admission"}
               onChange={(e) => setAssigned(e.target.value === "assigned")}

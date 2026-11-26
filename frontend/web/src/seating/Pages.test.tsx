@@ -74,7 +74,7 @@ it("saves only a layout belonging to the current venue", async () => {
     }),
   );
   await start();
-  const mode = await screen.findByLabelText("Seating setup");
+  const mode = await screen.findByLabelText("Seating type");
   fireEvent.change(mode, { target: { value: "assigned" } });
   const select = screen.getByLabelText("Existing venue layout");
   await screen.findByRole("option", { name: "Demo · Standard hall" });
@@ -123,7 +123,7 @@ it("retains a category after a failed save and supports explicit retry", async (
 });
 it("prevents seating and category changes for published events", async () => {
   await start(false);
-  const mode = await screen.findByLabelText("Seating setup");
+  const mode = await screen.findByLabelText("Seating type");
   expect(mode.matches(":disabled")).toBe(true);
   const category = await screen.findByLabelText(/^Price category · /);
   expect(category.matches(":disabled")).toBe(true);

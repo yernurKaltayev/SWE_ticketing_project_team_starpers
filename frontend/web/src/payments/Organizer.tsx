@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { formatMoney, formatEventDateTime } from "@biletflow/shared";
+import { formatPrice, formatEventDateTime } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
 import { Field, Status } from "../auth/ui";
 import { eventCopy } from "../events/copy";
@@ -451,7 +451,7 @@ export function FinancialsPage({ locale }: { locale: Locale }) {
             ).map(([label, value]) => (
               <div key={label}>
                 <dt>{label}</dt>
-                <dd>{formatMoney(value, locale, query.data.currency)}</dd>
+                <dd>{formatPrice(value, locale, query.data.currency)}</dd>
               </div>
             ))}
           </dl>
@@ -526,7 +526,7 @@ export function PayoutsPage({ locale }: { locale: Locale }) {
                       </td>
                       {[p.gross, p.fees, p.refunds, p.net].map((value, i) => (
                         <td key={i}>
-                          {formatMoney(value, locale, p.currency)}
+                          {formatPrice(value, locale, p.currency)}
                         </td>
                       ))}
                       <td>

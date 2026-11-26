@@ -9,10 +9,7 @@ import { Field, Status } from "../auth/ui";
 import { useSession } from "../auth/session";
 import { eventCopy } from "./copy";
 import { categoryLabel, knownCategories } from "./categories";
-import { zoneLabel } from "@biletflow/shared";
 
-/** Kazakhstan's zones plus UTC; an event saved with another zone keeps it as an option. */
-const eventZones = ["Asia/Almaty", "Asia/Qyzylorda", "Asia/Aqtobe", "Asia/Aqtau", "Asia/Atyrau", "Asia/Oral", "Asia/Qostanay", "UTC"];
 import { toneFor } from "../tone";
 import { useEventRequest, useResource } from "./data";
 import {
@@ -382,17 +379,9 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
                 </option>
               ))}
             </SelectField>
-            <div className="field">
-              <label htmlFor="timezone">{t.timezone}</label>
-              <select id="timezone" name="timezone" defaultValue={zone} required>
-                {[...new Set([zone, ...eventZones])].map((z) => (
-                  <option key={z} value={z}>
-                    {zoneLabel(z, locale)}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
+          {/* Every event is in Kazakhstan (one zone since 2024); existing events keep theirs. */}
+          <input type="hidden" name="timezone" defaultValue={zone} />
           <button>{pending ? t.working : event ? t.saveChanges : t.save}</button>
         </fieldset>
       </form>
@@ -440,7 +429,9 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
             aria-labelledby="publication-title"
             aria-describedby="publication-description"
           >
-            <h2 id="publication-title">{t.confirmTitle}</h2>
+            <h2 id="publication-title">
+              {action ? `${t[action]}?` : t.confirmTitle}
+            </h2>
             <p id="publication-description">
               {action === "publish"
                 ? t.publishHint
@@ -459,9 +450,10 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
               </button>
               <button
                 disabled={pending}
+                className={action === "cancel" ? "danger" : undefined}
                 onClick={() => action && void mutate(action)}
               >
-                {pending ? t.working : t.confirm}
+                {pending ? t.working : action ? t[action] : t.confirm}
               </button>
             </div>
           </dialog>
