@@ -34,6 +34,12 @@ const cityNames: Record<string, Record<Locale, string>> = {
   kostanay: { en: "Kostanay", ru: "Костанай", kk: "Қостанай" },
   taraz: { en: "Taraz", ru: "Тараз", kk: "Тараз" },
   turkistan: { en: "Turkistan", ru: "Туркестан", kk: "Түркістан" },
+  semey: { en: "Semey", ru: "Семей", kk: "Семей" },
+  petropavl: { en: "Petropavl", ru: "Петропавловск", kk: "Петропавл" },
+  kokshetau: { en: "Kokshetau", ru: "Кокшетау", kk: "Көкшетау" },
+  taldykorgan: { en: "Taldykorgan", ru: "Талдыкорган", kk: "Талдықорған" },
+  kyzylorda: { en: "Kyzylorda", ru: "Кызылорда", kk: "Қызылорда" },
+  oral: { en: "Oral", ru: "Уральск", kk: "Орал" },
 };
 const aliases: Record<string, string> = {
   алматы: "almaty",
@@ -43,6 +49,12 @@ const aliases: Record<string, string> = {
   караганда: "karaganda",
   қарағанды: "karaganda",
   oskemen: "ust-kamenogorsk",
+  "усть-каменогорск": "ust-kamenogorsk",
+  uralsk: "oral",
+  уральск: "oral",
+  petropavlovsk: "petropavl",
+  петропавловск: "petropavl",
+  semipalatinsk: "semey",
   өскемен: "ust-kamenogorsk",
 };
 
@@ -64,6 +76,12 @@ const cityCoords: Record<string, [number, number]> = {
   kostanay: [53.214, 63.632],
   taraz: [42.9, 71.367],
   turkistan: [43.297, 68.252],
+  semey: [50.411, 80.227],
+  petropavl: [54.866, 69.135],
+  kokshetau: [53.283, 69.396],
+  taldykorgan: [45.017, 78.373],
+  kyzylorda: [44.848, 65.482],
+  oral: [51.227, 51.387],
 };
 
 function cityKey(city: string) {
@@ -92,4 +110,12 @@ export function nearestCity(cities: string[], lat: number, lng: number): string 
 /** Where to start when location is unavailable: Almaty if listed, else the first city. */
 export function defaultCity(cities: string[]): string | undefined {
   return cities.find((c) => cityKey(c) === "almaty") ?? cities[0];
+}
+
+/** Every city the site offers, as stored on venues (the usual Latin spelling). */
+export const knownCities = Object.values(cityNames).map((names) => names.en);
+
+/** The same city however it is spelled (Almaty / Алматы / almaty). */
+export function sameCity(a: string, b: string) {
+  return cityKey(a) === cityKey(b);
 }
