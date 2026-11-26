@@ -3003,15 +3003,21 @@ button.danger-text {
 }
 /* Organizer pages laid out as a grid: the gap spaces the blocks, so their own margins
    would double it. Dialogs keep margin: auto (it centres them). */
-:is(.insights, .operations, .promotions) > :not(dialog) {
+:is(.insights, .operations, .promotions, .support-page, .seating) > :not(dialog) {
   margin-block: 0;
 }
-:is(.insights, .operations, .promotions) > .back-link {
+:is(.insights, .operations, .promotions, .support-page, .seating) > .back-link {
   margin-bottom: -0.25rem;
 }
-:is(.insights, .operations, .promotions) > :is(.title-row, h1, header) + .page-subtitle {
+:is(.insights, .operations, .promotions, .support-page, .seating) > :is(.title-row, h1, header) + .page-subtitle {
   margin-top: -0.85rem;
 }
-:is(.insights, .operations, .promotions) > .danger-zone {
+:is(.insights, .operations, .promotions, .support-page, .seating) > .danger-zone {
   margin-top: 1.5rem;
+}
+.detail-aside > .calendar-actions {
+  margin-block: 0;
+}
+.seating > h2 {
+  margin-top: 0.75rem;
 }
