@@ -3021,3 +3021,38 @@ button.danger-text {
 .seating > h2 {
   margin-top: 0.75rem;
 }
+
+/* 404 page: centred in the free space under the header. */
+.not-found {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  text-align: center;
+  max-width: 32rem;
+  margin: clamp(3rem, 12vh, 8rem) auto;
+}
+.not-found-code {
+  margin: 0;
+  font-size: clamp(4.5rem, 14vw, 7.5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 45%, #a78bfa));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.not-found h1 {
+  margin: 0;
+}
+.not-found > p:not(.not-found-code) {
+  margin: 0;
+  color: var(--color-muted);
+}
+.not-found-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
