@@ -15,12 +15,16 @@ export function formatMoney(
   const major = absolute / 100n;
   const signedMajor = minor < 0n ? (major === 0n ? -0 : -major) : major;
   const fraction = String(absolute % 100n).padStart(2, "0");
-  return new Intl.NumberFormat(intlLocales[locale], {
+  const formatter = new Intl.NumberFormat(intlLocales[locale], {
     style: "currency",
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })
+  });
+  // Hermes on iOS (React Native) has no NumberFormat.formatToParts. Two decimals of tiyn/100 are
+  // exact for every real price (doubles hold them to well beyond 10^12 tenge).
+  if (typeof formatter.formatToParts !== "function") return formatter.format(amountTiyn / 100);
+  return formatter
     .formatToParts(signedMajor)
     .map((part) => (part.type === "fraction" ? fraction : part.value))
     .join("");
