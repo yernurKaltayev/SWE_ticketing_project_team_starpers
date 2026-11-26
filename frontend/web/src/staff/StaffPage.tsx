@@ -116,6 +116,7 @@ function StaffContent({ eventId, locale }: { eventId: string; locale: Locale }) 
           label={t.email}
           name="staff-email"
           type="email"
+          spellCheck={false}
           autoComplete="off"
           value={email}
           hint={t.emailHint}

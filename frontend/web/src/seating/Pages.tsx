@@ -106,6 +106,7 @@ function SetupForm({
           <label>
             {t.mode}
             <select
+              name="seating_mode"
               value={assigned ? "assigned" : "general_admission"}
               onChange={(e) => setAssigned(e.target.value === "assigned")}
             >
@@ -117,6 +118,7 @@ function SetupForm({
             <label>
               {t.layout}
               <select
+                name="layout_id"
                 required
                 value={layout}
                 onChange={(e) => setLayout(e.target.value)}
@@ -211,6 +213,7 @@ function CategoryForm({
         <label>
           {ticket.name}
           <input
+            name="price_category"
             value={value}
             maxLength={120}
             placeholder="standard, vip…"

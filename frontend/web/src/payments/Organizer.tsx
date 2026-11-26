@@ -126,6 +126,7 @@ function ActivationContent({
                       <label className="field">
                         {t.select}
                         <select
+                          name="payout_account_id"
                           value={selected || data.payout_account_id || ""}
                           required
                           disabled={busy}

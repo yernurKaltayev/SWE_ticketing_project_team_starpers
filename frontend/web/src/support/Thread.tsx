@@ -296,6 +296,7 @@ function Content({ id, locale }: { id: string; locale: Locale }) {
           >
             <label htmlFor="reply-body">{t.message}</label>
             <textarea
+              name="body"
               id="reply-body"
               maxLength={5000}
               required
@@ -357,6 +358,7 @@ function Metadata({
         <div>
           <label htmlFor="manage-status">{t.status}</label>
           <select
+            name="status"
             id="manage-status"
             value={status}
             onChange={(e) => setStatus(e.target.value as CaseStatus)}
@@ -371,6 +373,7 @@ function Metadata({
         <div>
           <label htmlFor="manage-assignee">{t.chooseAssignee}</label>
           <select
+            name="assignee_id"
             id="manage-assignee"
             value={assignee}
             onChange={(e) => setAssignee(e.target.value)}

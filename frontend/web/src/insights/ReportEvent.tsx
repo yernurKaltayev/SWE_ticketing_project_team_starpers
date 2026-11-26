@@ -41,7 +41,7 @@ export function ReportEvent({
       <label htmlFor="event-report-reason">
         {t("reason")}
       </label>
-      <textarea id="event-report-reason" maxLength={2000} value={reason} disabled={write.busy || write.saved || write.uncertain} onChange={e => setReason(e.target.value)} />
+      <textarea name="reason" id="event-report-reason" maxLength={2000} value={reason} disabled={write.busy || write.saved || write.uncertain} onChange={e => setReason(e.target.value)} />
       <button disabled={!reason.trim() || write.busy || write.saved || write.uncertain}>
         {t(write.busy ? "working" : "report")}
       </button>

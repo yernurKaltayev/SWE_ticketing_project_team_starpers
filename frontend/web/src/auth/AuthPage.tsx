@@ -287,6 +287,7 @@ export function AuthPage({ kind, locale }: { kind: AuthKind; locale: Locale }) {
                 label={t.email}
                 name="email"
                 type="email"
+                spellCheck={false}
                 inputMode="email"
                 autoComplete="email"
                 required

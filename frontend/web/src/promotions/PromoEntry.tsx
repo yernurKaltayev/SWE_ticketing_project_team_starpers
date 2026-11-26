@@ -30,6 +30,7 @@ export function PromoEntry({
           id="promo-code"
           name="promo-code"
           autoComplete="off"
+          spellCheck={false}
           maxLength={64}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

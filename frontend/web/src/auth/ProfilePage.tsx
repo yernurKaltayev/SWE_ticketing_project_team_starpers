@@ -285,6 +285,7 @@ function OrganizerForm({
             label={t.contactEmail}
             name="contact_email"
             type="email"
+            spellCheck={false}
             autoComplete="email"
             required
             value={values.contact_email}

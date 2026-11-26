@@ -59,7 +59,7 @@ export default function Admin({
   </h1>
   <div className="field admin-section-select">
     <label htmlFor="admin-section" className="visually-hidden">{t("admin")}</label>
-    <select id="admin-section" value={valid ? section : ""} onChange={e => navigate(`/admin/${e.target.value}`)}>
+    <select name="section" id="admin-section" value={valid ? section : ""} onChange={e => navigate(`/admin/${e.target.value}`)}>
       {all.map(s => <option key={s} value={s}>
         {t(s)}
       </option>)}

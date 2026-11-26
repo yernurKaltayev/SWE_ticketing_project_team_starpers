@@ -17,6 +17,8 @@ import {
   MaskIcon,
   MicIcon,
   MusicIcon,
+  PauseIcon,
+  PlayIcon,
   SparkleIcon,
 } from "../icons";
 import { categoryLabel, knownCategories } from "./categories";
@@ -100,16 +102,19 @@ export function FeaturedCarousel({
   ].slice(0, 5);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  // Hover/focus only pause while the pointer or focus is inside; touch users
+  // need an explicit control to stop the motion (WCAG 2.2.2).
+  const [stopped, setStopped] = useState(false);
   const [drag, setDrag] = useState<{ x: number; dx: number } | null>(null);
   const moved = useRef(false);
   const count = slides.length;
   const active = count ? index % count : 0;
   useEffect(() => {
-    if (count < 2 || paused || drag) return;
+    if (count < 2 || paused || stopped || drag) return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => setIndex((i) => (i + 1) % count), 6000);
     return () => window.clearInterval(timer);
-  }, [count, paused, drag]);
+  }, [count, paused, stopped, drag]);
   if (!count) return null;
   const go = (next: number) => setIndex((next + count) % count);
   return (
@@ -192,6 +197,15 @@ export function FeaturedCarousel({
             <ArrowRightIcon size={20} />
           </button>
           <div className="featured-dots">
+            <button
+              type="button"
+              className="featured-toggle"
+              aria-label={stopped ? d.playSlides : d.pauseSlides}
+              aria-pressed={stopped}
+              onClick={() => setStopped((v) => !v)}
+            >
+              {stopped ? <PlayIcon size={14} /> : <PauseIcon size={14} />}
+            </button>
             {slides.map((event, i) => (
               <button
                 key={event.id}

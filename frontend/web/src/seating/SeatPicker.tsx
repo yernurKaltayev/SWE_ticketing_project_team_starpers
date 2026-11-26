@@ -144,6 +144,7 @@ export function SeatPicker({
         <label>
           {t.ticket}
           <select
+            name="ticket_type_id"
             value={offerId}
             disabled={busy || !!hold || controller.uncertain}
             onChange={(e) => {
