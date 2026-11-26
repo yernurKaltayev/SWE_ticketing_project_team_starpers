@@ -391,3 +391,99 @@
   font-size: 1.15rem;
   font-weight: 650;
 }
+
+/* Order page: summary card (event, number, totals) beside payment and tickets. */
+.order-page {
+  max-width: 1100px;
+}
+.order-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+  gap: clamp(1.25rem, 3vw, 2rem);
+  align-items: start;
+  margin-top: 1.25rem;
+}
+.order-summary {
+  grid-column: 2;
+  grid-row: 1;
+  position: sticky;
+  top: calc(var(--header-offset) + 1.25rem);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+.order-main {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+}
+.order-main > :first-child {
+  margin-top: 0;
+}
+.order-event-card {
+  padding: 1.1rem 1.25rem 0;
+}
+.order-event-cover {
+  display: block;
+  width: calc(100% + 2.5rem);
+  margin: -1.1rem -1.25rem 1rem;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+.order-event-card .order-event {
+  margin: 0 0 0.4rem;
+  font-size: 1.2rem;
+}
+.order-event-card .order-event a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.order-event-card .order-event a:hover {
+  color: var(--color-primary);
+}
+.order-event-card p {
+  margin: 0.15rem 0 0;
+  color: var(--color-muted);
+}
+.order-meta {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 1.25rem 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-line);
+}
+.order-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.order-summary .commerce-totals {
+  margin: 1rem 0 0;
+  border: 0;
+  border-top: 1px solid var(--color-line);
+  border-radius: 0;
+  background: none;
+}
+.order-summary > :last-child:not(.commerce-totals) {
+  padding-bottom: 1.25rem;
+}
+@media (max-width: 860px) {
+  .order-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .order-summary,
+  .order-main {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .order-summary {
+    position: static;
+  }
+}
+.order-main .notice {
+  flex-wrap: wrap;
+}
+.order-main .notice p {
+  flex: 1 1 14rem;
+}
