@@ -3056,3 +3056,10 @@ button.danger-text {
   gap: 0.75rem;
   margin-top: 0.75rem;
 }
+
+/* Narrow account pages (tickets, orders, support) sit in the middle of the
+   screen instead of leaving a wide empty band on the right. Pages inside the
+   organizer workspace keep their left alignment next to the sidebar. */
+:is(.reading-page, .support-page, .order-page):not(.workspace-main *) {
+  margin-inline: auto;
+}
