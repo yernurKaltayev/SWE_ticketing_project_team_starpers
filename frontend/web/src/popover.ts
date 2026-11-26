@@ -8,10 +8,14 @@ export function usePopover() {
   const open = openOn === location.pathname;
   const root = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
+  /** Content rendered elsewhere (a portal) that still counts as "inside". */
+  const panel = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
     const onPointer = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) setOpenOn(null);
+      const target = event.target as Node;
+      if (!root.current?.contains(target) && !panel.current?.contains(target))
+        setOpenOn(null);
     };
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -31,5 +35,6 @@ export function usePopover() {
     setOpen: (value: boolean) => setOpenOn(value ? location.pathname : null),
     root,
     button,
+    panel,
   };
 }

@@ -1630,67 +1630,124 @@ nav.controls:has(> a[aria-current]) > a[aria-current] {
   font-weight: 750;
   letter-spacing: 0.02em;
 }
+/* Profile menu: a sheet that slides in from the right edge over a dimmed page. */
+.account-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+.account-drawer[hidden] {
+  display: none;
+}
+.account-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(15 23 42 / 0.4);
+  animation: drawer-fade 180ms var(--ease-out);
+}
 .account-panel {
   position: absolute;
+  top: 0;
   right: 0;
-  top: calc(100% + 0.5rem);
-  z-index: 30;
-  width: max-content;
-  min-width: 15rem;
-  max-width: min(20rem, 90vw);
-  padding: 0.4rem;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(22rem, 88vw);
+  padding: 1rem 0.75rem calc(1rem + env(safe-area-inset-bottom));
+  overflow-y: auto;
   background: var(--color-surface);
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-raise);
+  border-left: 1px solid var(--color-line);
+  box-shadow: -12px 0 32px rgb(15 23 42 / 0.12);
+  animation: drawer-in 220ms var(--ease-out);
 }
-.account-panel[hidden] {
-  display: none;
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes drawer-fade {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-panel,
+  .account-backdrop {
+    animation: none;
+  }
 }
 .account-identity {
   display: grid;
-  gap: 0.1rem;
-  padding: 0.55rem 0.7rem 0.65rem;
-  margin-bottom: 0.3rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.5rem 1rem;
+  margin-bottom: 0.5rem;
   border-bottom: 1px solid var(--color-line);
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
 }
-.account-identity span {
+.account-identity .avatar {
+  width: 44px;
+  height: 44px;
+  font-size: 0.9rem;
+}
+.account-identity > div {
+  display: grid;
+  gap: 0.1rem;
+}
+.account-identity > div span {
   color: var(--color-muted);
   font-size: 0.8125rem;
+}
+button.account-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--color-muted);
+  box-shadow: none;
+}
+button.account-close:hover {
+  background: var(--color-canvas);
+  color: var(--color-ink);
 }
 .account-panel ul {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.account-nav .account-panel a,
-.account-nav .account-logout {
+.account-panel a,
+.account-panel .account-logout {
   display: flex;
   justify-content: flex-start;
   gap: 0.65rem;
   width: 100%;
-  min-height: 40px;
-  padding: 0 0.7rem;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 0.75rem;
   border: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   background: none;
   color: var(--color-ink);
-  font-size: 0.9rem;
+  font-size: 0.975rem;
+  text-decoration: none;
   font-weight: 550;
   box-shadow: none;
 }
-.account-nav .account-panel a:hover,
-.account-nav .account-logout:hover {
+.account-panel a:hover,
+.account-panel .account-logout:hover {
   background: var(--color-canvas);
 }
-.account-nav .account-panel a[aria-current="page"] {
+.account-panel a[aria-current="page"] {
+  background: var(--color-primary-soft);
   color: var(--color-primary);
 }
-.account-nav .account-logout {
-  margin-top: 0.3rem;
-  border-top: 1px solid var(--color-line);
-  border-radius: 0 0 8px 8px;
+.account-panel .account-logout {
+  margin-top: auto;
   color: var(--color-danger);
 }
 .notice-dismiss {
@@ -2219,13 +2276,15 @@ button.language-trigger[aria-expanded="true"] {
   justify-content: space-between;
   gap: 1rem;
   width: 100%;
-  min-height: 40px;
-  padding: 0 0.7rem;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 0.75rem;
   border: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   background: none;
   color: var(--color-ink);
-  font-size: 0.9rem;
+  font-size: 0.975rem;
+  text-decoration: none;
   font-weight: 550;
   box-shadow: none;
 }
