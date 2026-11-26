@@ -97,7 +97,12 @@ function Compose({ locale, context }: { locale: Locale; context: Context }) {
     <section className="support-page">
       <BackLink to="/support">{t.back}</BackLink>
       <h1>{t.newCase}</h1>
-      <ContextDetails context={context} t={t} />
+      <div className="support-new-layout">
+      <aside className="support-new-aside">
+        <ContextDetails context={context} t={t} own />
+        <p className="support-new-hint">{t.composeHint}</p>
+      </aside>
+      <div className="support-new-main">
       <div tabIndex={-1} ref={ref}>
         {invalid && <p role="alert">{t.invalid}</p>}
         <SupportError error={error} t={t} />
@@ -180,6 +185,8 @@ function Compose({ locale, context }: { locale: Locale; context: Context }) {
           </button>
         </fieldset>
       </form>
+      </div>
+      </div>
     </section>
   );
 }

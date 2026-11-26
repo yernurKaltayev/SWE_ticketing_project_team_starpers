@@ -487,3 +487,34 @@
 .order-main .notice p {
   flex: 1 1 14rem;
 }
+
+/* My tickets: a date tile in front of each ticket. */
+.commerce-list li.ticket-row {
+  align-items: center;
+}
+.commerce-list li.ticket-row > div:nth-child(2) {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+.date-tile {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  flex: none;
+  width: 3.5rem;
+  height: 3.75rem;
+  border-radius: 12px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  line-height: 1.05;
+}
+.date-tile strong {
+  font-size: 1.4rem;
+  font-weight: 750;
+}
+.date-tile span {
+  font-size: 0.75rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
