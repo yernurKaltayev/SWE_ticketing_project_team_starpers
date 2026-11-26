@@ -185,6 +185,8 @@ export function Image({ src, title }: { src: string; title: string }) {
       className="event-image"
       src={src}
       alt={title}
+      width={1600}
+      height={900}
       loading="lazy"
       referrerPolicy="no-referrer"
       onError={() => setHidden()}

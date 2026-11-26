@@ -68,6 +68,17 @@ html {
   scrollbar-color: #c3ccd9 transparent;
   scroll-padding-top: calc(var(--header-offset) + 1rem);
 }
+/* No double-tap zoom delay on controls; the tap flash is replaced by our own :active/:hover states. */
+a,
+button,
+input,
+select,
+textarea,
+label,
+summary {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
 
 /* ---------- Typography ---------- */
 a {
@@ -579,6 +590,7 @@ dialog {
   max-width: calc(100vw - 2rem);
   max-height: calc(100dvh - 2rem);
   overflow: auto;
+  overscroll-behavior: contain;
   color: var(--color-ink);
   background: var(--color-surface);
   border: 1px solid var(--color-line);
@@ -1118,6 +1130,7 @@ main:focus {
 .event-image {
   display: block;
   width: 100%;
+  height: auto;
   max-height: 320px;
   object-fit: cover;
   border-radius: 10px;
@@ -2688,6 +2701,7 @@ button.featured-arrow:hover {
   right: 1.5rem;
   bottom: 1.25rem;
   display: flex;
+  align-items: center;
   gap: 0.4rem;
 }
 .featured-dots button {
@@ -2703,6 +2717,19 @@ button.featured-arrow:hover {
 }
 .featured-dots button[aria-current="true"] {
   width: 22px;
+  background: #fff;
+}
+.featured-dots button.featured-toggle {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 0.2rem;
+  color: var(--color-ink);
+  background: rgb(255 255 255 / 0.85);
+  transition: background-color 140ms var(--ease-out);
+}
+.featured-dots button.featured-toggle:hover {
   background: #fff;
 }
 

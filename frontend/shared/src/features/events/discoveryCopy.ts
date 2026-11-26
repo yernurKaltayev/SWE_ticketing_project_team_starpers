@@ -27,6 +27,8 @@ const en = {
   next: "Next",
   details: "Details",
   featured: "Featured events",
+  pauseSlides: "Pause slideshow",
+  playSlides: "Play slideshow",
   categories: "Categories",
   filters: "Filters",
 };
@@ -59,6 +61,8 @@ const ru: Copy = {
   next: "Вперёд",
   details: "Подробнее",
   featured: "Избранные мероприятия",
+  pauseSlides: "Остановить показ",
+  playSlides: "Продолжить показ",
   categories: "Категории",
   filters: "Фильтры",
 };
@@ -90,6 +94,8 @@ const kk: Copy = {
   next: "Алға",
   details: "Толығырақ",
   featured: "Таңдаулы іс-шаралар",
+  pauseSlides: "Көрсетуді тоқтату",
+  playSlides: "Көрсетуді жалғастыру",
   categories: "Санаттар",
   filters: "Сүзгілер",
 };

@@ -160,6 +160,7 @@ function Compose({ locale, context }: { locale: Locale; context: Context }) {
           />
           <label htmlFor="support-category">{t.category}</label>
           <select
+            name="category"
             id="support-category"
             value={draft.category}
             onChange={(e) =>
@@ -174,6 +175,7 @@ function Compose({ locale, context }: { locale: Locale; context: Context }) {
           </select>
           <label htmlFor="support-message">{t.message}</label>
           <textarea
+            name="message"
             id="support-message"
             maxLength={5000}
             required

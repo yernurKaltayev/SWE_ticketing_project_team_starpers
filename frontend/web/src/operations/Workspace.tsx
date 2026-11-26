@@ -781,6 +781,7 @@ function Content({ locale, eventId }: { locale: Locale; eventId: string }) {
           <label>
             {t.reason}
             <textarea
+              name="reason"
               ref={reasonRef}
               aria-label={t.reason}
               maxLength={500}

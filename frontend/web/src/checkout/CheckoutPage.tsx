@@ -656,6 +656,7 @@ function CheckoutForm({
                       name={`attendee-email-${i}`}
                       required
                       type="email"
+                      spellCheck={false}
                       maxLength={254}
                       error={fields[`attendee-email-${i}`]}
                       value={a.email}
