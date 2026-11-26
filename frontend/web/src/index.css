@@ -3097,3 +3097,22 @@ button.danger-text {
 :is(.reading-page, .support-page, .order-page):not(.workspace-main *) {
   margin-inline: auto;
 }
+
+/* Main banner: close to the 16:9 covers organizers upload, so the picture is not
+   cropped to a thin strip. Height is capped so search and dates stay near the fold. */
+.featured {
+  height: auto;
+  aspect-ratio: 21 / 9;
+  max-height: min(72vh, 680px);
+  min-height: 240px;
+}
+.featured-slide.has-image {
+  background-position: center 30%;
+}
+@media (max-width: 760px) {
+  .featured {
+    height: auto;
+    aspect-ratio: 16 / 10;
+    min-height: 200px;
+  }
+}

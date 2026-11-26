@@ -9,6 +9,7 @@ const labels = {
   concert: { en: "Concert", ru: "Концерт", kk: "Концерт" },
   festival: { en: "Festival", ru: "Фестиваль", kk: "Фестиваль" },
   theatre: { en: "Theatre", ru: "Театр", kk: "Театр" },
+  cinema: { en: "Cinema", ru: "Кино", kk: "Кино" },
   sport: { en: "Sport", ru: "Спорт", kk: "Спорт" },
   conference: { en: "Conference", ru: "Конференция", kk: "Конференция" },
   meetup: { en: "Meetup", ru: "Митап", kk: "Митап" },
