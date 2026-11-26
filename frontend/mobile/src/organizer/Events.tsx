@@ -14,6 +14,7 @@ import { paymentCopy } from "@biletflow/shared/features/payments/copy";
 import { staffCopy } from "@biletflow/shared/features/staff/copy";
 import { promoCopy } from "@biletflow/shared/features/promotions/copy";
 import { label } from "@biletflow/shared/features/insights/copy";
+import { supportCopy } from "@biletflow/shared/features/support/copy";
 import { allEvents, lifecycle, lifecycles } from "@biletflow/shared/features/insights/model";
 import { AuthField, useDiscardChanges } from "../auth/Fields";
 import { Read, Failure, request, useResource } from "../features/resource";
@@ -111,7 +112,7 @@ function Editor({ event, locale, open }: OrganizerProps & { event?: Event }) {
   const [problem, setProblem] = useState("");
   const [confirm, setConfirm] = useState<"publish" | "unpublish" | null>(null);
   const venues = useResource("/api/v1/venues?limit=100&offset=0", parseVenues);
-  const write = useWrite(`event-editor:${event?.id ?? "new"}`);
+  const write = useWrite(`event-editor:${current?.id ?? "new"}`);
   const images = useWrite(`cover:${current?.id}`);
   const discard = useDiscardChanges(dirty, locale);
   const update = <T,>(set: (value: T) => void) => (value: T) => { set(value); setDirty(true); setProblem(""); };
@@ -158,7 +159,7 @@ function Editor({ event, locale, open }: OrganizerProps & { event?: Event }) {
         body.layout_id = current.layout_id ?? null;
       }
       return parseEvent(await request(path, { method: current ? "PATCH" : "POST", body }));
-    }).then((result) => {
+    }, Boolean(current) && !(venueId === "new" && !match)).then((result) => {
       if (!result) return;
       saved(result);
       setDirty(false);
@@ -172,6 +173,8 @@ function Editor({ event, locale, open }: OrganizerProps & { event?: Event }) {
     {problem ? <Callout tone="warning" alert>{problem}</Callout> : null}
     <Failure error={write.error ?? images.error} locale={locale} />
     {write.uncertain || images.uncertain ? <Callout tone="warning">{label(locale, "unknown")}</Callout> : null}
+    {write.uncertain ? <Action title={supportCopy[locale].checked} onPress={write.clearUncertain} /> : null}
+    {images.uncertain ? <Action title={supportCopy[locale].checked} onPress={images.clearUncertain} /> : null}
     {step === "details" ? <>
       <AuthField label={t.title} value={title} onChangeText={update(setTitle)} editable={!blocked} maxLength={200} />
       <AuthField label={t.description} value={description} onChangeText={update(setDescription)} editable={!blocked} multiline maxLength={10000} />
@@ -237,7 +240,7 @@ function Editor({ event, locale, open }: OrganizerProps & { event?: Event }) {
       confirmLabel={t.confirm} cancelLabel={kitCopy[locale].cancel} busy={write.busy}
       onCancel={() => setConfirm(null)} onConfirm={() => {
         if (!confirm) return;
-        void write.run(async () => parseEvent(await request(`${path}/${confirm}`, { method: "POST" }))).then((result) => {
+        void write.run(async () => parseEvent(await request(`${path}/${confirm}`, { method: "POST" })), true).then((result) => {
           if (result) saved(result);
           setConfirm(null);
         });
@@ -260,6 +263,7 @@ function Duplicate({ id, locale, open }: OrganizerProps & { id: string }) {
   const write = useWrite(`duplicate:${id}`);
   return <>
     <Action title={t.duplicate} onPress={() => setConfirm(true)} disabled={write.uncertain} />
+    {write.uncertain ? <Action title={supportCopy[locale].checked} onPress={write.clearUncertain} /> : null}
     <Failure error={write.error} locale={locale} />
     {write.uncertain ? <Muted>{label(locale, "unknown")}</Muted> : null}
     <ConfirmSheet visible={confirm} title={t.duplicate} confirmLabel={t.confirm} cancelLabel={kitCopy[locale].cancel}
@@ -311,6 +315,7 @@ function TicketForm({ ticket, path, locale, done }: { ticket?: Ticket; path: str
     {error ? <Muted>{t.invalid}</Muted> : null}
     <Failure error={write.error} locale={locale} />
     {write.uncertain ? <Muted>{label(locale, "unknown")}</Muted> : null}
+    {write.uncertain ? <Action title={supportCopy[locale].checked} onPress={write.clearUncertain} /> : null}
     <Action title={t.saveTicket} variant="primary" busy={write.busy} disabled={write.busy || write.uncertain}
       onPress={() => {
         if (price === null) { setError(true); return; }
@@ -323,7 +328,7 @@ function TicketForm({ ticket, path, locale, done }: { ticket?: Ticket; path: str
         if (ticket) body.price_category = ticket.price_category ?? null;
         void write.run(() => request(ticket ? `${path}/${encodeURIComponent(ticket.id)}` : path, {
           method: ticket ? "PATCH" : "POST", body,
-        })).then((result) => { if (result) done(); });
+        }), Boolean(ticket)).then((result) => { if (result) done(); });
       }} />
     <Action title={t.close} onPress={done} disabled={write.busy} />
     {discard}

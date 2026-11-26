@@ -17,6 +17,7 @@ import { Select } from "../kit/Select";
 import { Action, Body, Card, Heading, Muted, Pill } from "../ui";
 import { eventRoot } from "./Events";
 import type { OrganizerProps } from "./Events";
+import { editingAfterSave } from "./campaign-editing";
 
 export function Campaigns({ id, locale, open }: OrganizerProps & { id: string }) {
   const t = promoCopy[locale];
@@ -34,7 +35,7 @@ export function Campaigns({ id, locale, open }: OrganizerProps & { id: string })
         method: campaign ? "PATCH" : "POST", body,
       }));
       if (result.event_id !== id) throw new Error("wrong event");
-      setEditing(null);
+      setEditing((current) => editingAfterSave(current, campaign));
       await items.refetch();
     }, Boolean(campaign));
   }

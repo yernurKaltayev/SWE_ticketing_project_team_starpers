@@ -20,7 +20,7 @@ import {
 } from "./data";
 import { parseVenue } from "./model";
 import type { Order } from "./model";
-import { PaymentPanel } from "../payments/PaymentPanel";
+import { DemoCardPayment } from "../payments/DemoCardPayment";
 import { paymentCopy } from "../payments/copy";
 import "./checkout.css";
 import { BackLink } from "../BackLink";
@@ -200,19 +200,26 @@ function OrderContent({
             <Status>{paymentCopy[locale].pending}</Status>
           )}
           {order.status === "pending" && order.total > 0 && (
-            <PaymentPanel
+            <DemoCardPayment
+              orderId={orderId}
+              total={order.total}
               locale={locale}
-              kind="ticket"
-              amount={order.total}
-              startPath={`${orderPath(orderId)}/payments`}
             />
+          )}
+          {order.status === "paid" && (
+            <div className="notice" role="status">
+              <p>{paymentCopy[locale].paySuccess}</p>
+              <Link className="action-link ghost" to="/account/tickets">
+                {paymentCopy[locale].myTickets}
+              </Link>
+            </div>
           )}
           {["failed", "expired", "cancelled"].includes(order.status) && (
             <p>
               <Link className="action-link ghost" to="/events">{t.back}</Link>
             </p>
           )}
-          {/* A pending paid order has the payment panel's own refresh. */}
+          {/* A pending paid order shows the Pay form, which refreshes the order itself. */}
           {poll && polls >= 10 && !(order.status === "pending" && order.total > 0) && (
             <p role="status">{t.pollEnded}</p>
           )}

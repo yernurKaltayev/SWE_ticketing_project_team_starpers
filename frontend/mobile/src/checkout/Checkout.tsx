@@ -4,6 +4,7 @@ import type { Locale } from "@biletflow/shared";
 import { commerceCopy } from "@biletflow/shared/features/checkout/copy";
 import { makeOrderBody, parseAvailability, parseEvent, registrationOpen } from "@biletflow/shared/features/checkout/model";
 import type { Attendee, Availability, Event, OrderBody } from "@biletflow/shared/features/checkout/model";
+import { paidSalesOpen } from "@biletflow/shared/features/events/model";
 import { paymentCopy } from "@biletflow/shared/features/payments/copy";
 import { promoCopy, reasonText } from "@biletflow/shared/features/promotions/copy";
 import { codeValue, selectedCart, validatePromo } from "@biletflow/shared/features/promotions/model";
@@ -111,7 +112,7 @@ function CheckoutForm({ id, event, availability, locale, search, open, reload }:
     })) : current.choices;
     const draft = makeOrderBody(id, check, quantities,
       attendees.length ? attendees : Array.from({ length: cart?.ids.length ?? 0 }, (_, i) => defaultAttendee(i)),
-      currentEvent.paid_sales_status === "active");
+      paidSalesOpen(currentEvent));
     return {
       ...draft,
       ...(seat ? { items: seat.items, hold_ids: seat.holdIds } : {}),
@@ -220,7 +221,7 @@ function CheckoutForm({ id, event, availability, locale, search, open, reload }:
       </> : <>
         <Heading>{t.select}</Heading>
         {choices.filter((choice) => choice.open && choice.available > 0 &&
-          (choice.free || (event.paid_sales_status === "active" && choice.price !== undefined))).map((choice) => (
+          (choice.free || (paidSalesOpen(event) && choice.price !== undefined))).map((choice) => (
           <Card key={choice.id}>
             <Heading>{choice.name}</Heading>
             <Muted>{choice.free ? t.free : formatPrice(choice.price ?? 0, locale)}</Muted>

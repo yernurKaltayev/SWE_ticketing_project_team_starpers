@@ -16,7 +16,7 @@ import { api } from "../session";
 import { color, radius } from "../theme";
 import { Action, Card, Heading, Input, Muted, Pill, Title } from "../ui";
 import { webOrigin } from "../public-origin";
-import { discoveryFilters } from "./discovery-filters";
+import { discoveryFilters, withSheetValues } from "./discovery-filters";
 import type { DiscoveryParams } from "./discovery-filters";
 import { DiscoveryFilterSheet } from "./DiscoveryFilterSheet";
 
@@ -131,7 +131,7 @@ export function Discovery({ locale, initial, onOpen }: {
         <DiscoveryFilterSheet filters={filters} cities={cities} locale={locale}
           onClose={() => setShowFilters(false)}
           onApply={(values) => {
-            setFilters(discoveryFilters({ ...values, q: search }));
+            setFilters((current) => withSheetValues(current, values));
             setShowFilters(false);
           }} />
       ) : null}
