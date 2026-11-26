@@ -735,3 +735,21 @@
 .checkout-layout:has(> .checkout-state) > .checkout-context {
   position: static;
 }
+
+/* Small caption above an order or ticket number. */
+.order-meta-label {
+  display: block;
+  margin-bottom: -0.3rem;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ticket-number-line {
+  display: grid;
+  gap: 0.35rem;
+}
+.ticket-number-line .order-meta-label {
+  margin: 0;
+}

@@ -100,7 +100,10 @@ export default function Tickets({ locale }: { locale: Locale }) {
                     </Link>
                   )}
                   <p>
-                    {ticket.ticket_type} · {ticket.attendee_name} ·{" "}
+                    {ticket.ticket_type} · {ticket.attendee_name}
+                  </p>
+                  <p>
+                    {t.ticketNumber}:{" "}
                     <span className="commerce-identifier">
                       {ticket.ticket_number}
                     </span>
@@ -253,7 +256,10 @@ function TicketContent({
       {ticket && (
         <div className="checkout-layout ticket-detail">
           <div>
-            <p className="commerce-identifier">{ticket.ticket_number}</p>
+            <p className="ticket-number-line">
+              <span className="order-meta-label">{t.ticketNumber}</span>
+              <span className="commerce-identifier">{ticket.ticket_number}</span>
+            </p>
             <CommerceStatus value={ticket.status} t={t} />
             <CommerceError
               error={event.error}

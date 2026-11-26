@@ -22,6 +22,7 @@ export function Orders({ locale, open }: Props) {
   const resource = useResource(path, (value) => parsePage(value, parseOrder), { key: queryKeys.commerce(user?.id, path) });
   return <RecordPage title={t.orders} empty={t.emptyOrders} locale={locale} resource={resource} change={setOffset}
     render={(order) => <Card key={order.id}>
+      <Muted>{t.orderNumber}</Muted>
       <Heading>{order.order_number}</Heading>
       <Pill label={t.states[order.status] ?? t.unknownStatus} />
       <Body>{formatPrice(order.total, locale, order.currency)}</Body>
@@ -64,6 +65,7 @@ export function Order({ id, locale, open }: Props & { id: string }) {
       // Shown as expired the moment the reservation runs out; the refetch brings the server status.
       const order = left === 0 ? { ...fetched, status: "expired" } : fetched;
       return <>
+      <Muted>{t.orderNumber}</Muted>
       <Heading>{order.order_number}</Heading>
       <Pill label={t.states[order.status] ?? t.unknownStatus} />
       {event.data ? <Action title={event.data.title} onPress={() => open(`/events/${encodeURIComponent(event.data!.id)}`)} /> : null}
@@ -87,7 +89,7 @@ export function Order({ id, locale, open }: Props & { id: string }) {
       {order.status === "pending" && order.total === 0 ? <Muted>{t.pending}</Muted> : null}
       {order.status === "paid" || order.status === "free_confirmed" ? <>
         <Heading>{t.tickets}</Heading>
-        {order.tickets.length ? order.tickets.map((ticket) => <Action key={ticket.id} title={ticket.ticket_number}
+        {order.tickets.length ? order.tickets.map((ticket) => <Action key={ticket.id} title={`${t.ticketNumber}: ${ticket.ticket_number}`}
           onPress={() => open(`/account/tickets/${encodeURIComponent(ticket.id)}`)} />) : <Muted>{t.preparing}</Muted>}
       </> : null}
       <Action title={t.refresh} disabled={resource.isFetching} onPress={() => void resource.refetch()} />

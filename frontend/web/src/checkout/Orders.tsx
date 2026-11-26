@@ -118,6 +118,7 @@ export default function Orders({ locale }: { locale: Locale }) {
                       order.order_number}
                   </Link>
                   <p>
+                    {t.orderNumber}:{" "}
                     <span className="commerce-identifier">
                       {order.order_number}
                     </span>{" "}
@@ -217,6 +218,7 @@ function OrderContent({
             <OrderEvent eventId={eventOf(order)!} locale={locale} calendar={false} />
           )}
           <div className="order-meta">
+            <span className="order-meta-label">{t.orderNumber}</span>
             <span className="commerce-identifier">{order.order_number}</span>
             <span className="order-badges">
               <CommerceStatus value={order.status} t={t} />
@@ -334,7 +336,7 @@ function OrderContent({
                     {ticket.attendee_name}
                   </Link>
                   <p>
-                    {ticket.ticket_type} ·{" "}
+                    {ticket.ticket_type} · {t.ticketNumber}:{" "}
                     <span className="commerce-identifier">{ticket.ticket_number}</span>
                   </p>
                 </div>
