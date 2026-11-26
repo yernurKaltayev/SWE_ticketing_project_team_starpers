@@ -8,6 +8,7 @@ import { parseAvailability } from "@biletflow/shared/features/checkout/model";
 import { seatingCopy } from "@biletflow/shared/features/seating/copy";
 import { categoryMatches, HoldController, parseSeatMap, remainingSeconds } from "@biletflow/shared/features/seating/model";
 import type { Seat, SeatOffer, SeatingSelection } from "@biletflow/shared/features/seating/model";
+import { seatOffers } from "./offers";
 import { useDiscardChanges } from "../auth/Fields";
 import { Failure, Read, request, useResource } from "../features/resource";
 import { Select } from "../kit/Select";
@@ -90,12 +91,6 @@ export function SeatPicker({ id, locale, onContinue }: {
   const path = `/api/v1/events/${encodeURIComponent(id)}`;
   const map = useResource(`${path}/seat-map`, parseSeatMap, { interval: 15000 });
   const availability = useResource(`${path}/availability`, parseAvailability, { interval: 15000 });
-  const offers: SeatOffer[] = (availability.data?.registrationOpen ? availability.data.choices : [])
-    .filter((choice) => choice.open && choice.available > 0 && (choice.free || choice.price !== undefined))
-    .map((choice) => ({
-      id: choice.id, name: choice.name, category: choice.priceCategory ?? null,
-      priceTiyn: choice.price ?? 0, limit: Math.min(choice.limit, choice.available),
-    }));
   const [offerId, setOfferId] = useState("");
   const [ids, setIds] = useState<string[]>([]);
   const [mode, setMode] = useState<"map" | "list">("map");
@@ -104,6 +99,10 @@ export function SeatPicker({ id, locale, onContinue }: {
   const [now, setNow] = useState(Date.now);
   const controller = useMemo(() => new HoldController(request, id), [id]);
   const hold = controller.hold;
+  const offers: SeatOffer[] = seatOffers(
+    availability.data,
+    hold ? { offerId, heldSeats: hold.seat_ids.length } : null,
+  );
   const offer = offers.find((item) => item.id === offerId);
   const expires = hold ? remainingSeconds(hold.expires_at, now) : 0;
   const discard = useDiscardChanges(Boolean(hold || ids.length), locale);
