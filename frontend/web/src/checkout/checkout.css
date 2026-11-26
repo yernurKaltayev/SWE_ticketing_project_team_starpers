@@ -670,3 +670,30 @@
     margin-left: 3.5rem;
   }
 }
+
+/* Reservation countdown above the payment form. */
+.order-timer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  margin: 0 0 1rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius-card);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.order-timer strong {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.1rem;
+}
+.order-timer small {
+  flex-basis: 100%;
+  margin-left: 1.6rem;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+.order-timer[data-urgent] {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}

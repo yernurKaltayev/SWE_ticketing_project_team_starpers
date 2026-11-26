@@ -25,7 +25,7 @@ import { paymentCopy } from "../payments/copy";
 import "./checkout.css";
 import { BackLink } from "../BackLink";
 import { cityLabel } from "../events/venues";
-import { AlertIcon, ArrowRightIcon, CheckIcon, CloseIcon, TicketIcon } from "../icons";
+import { AlertIcon, ArrowRightIcon, CheckIcon, ClockIcon, CloseIcon, TicketIcon } from "../icons";
 
 // Older API builds sent no event_id; tickets of one order share one event.
 const eventOf = (order: Order): string | undefined =>
@@ -141,6 +141,19 @@ export default function Orders({ locale }: { locale: Locale }) {
   );
 }
 
+/** Current time, ticking every second while active. */
+function useNow(active: boolean) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!active) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [active]);
+  return now;
+}
+const clock = (seconds: number) =>
+  `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+
 export function OrderDetail({ locale }: { locale: Locale }) {
   const { orderId = "" } = useParams();
   return <OrderContent key={orderId} orderId={orderId} locale={locale} />;
@@ -156,7 +169,21 @@ function OrderContent({
   const query = useCommerceQuery(orderPath(orderId), parseOrder);
   const { refetch, dataUpdatedAt, isFetching } = query;
   const [polls, setPolls] = useState(0);
-  const order = query.isError ? undefined : query.data;
+  const raw = query.isError ? undefined : query.data;
+  // Paid orders waiting for payment hold their tickets until expires_at.
+  const deadline =
+    raw?.status === "pending" && raw.total > 0 && raw.expires_at
+      ? Date.parse(raw.expires_at)
+      : null;
+  const now = useNow(deadline !== null);
+  const left =
+    deadline === null ? null : Math.max(0, Math.ceil((deadline - now) / 1000));
+  // Once the reservation runs out the order is shown as expired right away;
+  // the refetch below brings the server's own status.
+  const order = raw && left === 0 ? { ...raw, status: "expired" } : raw;
+  useEffect(() => {
+    if (left === 0) void refetch();
+  }, [left, refetch]);
   const count = order?.items.reduce((sum, i) => sum + i.quantity, 0) ?? 0;
   const confirmed = order && ["free_confirmed", "paid"].includes(order.status);
   const preparing = confirmed && order.tickets.length < count;
@@ -205,6 +232,15 @@ function OrderContent({
           {preparing && <Status>{t.preparing}</Status>}
           {order.status === "pending" && order.total === 0 && (
             <Status>{paymentCopy[locale].pending}</Status>
+          )}
+          {order.status === "pending" && order.total > 0 && left !== null && (
+            <p className="order-timer" data-urgent={left < 60 || undefined} role="timer">
+              <ClockIcon size={18} />
+              <span>
+                {t.reservedFor} <strong>{clock(left)}</strong>
+              </span>
+              <small>{t.reservedHint}</small>
+            </p>
           )}
           {order.status === "pending" && order.total > 0 && (
             <DemoCardPayment

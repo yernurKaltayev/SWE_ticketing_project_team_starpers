@@ -1,5 +1,6 @@
 """P5 order checkout and read models; amounts are integer tiyn."""
 
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
@@ -69,6 +70,8 @@ class OrderOut(BaseModel):
     is_simulated: bool
     items: list[OrderItemOut]
     tickets: list[TicketOut]
+    # End of the ticket reservation while the order waits for payment; null otherwise.
+    expires_at: datetime | None = None
 
 
 class AttendeeOut(BaseModel):

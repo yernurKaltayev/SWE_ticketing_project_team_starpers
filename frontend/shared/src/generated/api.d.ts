@@ -2762,6 +2762,11 @@ export interface components {
             items: components["schemas"]["OrderItemOut"][];
             /** Tickets */
             tickets: components["schemas"]["TicketOut"][];
+            /**
+             * Expires At
+             * @description End of the ticket reservation while the order waits for payment; null otherwise.
+             */
+            expires_at?: string | null;
         };
         /** OrganizerProfileOut */
         OrganizerProfileOut: {

@@ -113,6 +113,7 @@ async def to_order_out(db: AsyncSession, order: Order) -> OrderOut:
         total=order.total,
         currency=order.currency,
         is_simulated=order.is_simulated,
+        expires_at=order.expires_at if order.status == OrderStatus.pending else None,
         items=[
             OrderItemOut(
                 id=item.id,

@@ -5032,6 +5032,13 @@ components:
             $ref: '#/components/schemas/TicketOut'
           title: Tickets
           type: array
+        expires_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Expires At
+          description: End of the ticket reservation while the order waits for payment; null otherwise.
       required:
       - id
       - order_number
