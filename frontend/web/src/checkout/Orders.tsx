@@ -7,7 +7,7 @@ import type { Locale } from "@biletflow/shared";
 import { Status } from "../auth/ui";
 import { commerceCopy } from "./copy";
 import type { CommerceCopy } from "./copy";
-import { CommerceError, CommerceStatus } from "./ui";
+import { CommerceError, CommerceStatus, DateTile } from "./ui";
 import {
   eventPath,
   orderPath,
@@ -106,34 +106,37 @@ export default function Orders({ locale }: { locale: Locale }) {
             </div>
           )}
           <ul className="commerce-list">
-            {query.data.items.map((order) => (
-              <li key={order.id}>
+            {query.data.items.map((order) => {
+              const event = eventOf(order) ? events.get(eventOf(order)!)?.data : undefined;
+              return (
+              <li key={order.id} className="ticket-row">
+                <DateTile value={event?.starts_at} zone={event?.timezone} locale={locale} />
                 <div>
                   <Link
                     className="row-link"
                     to={`/account/orders/${encodeURIComponent(order.id)}`}
                   >
-                    {(eventOf(order) &&
-                      events.get(eventOf(order)!)?.data?.title) ||
-                      order.order_number}
+                    {event?.title || order.order_number}
                   </Link>
+                  {event && (
+                    <p>{formatEventDateTime(event.starts_at, event.timezone, locale)}</p>
+                  )}
+                  <p>
+                    {t.ticketCount}: {order.tickets.length}
+                    {order.is_simulated && order.total > 0 && ` · ${t.simulated}`}
+                  </p>
                   <p>
                     {t.orderNumber}:{" "}
-                    <span className="commerce-identifier">
-                      {order.order_number}
-                    </span>{" "}
-                    · {t.tickets}: {order.tickets.length}
+                    <span className="commerce-identifier">{order.order_number}</span>
                   </p>
-                  {order.is_simulated && order.total > 0 && (
-                    <span className="status-badge">{t.simulated}</span>
-                  )}
                 </div>
-                <CommerceStatus value={order.status} t={t} />
-                <strong>
-                  {formatPrice(order.total, locale, order.currency)}
-                </strong>
+                <div className="order-row-side">
+                  <CommerceStatus value={order.status} t={t} />
+                  <strong>{formatPrice(order.total, locale, order.currency)}</strong>
+                </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
           <Pagination {...pagination} total={query.data.total} t={t} />
         </>

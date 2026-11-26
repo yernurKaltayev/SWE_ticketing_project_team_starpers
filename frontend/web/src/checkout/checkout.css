@@ -753,3 +753,28 @@
 .ticket-number-line .order-meta-label {
   margin: 0;
 }
+
+/* My orders: status and amount stacked on the right, like My tickets. */
+.order-row-side {
+  display: grid;
+  justify-items: end;
+  gap: 0.4rem;
+  flex: none;
+}
+.order-row-side strong {
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 480px) {
+  .order-row-side {
+    justify-items: start;
+    margin-left: 4.75rem;
+  }
+}
+@media (max-width: 480px) {
+  .order-row-side {
+    max-width: calc(100% - 4.75rem);
+  }
+  .order-row-side .status-badge {
+    white-space: normal;
+  }
+}
