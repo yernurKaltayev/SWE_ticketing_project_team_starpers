@@ -234,7 +234,7 @@ function dayNames(day: Date, locale: Locale) {
   return { month: cap(month), weekday: cap(weekday.replace(".", "")) };
 }
 
-/** "All dates" plus the next 30 days as a scrollable strip, month names above. */
+/** The next 30 days as a scrollable strip, month names above; "All dates" on the right. */
 export function DateStrip({
   from,
   to,
@@ -260,15 +260,6 @@ export function DateStrip({
     });
   return (
     <div className="date-strip" role="group" aria-label={d.dates}>
-      <button
-        type="button"
-        className="date-all"
-        aria-pressed={!from && !to}
-        onClick={() => onChange(null)}
-      >
-        <CalendarIcon size={18} />
-        <span className="date-all-label">{d.allDates}</span>
-      </button>
       <button
         type="button"
         className="date-scroll is-prev"
@@ -307,6 +298,15 @@ export function DateStrip({
         onClick={() => scroll(1)}
       >
         <ArrowRightIcon size={16} />
+      </button>
+      <button
+        type="button"
+        className="date-all"
+        aria-pressed={!from && !to}
+        onClick={() => onChange(null)}
+      >
+        <CalendarIcon size={18} />
+        <span className="date-all-label">{d.allDates}</span>
       </button>
     </div>
   );
