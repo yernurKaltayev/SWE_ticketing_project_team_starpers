@@ -25,6 +25,7 @@ import { paymentCopy } from "../payments/copy";
 import "./checkout.css";
 import { BackLink } from "../BackLink";
 import { cityLabel } from "../events/venues";
+import { ArrowRightIcon, TicketIcon } from "../icons";
 
 // Older API builds sent no event_id; tickets of one order share one event.
 const eventOf = (order: Order): string | undefined =>
@@ -245,20 +246,32 @@ function OrderContent({
           )}
           {(confirmed || order.tickets.length > 0) && (
           <>
-          <h2>{t.tickets}</h2>
-          <ul className="commerce-list">
+          <h2 className="order-tickets-title">
+            {t.orderTickets}
+            {order.tickets.length > 0 && (
+              <span className="order-tickets-count">{order.tickets.length}</span>
+            )}
+          </h2>
+          <ul className="commerce-list order-tickets">
             {order.tickets.map((ticket) => (
               <li key={ticket.id}>
+                <span className="order-ticket-icon" aria-hidden="true">
+                  <TicketIcon size={20} />
+                </span>
                 <div>
                   <Link
                     className="row-link"
                     to={`/account/tickets/${encodeURIComponent(ticket.id)}`}
                   >
-                    {ticket.ticket_type} · {ticket.attendee_name}
+                    {ticket.attendee_name}
                   </Link>
-                  <p className="commerce-identifier">{ticket.ticket_number}</p>
+                  <p>
+                    {ticket.ticket_type} ·{" "}
+                    <span className="commerce-identifier">{ticket.ticket_number}</span>
+                  </p>
                 </div>
                 <CommerceStatus value={ticket.status} t={t} />
+                <ArrowRightIcon className="order-ticket-arrow" size={18} aria-hidden="true" />
               </li>
             ))}
           </ul>

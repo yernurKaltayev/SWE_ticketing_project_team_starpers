@@ -518,3 +518,74 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+/* Order page tickets: icon, holder, type and number, status, arrow. */
+.order-tickets-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.15rem;
+}
+.order-tickets-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 0.85rem;
+}
+.commerce-list.order-tickets li {
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.9rem;
+}
+.commerce-list.order-tickets li > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.commerce-list.order-tickets p {
+  margin-top: 0.2rem;
+}
+.order-ticket-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 10px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.order-ticket-arrow {
+  flex: none;
+  color: var(--color-muted);
+}
+.commerce-list.order-tickets li:hover .order-ticket-arrow {
+  color: var(--color-primary);
+}
+@media (max-width: 480px) {
+  .commerce-list.order-tickets li {
+    flex-wrap: wrap;
+  }
+  .commerce-list.order-tickets li > div {
+    flex-basis: calc(100% - 3.4rem);
+  }
+  .order-ticket-arrow {
+    display: none;
+  }
+}
+.order-event-cover {
+  max-width: none;
+}
+.order-main .calendar-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+}
+@media (max-width: 480px) {
+  .commerce-list.order-tickets li > .status-badge {
+    margin-left: 3.4rem;
+  }
+}
