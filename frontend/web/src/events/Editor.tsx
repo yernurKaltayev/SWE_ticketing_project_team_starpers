@@ -25,6 +25,7 @@ import {
 import type { Event, Page, Ticket, Venue } from "./model";
 import { EventError, SelectField, TextArea } from "./ui";
 import { ArrowLeftIcon } from "../icons";
+import { cityLabel, knownCities } from "./venues";
 import {
   parseEvent,
   parseVenue,
@@ -163,6 +164,7 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
       {event?.seating_mode === "assigned" && <Status>{t.assignedHint}</Status>}
       <form
         className="panel editor-form"
+        noValidate
         key={revision}
         onChange={() => {
           setDirty(true);
@@ -178,6 +180,8 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
           let venueToCreate: { name: string; address: string; city: string } | null =
             null;
           try {
+            // Fields above the venue are checked first, so the first error matches the form order.
+            if (newVenue) eventBody({ get: (key) => (key === "venue_id" ? "new" : form.get(key)) });
             if (newVenue) {
               const text = (key: string) => String(form.get(key) ?? "").trim();
               const name = text("venue_new_name");
@@ -313,12 +317,20 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
                 maxLength={300}
                 required
               />
-              <Field
-                name="venue_city"
-                label={t.venue_city}
-                maxLength={100}
-                required
-              />
+              <SelectField name="venue_city" label={t.venue_city} required>
+                <option value="" disabled>
+                  {t.chooseCity}
+                </option>
+                {[...knownCities]
+                  .sort((a, b) =>
+                    cityLabel(a, locale).localeCompare(cityLabel(b, locale)),
+                  )
+                  .map((city) => (
+                    <option key={city} value={city}>
+                      {cityLabel(city, locale)}
+                    </option>
+                  ))}
+              </SelectField>
             </div>
           )}
           {moreVenues.data &&
@@ -609,6 +621,7 @@ function TicketEditor({
       {selected !== undefined && (
         <form
           className="panel editor-form"
+          noValidate
           key={selected?.id ?? "new"}
           onSubmit={(e) => {
             e.preventDefault();
@@ -731,6 +744,7 @@ function RefundEditor({
       {saved && <Status>{t.policySaved}</Status>}
       <form
         className="panel editor-form"
+        noValidate
         onSubmit={(e) => {
           e.preventDefault();
           if (locked || pending) return;

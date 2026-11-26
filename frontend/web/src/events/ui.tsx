@@ -7,6 +7,17 @@ import { InputError } from "./model";
 import type { EventCopy } from "./copy";
 import { eventCopy } from "./copy";
 
+// An empty field gets "fill it in" rather than "check its value".
+function isEmpty(field: string) {
+  const input = document.getElementById(field);
+  return (
+    (input instanceof HTMLInputElement ||
+      input instanceof HTMLTextAreaElement ||
+      input instanceof HTMLSelectElement) &&
+    !input.value.trim()
+  );
+}
+
 export function EventError({
   error,
   t,
@@ -85,7 +96,8 @@ export function EventError({
         <p>
           <strong>{label(error.field)}</strong>
           {": "}
-          {fieldMessages[error.field] ?? t.invalid}
+          {fieldMessages[error.field] ??
+            (isEmpty(error.field) ? t.required : t.invalid)}
         </p>
       </div>
     );

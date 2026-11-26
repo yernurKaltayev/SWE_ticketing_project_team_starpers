@@ -9,7 +9,7 @@ import { eventCopy } from "@biletflow/shared/features/events/copy";
 import { discoveryCopy } from "@biletflow/shared/features/events/discoveryCopy";
 import { searchQuery } from "@biletflow/shared/features/events/model";
 import type { Event } from "@biletflow/shared/features/events/model";
-import { cityLabel, parseVenueRefs } from "@biletflow/shared/features/events/venues";
+import { cityLabel, knownCities, parseVenueRefs } from "@biletflow/shared/features/events/venues";
 import { EmptyState } from "../kit/States";
 import { ListScreen } from "../kit/ListScreen";
 import { api } from "../session";
@@ -60,11 +60,8 @@ export function Discovery({ locale, initial, onOpen }: {
   });
   const venueById = useMemo(() => new Map(venues.data?.map((venue) => [venue.id, venue])), [venues.data]);
   const cities = useMemo(
-    () => [...new Map((venues.data ?? [])
-      .filter(({ city }) => city)
-      .map(({ city }) => [city.toLowerCase(), city])).values()]
-      .sort((a, b) => cityLabel(a, locale).localeCompare(cityLabel(b, locale), locale)),
-    [locale, venues.data],
+    () => [...knownCities].sort((a, b) => cityLabel(a, locale).localeCompare(cityLabel(b, locale), locale)),
+    [locale],
   );
   const items = useMemo(() => {
     if (!events.data) return undefined;
