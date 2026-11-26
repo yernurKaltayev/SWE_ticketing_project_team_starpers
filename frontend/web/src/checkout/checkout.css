@@ -642,3 +642,31 @@
     margin-left: 3.5rem;
   }
 }
+
+.order-success[data-tone="danger"] {
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-line);
+}
+.order-success[data-tone="danger"] strong,
+.order-success[data-tone="danger"] .order-success-link {
+  color: var(--color-danger);
+}
+.order-success[data-tone="danger"] .order-success-icon {
+  background: var(--color-danger);
+}
+.order-success[data-tone="warning"] {
+  background: var(--color-warning-soft);
+  border-color: color-mix(in srgb, var(--color-warning) 25%, transparent);
+}
+.order-success[data-tone="warning"] strong,
+.order-success[data-tone="warning"] .order-success-link {
+  color: var(--color-warning);
+}
+.order-success[data-tone="warning"] .order-success-icon {
+  background: var(--color-warning);
+}
+@media (max-width: 480px) {
+  .order-success > .action-link {
+    margin-left: 3.5rem;
+  }
+}

@@ -25,7 +25,7 @@ import { paymentCopy } from "../payments/copy";
 import "./checkout.css";
 import { BackLink } from "../BackLink";
 import { cityLabel } from "../events/venues";
-import { ArrowRightIcon, CheckIcon, TicketIcon } from "../icons";
+import { AlertIcon, ArrowRightIcon, CheckIcon, CloseIcon, TicketIcon } from "../icons";
 
 // Older API builds sent no event_id; tickets of one order share one event.
 const eventOf = (order: Order): string | undefined =>
@@ -228,10 +228,35 @@ function OrderContent({
               </Link>
             </div>
           )}
-          {["failed", "expired", "cancelled"].includes(order.status) && (
-            <p>
-              <Link className="action-link ghost" to="/events">{t.back}</Link>
-            </p>
+          {(order.status === "failed" ||
+            order.status === "expired" ||
+            order.status === "cancelled") && (
+            <div
+              className="order-success"
+              data-tone={order.status === "failed" ? "danger" : "warning"}
+              role="status"
+            >
+              <span className="order-success-icon" aria-hidden="true">
+                {order.status === "failed" ? <CloseIcon size={20} /> : <AlertIcon size={20} />}
+              </span>
+              <div>
+                <strong>{t[`${order.status}Title`]}</strong>
+                <p>{t[`${order.status}Hint`]}</p>
+              </div>
+              {order.status === "cancelled" ? (
+                <Link className="order-success-link" to="/events">
+                  {t.back}
+                  <ArrowRightIcon size={16} />
+                </Link>
+              ) : (
+                <Link
+                  className="action-link"
+                  to={eventOf(order) ? `/events/${encodeURIComponent(eventOf(order)!)}/checkout` : "/events"}
+                >
+                  {t.tryAgain}
+                </Link>
+              )}
+            </div>
           )}
           {/* A pending paid order shows the Pay form, which refreshes the order itself. */}
           {poll && polls >= 10 && !(order.status === "pending" && order.total > 0) && (
