@@ -1,6 +1,5 @@
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { usePopover } from "./popover";
-import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
 import { isLocale, localeLabels, locales, messages } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
@@ -19,11 +18,11 @@ import {
 
 const headerCopy: Record<
   Locale,
-  { menu: string; close: string; hideNotice: string }
+  { menu: string; hideNotice: string }
 > = {
-  en: { menu: "Account menu", close: "Close menu", hideNotice: "Hide demo notice" },
-  ru: { menu: "Меню аккаунта", close: "Закрыть меню", hideNotice: "Скрыть уведомление о демо" },
-  kk: { menu: "Тіркелгі мәзірі", close: "Мәзірді жабу", hideNotice: "Демо хабарламасын жасыру" },
+  en: { menu: "Account menu", hideNotice: "Hide demo notice" },
+  ru: { menu: "Меню аккаунта", hideNotice: "Скрыть уведомление о демо" },
+  kk: { menu: "Тіркелгі мәзірі", hideNotice: "Демо хабарламасын жасыру" },
 };
 
 const localeCodes: Record<Locale, string> = { en: "EN", ru: "RU", kk: "KZ" };
@@ -112,22 +111,8 @@ export function AccountMenu({
   onLogout: () => void;
 }) {
   // The menu belongs to the page it was opened on, so navigating closes it.
-  const { open, setOpen, root, button, panel } = usePopover();
+  const { open, setOpen, root, button } = usePopover();
   const menuId = useId();
-  const close = () => {
-    setOpen(false);
-    button.current?.focus();
-  };
-  // A drawer owns the screen while open: focus moves in, the page stops scrolling.
-  useEffect(() => {
-    if (!open) return;
-    panel.current?.querySelector<HTMLElement>("a, button")?.focus();
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = overflow;
-    };
-  }, [open, panel]);
   const icons = {
     events: GridIcon,
     admin: ChartIcon,
@@ -152,60 +137,34 @@ export function AccountMenu({
         </span>
         <ChevronDownIcon size={16} />
       </button>
-      {createPortal(
-        <div className="account-drawer" hidden={!open}>
-          <div className="account-backdrop" aria-hidden="true" onClick={close} />
-          <div
-            ref={panel}
-            className="account-panel"
-            id={menuId}
-            role="dialog"
-            aria-modal="true"
-            aria-label={headerCopy[locale].menu}
-          >
-            <div className="account-identity">
-              <span className="avatar" aria-hidden="true">
-                {initials(name, email)}
-              </span>
-              <div>
-                {name ? <strong>{name}</strong> : null}
-                <span>{email}</span>
-              </div>
-              <button
-                type="button"
-                className="account-close"
-                aria-label={headerCopy[locale].close}
-                onClick={close}
-              >
-                <CloseIcon size={18} />
-              </button>
-            </div>
-            <ul>
-              {links.map(({ to, label, kind }) => {
-                const LinkIcon = icons[kind];
-                return (
-                  <li key={to}>
-                    <NavLink to={to} end onClick={() => setOpen(false)}>
-                      <LinkIcon size={20} />
-                      {label}
-                    </NavLink>
-                  </li>
-                );
-              })}
-            </ul>
-            <button
-              type="button"
-              className="account-logout"
-              disabled={busy}
-              onClick={onLogout}
-            >
-              <LogoutIcon size={20} />
-              {logoutLabel}
-            </button>
-          </div>
-        </div>,
-        document.body,
-      )}
+      <div className="account-panel" id={menuId} hidden={!open}>
+        <div className="account-identity">
+          {name ? <strong>{name}</strong> : null}
+          <span>{email}</span>
+        </div>
+        <ul>
+          {links.map(({ to, label, kind }) => {
+            const LinkIcon = icons[kind];
+            return (
+              <li key={to}>
+                <NavLink to={to} end onClick={() => setOpen(false)}>
+                  <LinkIcon size={18} />
+                  {label}
+                </NavLink>
+              </li>
+            );
+          })}
+        </ul>
+        <button
+          type="button"
+          className="account-logout"
+          disabled={busy}
+          onClick={onLogout}
+        >
+          <LogoutIcon size={18} />
+          {logoutLabel}
+        </button>
+      </div>
     </div>
   );
 }
