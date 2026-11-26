@@ -20,6 +20,7 @@ import { AuthField, useDiscardChanges } from "../auth/Fields";
 import { Read, Failure, request, useResource } from "../features/resource";
 import { PageNav } from "../features/PageNav";
 import { useWrite } from "../features/use-write";
+import { resourceKey } from "../features/resource-key";
 import { ConfirmSheet } from "../kit/ConfirmSheet";
 import { DateTimeField } from "../kit/DateTimeField";
 import { ImageField } from "../kit/ImageField";
@@ -90,7 +91,9 @@ function Editor({ event, locale, open }: OrganizerProps & { event?: Event }) {
   const cache = useQueryClient();
   function saved(value: Event) {
     setCurrent(value);
-    cache.setQueryData(["mobile", user?.id, eventRoot(value.id)], value);
+    cache.setQueryData(resourceKey(user?.id, eventRoot(value.id), parseEvent), value);
+    // Other screens may hold the same event under another parser: refresh those too.
+    void cache.invalidateQueries({ queryKey: ["mobile", user?.id, eventRoot(value.id)] });
     void cache.invalidateQueries({ queryKey: ["mobile-owned-events", user?.id] });
   }
   const [step, setStep] = useState<Step>("details");
@@ -297,34 +300,43 @@ function TicketForm({ ticket, path, locale, done }: { ticket?: Ticket; path: str
   const t = eventCopy[locale];
   const [name, setName] = useState(ticket?.name ?? "");
   const [description, setDescription] = useState(ticket?.description ?? "");
-  const [price, setPrice] = useState<number | null>(ticket ? Number(ticket.price_amount) : 0);
+  const [price, setPrice] = useState<number | null>(ticket ? Number(ticket.price_amount) : null);
+  const [priceInvalid, setPriceInvalid] = useState(false);
   const [quantity, setQuantity] = useState(ticket ? String(ticket.quantity_total) : "");
   const [limit, setLimit] = useState(ticket ? String(ticket.max_per_order) : "10");
   const [hidden, setHidden] = useState(Boolean(ticket?.is_hidden));
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const write = useWrite(`ticket:${path}:${ticket?.id ?? "new"}`);
   const discard = useDiscardChanges(Boolean(name || description || quantity) && !write.saved, locale);
   return <Card>
     <Heading>{ticket ? t.editTicket : t.addTicket}</Heading>
     <AuthField label={t.name} value={name} onChangeText={setName} maxLength={200} />
     <AuthField label={t.ticket_description} value={description} onChangeText={setDescription} multiline />
-    <MoneyInput label={t.price} amount={price} onChange={setPrice} locale={locale} />
+    <MoneyInput label={t.price} amount={price} locale={locale} onChange={(amount, invalid) => {
+      setPrice(amount);
+      setPriceInvalid(invalid);
+    }} />
     <AuthField label={t.quantity_total} value={quantity} onChangeText={setQuantity} inputMode="numeric" />
     <AuthField label={t.max_per_order} value={limit} onChangeText={setLimit} inputMode="numeric" />
     <Action title={t.is_hidden} variant={hidden ? "primary" : "secondary"} onPress={() => setHidden(!hidden)} />
-    {error ? <Muted>{t.invalid}</Muted> : null}
+    {error ? <Callout tone="warning">{error}</Callout> : null}
     <Failure error={write.error} locale={locale} />
     {write.uncertain ? <Muted>{label(locale, "unknown")}</Muted> : null}
     {write.uncertain ? <Action title={supportCopy[locale].checked} onPress={write.clearUncertain} /> : null}
     <Action title={t.saveTicket} variant="primary" busy={write.busy} disabled={write.busy || write.uncertain}
       onPress={() => {
-        if (price === null) { setError(true); return; }
-        const values: Record<string, string> = { name, ticket_description: description, price: (price / 100).toFixed(2),
-          quantity_total: quantity, max_per_order: limit };
+        // Name the field that is wrong; an empty price means a free ticket type.
+        if (priceInvalid) { setError(`${t.price} · ${t.invalid}`); return; }
+        const values: Record<string, string> = { name, ticket_description: description,
+          price: ((price ?? 0) / 100).toFixed(2), quantity_total: quantity.trim(), max_per_order: limit.trim() };
         let body: ReturnType<typeof ticketBody>;
         try { body = ticketBody({ get: (key) => values[key] ?? null, has: (key) => key === "is_hidden" && hidden }); }
-        catch { setError(true); return; }
-        setError(false);
+        catch (caught) {
+          const field = caught instanceof InputError ? t[caught.field as keyof typeof t] : undefined;
+          setError([field, t.invalid].filter(Boolean).join(" · "));
+          return;
+        }
+        setError(null);
         if (ticket) body.price_category = ticket.price_category ?? null;
         void write.run(() => request(ticket ? `${path}/${encodeURIComponent(ticket.id)}` : path, {
           method: ticket ? "PATCH" : "POST", body,

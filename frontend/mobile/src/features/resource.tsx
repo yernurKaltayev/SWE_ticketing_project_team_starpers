@@ -8,6 +8,7 @@ import { errorMessage } from "@biletflow/shared/features/auth/helpers";
 import { api, session, useSessionSnapshot } from "../session";
 import { Action, Callout, Muted } from "../ui";
 import { kitCopy } from "../kit/copy";
+import { resourceKey } from "./resource-key";
 
 export const request: Session["request"] = <T,>(path: string, options?: ApiRequestOptions) => {
   const transport = session?.getSnapshot().user ? session : api;
@@ -23,7 +24,7 @@ export function useResource<T>(
   const { user } = useSessionSnapshot();
   const focused = useIsFocused();
   return useQuery({
-    queryKey: options.key ?? ["mobile", user?.id, path],
+    queryKey: options.key ?? resourceKey(user?.id, path, parse),
     queryFn: async ({ signal }) => parse(await request(path, { signal })),
     enabled: Boolean(path) && (options.enabled ?? true),
     refetchInterval: focused ? options.interval : false,
