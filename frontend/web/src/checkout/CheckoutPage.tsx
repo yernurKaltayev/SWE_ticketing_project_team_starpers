@@ -23,6 +23,7 @@ import type { Attendee, Availability, Event, OrderBody } from "./model";
 import "./checkout.css";
 import { BackLink } from "../BackLink";
 import { eventCopy } from "../events/copy";
+import { paidSalesOpen } from "../events/model";
 
 export default function CheckoutPage({ locale }: { locale: Locale }) {
   const { eventId = "" } = useParams();
@@ -122,7 +123,7 @@ function CheckoutForm({
       (c) =>
         c.open &&
         c.available > 0 &&
-        (c.free || (event.paid_sales_status === "active" && !!c.price)),
+        (c.free || (paidSalesOpen(event) && !!c.price)),
     );
     return !initial && open.length === 1 ? open[0].id : null;
   });
@@ -169,7 +170,7 @@ function CheckoutForm({
     controller.request,
   );
   const pt = promoCopy[locale];
-  const paidActive = event.paid_sales_status === "active";
+  const paidActive = paidSalesOpen(event);
   const canChoose = (c: (typeof choices)[number]) =>
     c.free || (paidActive && !!c.price);
   const selectedPaid = choices.some(
@@ -238,7 +239,7 @@ function CheckoutForm({
             body.items.map((i) => [i.ticket_type_id, i.quantity]),
           ),
           body.attendees,
-          latestEvent.paid_sales_status === "active",
+          paidSalesOpen(latestEvent),
         );
         if (promoCode) {
           const ids = body.items.flatMap((i) =>

@@ -142,8 +142,9 @@ export const orderHandlers = [
       const ticket = context.tickets.find((v) => v.id === item.ticket_type_id);
       if (
         !ticket ||
+        // Demo checkout: paid tickets sell unless paid sales are suspended.
         (ticket.price_amount !== 0 &&
-          context.event.paid_sales_status !== "active") ||
+          context.event.paid_sales_status === "suspended") ||
         ticket.is_hidden ||
         !Number.isSafeInteger(item.quantity) ||
         item.quantity < 1 ||

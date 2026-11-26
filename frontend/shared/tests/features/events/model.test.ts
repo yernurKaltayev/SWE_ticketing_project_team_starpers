@@ -128,7 +128,11 @@ describe("F2 money, time and recovery inputs", () => {
     expect(salesState(e, a, now)).toBe("onSale");
     expect(salesState({ ...e, status: "cancelled" }, a, now)).toBe("cancelled");
     expect(salesState(e, { ...a, available: 0 }, now)).toBe("soldOut");
-    expect(salesState(e, { ...a, price_amount: 100 }, now)).toBe("paidBlocked");
+    // Demo checkout: a paid ticket sells without activation, unless paid sales are suspended.
+    expect(salesState(e, { ...a, price_amount: 100 }, now)).toBe("onSale");
+    expect(
+      salesState({ ...e, paid_sales_status: "suspended" }, { ...a, price_amount: 100 }, now),
+    ).toBe("paidBlocked");
     expect(
       salesState(
         { ...e, registration_opens_at: "2027-01-10T00:00:00Z" },
@@ -151,8 +155,16 @@ describe("F2 money, time and recovery inputs", () => {
       on_sale: false,
       price_amount: 0,
     } as Availability;
+    expect(
+      salesState(
+        { ...e, paid_sales_status: "suspended" },
+        { ...closed, price_amount: 10000 },
+        now,
+      ),
+    ).toBe("paidBlocked");
+    // Activation-gated backend: the paid ticket is reported off sale.
     expect(salesState(e, { ...closed, price_amount: 10000 }, now)).toBe(
-      "paidBlocked",
+      "unavailable",
     );
     expect(salesState(e, closed, now)).toBe("unavailable");
     expect(salesState(e, closed, Date.parse("2027-01-20T12:00:00Z"))).toBe(
