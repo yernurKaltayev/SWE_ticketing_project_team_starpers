@@ -3,7 +3,7 @@ import { DevSeating } from "../seating/DevSeating";
 import { Action, Title } from "../ui";
 import { Admin } from "../admin/Admin";
 import { authCopy } from "@biletflow/shared/features/auth/copy";
-import { organizerFeatures } from "../navigation/features";
+import { canOpenFeature } from "../navigation/features";
 import { EventEditor, OrganizerEvents } from "../organizer/Events";
 import { OrganizerProfile, Staff } from "../organizer/People";
 import { Seating } from "../organizer/Seating";
@@ -47,7 +47,7 @@ export function FeatureScreen({ name, params, locale, open, openAuth }: {
   if (name === "DevSeating") return <DevSeating locale={locale} />;
   if (name === "Event") return <EventDetail id={eventId} locale={locale} search={query} open={open} />;
   if (!user) return <Screen><SessionPanel locale={locale} onNavigate={openAuth} confirmDiscard /></Screen>;
-  if ((organizerFeatures.has(name) && user.role !== "organizer") || ((name === "Admin" || name === "AdminUnavailable") && user.role !== "platform_admin"))
+  if (!canOpenFeature(name, user.role))
     return <Screen><Callout tone="danger">{authCopy[locale].forbidden}</Callout></Screen>;
   if (name === "OrganizerUnavailable" || name === "AdminUnavailable") {
     return <Screen><Title>{authCopy[locale].unavailable}</Title></Screen>;
