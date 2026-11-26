@@ -8,6 +8,9 @@ import { useOwnedEvents } from "./data";
 import { label } from "./copy";
 import { eventCopy } from "../events/copy";
 import { Failure, Pager } from "./ui";
+import { useResource } from "../events/data";
+import { cityLabel, parseVenueRefs } from "../events/venues";
+import type { VenueRef } from "../events/venues";
 export default function Archive({
   locale
 }: {
@@ -15,6 +18,11 @@ export default function Archive({
 }) {
   const t = (s: string) => label(locale, s),
     query = useOwnedEvents();
+  const venues = useResource<VenueRef[]>("/api/v1/venues", parseVenueRefs);
+  const place = (id: string) => {
+    const venue = venues.data?.find(v => v.id === id);
+    return venue ? [venue.name, venue.city && cityLabel(venue.city, locale)].filter(Boolean).join(" · ") : "";
+  };
   const [params, setParams] = useSearchParams();
   const group = lifecycles.includes(params.get("lifecycle") as typeof lifecycles[number]) ? params.get("lifecycle")! : "";
   const [now, setNow] = useState(Date.now);
@@ -76,6 +84,7 @@ export default function Archive({
       </div>
       <p className="organizer-event-when">
         {formatEventRange(e.starts_at, e.ends_at, e.timezone, locale)}
+        {place(e.venue_id) && <> · {place(e.venue_id)}</>}
       </p>
       {/* Past events keep the records an organizer still needs after the date. */}
       <nav className="controls card-links" aria-label={e.title}>

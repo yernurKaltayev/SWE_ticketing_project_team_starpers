@@ -56,6 +56,14 @@ const zoneCities: Record<string, Record<Locale, string>> = {
   "Asia/Oral": { kk: "Орал", ru: "Уральск", en: "Oral" },
 };
 
+/**
+ * Suffix for an event time: nothing for Kazakhstan (one zone, the local time everyone reads),
+ * the IANA id for anywhere else so the clock is not misread.
+ */
+function zoneSuffix(timeZone: string): string {
+  return zoneCities[timeZone] ? "" : ` · ${timeZone}`;
+}
+
 /** The event zone as people say it: a city for Kazakhstan, the IANA id otherwise. */
 export function zoneLabel(timeZone: string, locale: Locale): string {
   return zoneCities[timeZone]?.[locale] ?? timeZone;
@@ -142,11 +150,11 @@ export function formatEventDateTime(
   if (!Number.isFinite(date.getTime()))
     throw new RangeError("Timestamp is invalid.");
   const formatted = formatDateTime(date, locale, { time: true, timeZone });
-  return `${formatted} · ${zoneLabel(timeZone, locale)}`;
+  return `${formatted}${zoneSuffix(timeZone)}`;
 }
 
 /**
- * An event's start and end with the zone named once: "13 дек. 2026 г., 21:30 — 23:30 · Алматы".
+ * An event's start and end: "13 дек. 2026 г., 21:30 — 23:30".
  * The end repeats the date only when it falls on another day.
  */
 export function formatEventRange(
@@ -166,5 +174,5 @@ export function formatEventRange(
           timeZone,
         }).format(new Date(end))
       : formatDateTime(end, locale, { time: true, timeZone });
-  return `${from} — ${to} · ${zoneLabel(timeZone, locale)}`;
+  return `${from} — ${to}${zoneSuffix(timeZone)}`;
 }
