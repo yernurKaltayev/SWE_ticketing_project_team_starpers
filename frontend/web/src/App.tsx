@@ -647,6 +647,14 @@ function OrganizerNav({
       return pathname === path || (!("end" in link) && pathname.startsWith(`${path}/`));
     })
     .sort((a, b) => b.to.length - a.to.length)[0];
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpenOn(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
   return (
     <nav
       className="workspace-nav"
@@ -663,6 +671,12 @@ function OrganizerNav({
         <span>{current?.label ?? authCopy[locale].organizerRole}</span>
         <ChevronDownIcon />
       </button>
+      <div
+        className="workspace-backdrop"
+        aria-hidden="true"
+        onClick={() => setOpenOn(null)}
+      />
+      <div className="workspace-drawer">
       {groups.map((group) => (
         <section key={group.id}>
           <p className="nav-label" id={group.id}>
@@ -680,6 +694,7 @@ function OrganizerNav({
           </ul>
         </section>
       ))}
+      </div>
     </nav>
   );
 }

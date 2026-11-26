@@ -788,8 +788,12 @@ main:focus {
 .workspace-main {
   min-width: 0;
 }
-.workspace-nav-toggle {
+.workspace-nav-toggle,
+.workspace-backdrop {
   display: none;
+}
+.workspace-drawer {
+  display: contents;
 }
 
 /* ---------- Auth ---------- */
@@ -1262,32 +1266,61 @@ main:focus {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
   }
+  /* Narrow screens: a compact button opens the sections as a sheet from the left. */
   .workspace-nav {
     position: static;
-    gap: 1rem;
-    padding: 0.5rem;
+    display: block;
+    padding: 0;
+    background: none;
+    border: 0;
   }
   .workspace-nav-toggle {
-    display: flex;
-    width: 100%;
-    justify-content: flex-start;
-    gap: 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    max-width: 100%;
+    min-height: 42px;
+    padding: 0 0.9rem;
+    border-radius: 999px;
   }
   .workspace-nav-toggle span {
-    flex: 1;
-    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .workspace-nav-toggle svg:last-child {
-    transition: transform 160ms var(--ease-out);
+    transform: rotate(-90deg);
+    color: var(--color-muted);
   }
-  .workspace-nav[data-open] .workspace-nav-toggle svg:last-child {
-    transform: rotate(180deg);
+  .workspace-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    background: rgb(15 23 42 / 0.4);
+    animation: sheet-fade 180ms var(--ease-out);
   }
-  .workspace-nav:not([data-open]) section {
+  .workspace-drawer {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 71;
     display: none;
+    gap: 1.25rem;
+    align-content: start;
+    width: min(20rem, 86vw);
+    padding: 1.25rem 0.75rem calc(1.25rem + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    background: var(--color-surface);
+    border-right: 1px solid var(--color-line);
+    box-shadow: 12px 0 32px rgb(15 23 42 / 0.14);
+    animation: sheet-in 220ms var(--ease-out);
   }
-  .workspace-nav section {
-    padding-inline: 0.25rem;
+  .workspace-nav[data-open] .workspace-backdrop {
+    display: block;
+  }
+  .workspace-nav[data-open] .workspace-drawer {
+    display: grid;
   }
 }
 @media (max-width: 760px) {
@@ -1336,7 +1369,7 @@ main:focus {
       transform 80ms var(--ease-out);
   }
   .page > * {
-    animation: page-in 380ms var(--ease-out) both;
+    animation: page-in 380ms var(--ease-out) backwards;
   }
 }
 @keyframes page-in {
@@ -2900,4 +2933,20 @@ button.cover-empty:hover,
 }
 button.danger-text {
   color: var(--color-danger);
+}
+@keyframes sheet-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes sheet-fade {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace-drawer,
+  .workspace-backdrop {
+    animation: none;
+  }
 }
