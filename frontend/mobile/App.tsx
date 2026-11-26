@@ -56,6 +56,9 @@ import { TicketsScreen } from "./src/tickets/TicketsScreen";
 import { TicketDetail } from "./src/tickets/TicketDetail";
 import { ticketsCopy } from "./src/tickets/copy";
 import { KitGallery } from "./src/kit/Gallery";
+import { View } from "react-native";
+import { MenuButton, NavDrawer } from "./src/navigation/NavDrawer";
+import type { DrawerGroup } from "./src/navigation/NavDrawer";
 import { color, navigationTheme } from "./src/theme";
 import {
   Action,
@@ -111,6 +114,7 @@ export default function App() {
   const signedIn = snapshot.user !== null;
   // A volunteer account can only scan tickets for its event: show the check-in tab alone.
   const isVolunteer = snapshot.user?.role === "volunteer";
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => bindAppFocus(), []);
 
@@ -152,6 +156,7 @@ export default function App() {
           <Stack.Screen
             name="Tabs"
             options={({ navigation: nav }) => ({
+              headerLeft: () => <MenuButton locale={locale} onPress={() => setMenuOpen(true)} />,
               headerRight: () => <HeaderAction title={c.settings} onPress={() => nav.navigate("Settings")} />,
             })}
           >
@@ -315,9 +320,79 @@ export default function App() {
           ) : null}
           <Stack.Screen name="Connection">{() => <Connection locale={locale} />}</Stack.Screen>
         </Stack.Navigator>
+        <AppDrawer open={menuOpen} onClose={() => setMenuOpen(false)} locale={locale} />
       </NavigationContainer>
     </SafeAreaProvider>
     </QueryClientProvider>
+  );
+}
+
+/** Every section in one left-side menu, like the web site on a phone. Items depend on the role. */
+function AppDrawer({ open, onClose, locale }: { open: boolean; onClose: () => void; locale: Locale }) {
+  const { user } = useSessionSnapshot();
+  const unread = useUnreadCount();
+  const [current, setCurrent] = useState<string | undefined>();
+  useEffect(() => {
+    if (open && navigation.isReady()) setCurrent(navigation.getCurrentRoute()?.name);
+  }, [open]);
+  const tab = (screen: keyof TabScreens) => () => {
+    if (navigation.isReady()) navigation.dispatch(CommonActions.navigate({ name: "Tabs", params: { screen } }));
+  };
+  const c = checkInCopy[locale];
+  const volunteer = user?.role === "volunteer";
+  const groups: DrawerGroup[] = [
+    {
+      key: "main",
+      items: [
+        ...(volunteer ? [] : [
+          { key: "Discover", label: eventCopy[locale].navEvents, onPress: tab("Discover") },
+          { key: "Tickets", label: ticketsCopy[locale].tab, onPress: tab("Tickets") },
+        ]),
+        { key: "Home", label: c.tab, onPress: tab("Home") },
+      ].map((item) => ({ ...item, active: item.key === current })),
+    },
+    {
+      key: "account",
+      label: authCopy[locale].account,
+      items: user && !volunteer ? [
+        { key: "notifications", label: supportCopy[locale].notifications, badge: unread || undefined, onPress: () => openPath("/account/notifications") },
+        { key: "orders", label: commerceCopy[locale].orders, onPress: () => openPath("/account/orders") },
+        { key: "support", label: supportCopy[locale].title, onPress: () => openPath("/support") },
+        { key: "Account", label: authCopy[locale].account, active: current === "Account", onPress: tab("Account") },
+      ] : [{ key: "Account", label: authCopy[locale].account, active: current === "Account", onPress: tab("Account") }],
+    },
+    {
+      key: "organizer",
+      label: authCopy[locale].organizerRole,
+      items: user?.role === "organizer" ? [
+        { key: "events", label: eventCopy[locale].organizer, onPress: () => openPath("/organizer/events") },
+        { key: "profile", label: authCopy[locale].organizer, onPress: () => openPath("/organizer/profile") },
+        { key: "accounts", label: paymentCopy[locale].accounts, onPress: () => openPath("/organizer/payout-accounts") },
+        { key: "payouts", label: paymentCopy[locale].payouts, onPress: () => openPath("/organizer/payouts") },
+      ] : [],
+    },
+    {
+      key: "admin",
+      items: user?.role === "platform_admin" ? [
+        { key: "admin", label: insightLabel(locale, "admin"), onPress: () => openPath("/admin") },
+      ] : [],
+    },
+    {
+      key: "settings",
+      items: [{
+        key: "Settings", label: c.settings, active: current === "Settings",
+        onPress: () => { if (navigation.isReady()) navigation.navigate("Settings"); },
+      }],
+    },
+  ];
+  return (
+    <NavDrawer open={open} onClose={onClose} groups={groups} locale={locale}
+      header={user ? (
+        <View style={{ paddingHorizontal: 20, paddingBottom: 12, marginBottom: 8, borderBottomWidth: 1, borderBottomColor: color.line }}>
+          <Body style={{ fontFamily: "Inter_600SemiBold" }}>{user.full_name}</Body>
+          <Muted>{user.email}</Muted>
+        </View>
+      ) : null} />
   );
 }
 
