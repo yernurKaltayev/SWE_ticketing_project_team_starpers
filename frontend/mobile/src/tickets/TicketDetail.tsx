@@ -3,6 +3,9 @@ import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 import { useIsFocused } from "@react-navigation/native";
 import { ApiError } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
+import { commerceCopy } from "@biletflow/shared/features/checkout/copy";
+import { ticketPath } from "@biletflow/shared/features/checkout/model";
+import { downloadAndShare } from "../files";
 import { session } from "../session";
 import { color, radius, type } from "../theme";
 import { Action, Callout, Card, Muted, Pill, Screen, Title } from "../ui";
@@ -29,6 +32,9 @@ export function TicketDetail({
   const [qrFailed, setQrFailed] = useState(false);
   const [loading, setLoading] = useState(false);
   const active = useRef<AbortController | null>(null);
+  const sharing = useRef<AbortController | null>(null);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!session) return;
@@ -38,12 +44,14 @@ export function TicketDetail({
     setLoading(true);
     setFailed(null);
     setQrFailed(false);
+    setQr(null);
     try {
       const next = await session.request<MyTicket>(ticketPaths.ticket(ticketId), {
         signal: controller.signal,
       });
       if (controller.signal.aborted) return;
       setTicket(next);
+      if (!isAdmissible(next.status)) return;
       try {
         const png = await session.request<Blob>(ticketPaths.qr(ticketId), {
           signal: controller.signal,
@@ -55,17 +63,46 @@ export function TicketDetail({
         if (!controller.signal.aborted) setQrFailed(true);
       }
     } catch (error) {
-      if (!controller.signal.aborted)
+      if (!controller.signal.aborted) {
+        setTicket(null);
         setFailed(error instanceof ApiError ? error.code : "unexpected");
+      }
     } finally {
       if (!controller.signal.aborted) setLoading(false);
     }
   }, [ticketId]);
 
   useEffect(() => {
-    if (focused) void load();
+    if (focused) {
+      void load();
+    } else {
+      sharing.current?.abort();
+      setShareBusy(false);
+    }
   }, [focused, load]);
-  useEffect(() => () => active.current?.abort(), []);
+  useEffect(() => () => {
+    active.current?.abort();
+    sharing.current?.abort();
+  }, []);
+
+  async function sharePdf() {
+    if (!ticket || loading || sharing.current || !isAdmissible(ticket.status)) return;
+    const operation = new AbortController();
+    sharing.current = operation;
+    setShareBusy(true);
+    setShareError(null);
+    try {
+      const result = await downloadAndShare(ticketPath(ticket, "pdf"), ticket.ticket_number, "pdf", operation.signal);
+      if (result === "unavailable" && !operation.signal.aborted) setShareError(t.sharingUnavailable);
+    } catch (error) {
+      if (operation.signal.aborted) return;
+      const copy = commerceCopy[locale];
+      setShareError(error instanceof ApiError && error.code === "network_error" ? copy.network : copy.error);
+    } finally {
+      sharing.current = null;
+      if (!operation.signal.aborted) setShareBusy(false);
+    }
+  }
 
   const seat = ticket ? seatText(ticket) : null;
 
@@ -85,7 +122,7 @@ export function TicketDetail({
           {t.invalidTicket}
         </Callout>
       ) : null}
-      <View style={local.qrBox}>
+      {!failed && (!ticket || isAdmissible(ticket.status)) ? <View style={local.qrBox}>
         {qr ? (
           <Image
             source={{ uri: qr }}
@@ -104,7 +141,7 @@ export function TicketDetail({
             <ActivityIndicator color={color.primary} />
           </View>
         )}
-      </View>
+      </View> : null}
       {ticket ? (
         <Card>
           <Text style={local.number}>{ticket.ticket_number}</Text>
@@ -117,6 +154,11 @@ export function TicketDetail({
             />
           </View>
         </Card>
+      ) : null}
+      {shareError ? <Callout tone="danger" alert>{shareError}</Callout> : null}
+      {ticket && isAdmissible(ticket.status) ? (
+        <Action title={shareBusy ? commerceCopy[locale].working : t.sharePdf}
+          disabled={loading || shareBusy} busy={shareBusy} onPress={() => void sharePdf()} />
       ) : null}
       {loading && ticket ? <Muted live="polite">{t.loading}</Muted> : null}
     </Screen>
@@ -133,9 +175,11 @@ const local = StyleSheet.create({
     borderColor: color.line,
     padding: 16,
     marginVertical: 8,
+    width: "100%",
+    maxWidth: 314,
   },
-  qr: { width: 280, height: 280 },
-  qrPlaceholder: { width: 280, height: 280, alignItems: "center", justifyContent: "center", gap: 12 },
+  qr: { width: "100%", aspectRatio: 1 },
+  qrPlaceholder: { width: "100%", aspectRatio: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   number: { ...type.heading, color: color.ink },
   pills: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 4 },
 });

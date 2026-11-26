@@ -14,6 +14,7 @@ export function Select<T extends string>({
   onChange,
   placeholder,
   error,
+  disabled = false,
   locale,
 }: {
   label: string;
@@ -22,6 +23,7 @@ export function Select<T extends string>({
   onChange: (value: T) => void;
   placeholder?: string;
   error?: string | null;
+  disabled?: boolean;
   locale: Locale;
 }) {
   const t = kitCopy[locale];
@@ -32,6 +34,8 @@ export function Select<T extends string>({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${current?.label ?? placeholder ?? t.choose}`}
+        disabled={disabled}
+        accessibilityState={{ disabled }}
         onPress={() => setOpen(true)}
         style={({ pressed }) => [local.field, error ? local.fieldError : null, pressed && local.pressed]}
       >

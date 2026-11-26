@@ -92,6 +92,7 @@ class PublicTicketAvailability(BaseModel):
     currency: str
     max_per_order: int
     quantity_available: int
+    price_category: str | None = None
     sales_open: bool
 
 

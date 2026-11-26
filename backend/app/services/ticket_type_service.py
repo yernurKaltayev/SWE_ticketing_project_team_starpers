@@ -261,6 +261,7 @@ async def public_availability(
                 price_amount=item.price_amount,
                 currency=item.currency,
                 max_per_order=item.max_per_order,
+                price_category=item.price_category,
                 # The real count even while closed: reporting 0 made the web show "Sold out"
                 # for events whose sales had not opened yet. sales_open says if it can be bought.
                 quantity_available=_available(item),
