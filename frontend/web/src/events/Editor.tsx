@@ -440,7 +440,9 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
             aria-labelledby="publication-title"
             aria-describedby="publication-description"
           >
-            <h2 id="publication-title">{t.confirmTitle}</h2>
+            <h2 id="publication-title">
+              {action ? `${t[action]}?` : t.confirmTitle}
+            </h2>
             <p id="publication-description">
               {action === "publish"
                 ? t.publishHint
@@ -459,9 +461,10 @@ function EditorForm({ initial, locale }: { initial?: Event; locale: Locale }) {
               </button>
               <button
                 disabled={pending}
+                className={action === "cancel" ? "danger" : undefined}
                 onClick={() => action && void mutate(action)}
               >
-                {pending ? t.working : t.confirm}
+                {pending ? t.working : action ? t[action] : t.confirm}
               </button>
             </div>
           </dialog>

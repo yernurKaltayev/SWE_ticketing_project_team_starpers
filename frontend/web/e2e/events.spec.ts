@@ -39,7 +39,10 @@ test("organizer creates a free event, corrects publication, previews, publishes,
     page.getByRole("heading", { name: "Edit event", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Publish", exact: true }).click();
-  await page.getByRole("button", { name: "Confirm", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Publish", exact: true })
+    .click();
   await expect(page.getByRole("alert")).toContainText("Add a ticket type");
   await page.getByRole("button", { name: "Add ticket type" }).click();
   await page.getByLabel("Ticket name", { exact: true }).fill("Free admission");
@@ -60,7 +63,10 @@ test("organizer creates a free event, corrects publication, previews, publishes,
     .getByRole("link", { name: "Edit event", exact: true })
     .click();
   await page.getByRole("button", { name: "Publish", exact: true }).click();
-  await page.getByRole("button", { name: "Confirm", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Publish", exact: true })
+    .click();
   await expect(
     page.getByRole("button", { name: "Return to draft" }),
   ).toBeVisible();

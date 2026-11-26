@@ -62,23 +62,31 @@ export function EventError({
           )
           .filter((v): v is string => !!v && v in t)
       : [];
-  if (error instanceof InputError) fields.push(error.field);
+  // A form check names the field and says what is wrong with it, once.
+  const fieldMessages: Record<string, string> = {
+    registration_closes_at: t.salesWindowError,
+    ends_at: t.endsBeforeStart,
+  };
+  const label = (field: string) => t[field as keyof EventCopy] as string;
+  if (error instanceof InputError)
+    return (
+      <div className="form-error" tabIndex={-1} ref={ref} role="alert">
+        <p>
+          <a href={`#${error.field}`}>{label(error.field)}</a>
+          {": "}
+          {fieldMessages[error.field] ?? t.invalid}
+        </p>
+      </div>
+    );
+  const message = error instanceof ApiError ? apiMessage(error) : t.error;
   return (
     <div className="form-error" tabIndex={-1} ref={ref} role="alert">
-      <p>
-        {error instanceof InputError
-          ? t.invalid
-          : error instanceof ApiError
-            ? apiMessage(error)
-            : t.error}
-      </p>
+      <p>{message}</p>
       {fields.length > 0 && (
         <ul>
           {fields.map((field) => (
             <li key={field}>
-              <a href={`#${field}`}>
-                {t[field as keyof EventCopy]}: {t.invalid}
-              </a>
+              <a href={`#${field}`}>{label(field)}</a>
             </li>
           ))}
         </ul>

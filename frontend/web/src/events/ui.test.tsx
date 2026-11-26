@@ -6,6 +6,7 @@ import {
   fireEvent,
   waitFor,
   cleanup,
+  within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { setupServer } from "msw/node";
@@ -103,7 +104,9 @@ it("renders the free-event journey with corrective publication errors and protec
   );
   await screen.findByRole("heading", { name: "Edit event" });
   await user.click(screen.getByRole("button", { name: "Publish" }));
-  await user.click(screen.getByRole("button", { name: "Confirm" }));
+  await user.click(
+    within(screen.getByRole("dialog")).getByRole("button", { name: "Publish" }),
+  );
   await screen.findByText("Add a ticket type before publishing.");
   await user.click(screen.getByRole("button", { name: "Add ticket type" }));
   fireEvent.change(screen.getByLabelText("Ticket name", { exact: true }), {
@@ -112,7 +115,9 @@ it("renders the free-event journey with corrective publication errors and protec
   await user.click(screen.getByRole("button", { name: "Save ticket type" }));
   await screen.findByRole("rowheader", { name: "Free admission" });
   await user.click(screen.getByRole("button", { name: "Publish" }));
-  await user.click(screen.getByRole("button", { name: "Confirm" }));
+  await user.click(
+    within(screen.getByRole("dialog")).getByRole("button", { name: "Publish" }),
+  );
   await screen.findByRole("button", { name: "Return to draft" });
   await user.click(screen.getByRole("link", { name: "Preview" }));
   await screen.findByRole("heading", { name: "Dias demonstration" });

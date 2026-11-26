@@ -413,9 +413,20 @@ label {
 .form-error > div {
   min-width: 0;
 }
+/* Focus is moved here only so screen readers announce it; no ring needed. */
 .form-error:focus {
-  outline: 2px solid var(--color-danger);
-  outline-offset: 2px;
+  outline: none;
+}
+.form-error {
+  flex-wrap: wrap;
+}
+.form-error > p,
+.form-error > ul,
+.form-error > button {
+  flex-basis: 100%;
+}
+.form-error > button {
+  flex-basis: auto;
 }
 .form-error p {
   font-weight: 500;
@@ -561,17 +572,42 @@ th[scope="row"] {
   font-weight: 650;
 }
 
+/* The global margin reset removes the UA "margin: auto" that centres modal dialogs. */
 dialog {
+  margin: auto;
+  width: min(28rem, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
   color: var(--color-ink);
   background: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: 16px;
   padding: 1.5rem;
-  max-width: min(92vw, 520px);
-  box-shadow: var(--shadow-raise);
+  box-shadow: 0 24px 64px rgb(15 23 42 / 0.24);
+}
+dialog[open] {
+  animation: dialog-in 180ms var(--ease-out);
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
 }
 dialog h2:first-child {
-  margin-top: 0;
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+dialog p {
+  color: var(--color-muted);
+}
+dialog .controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
 }
 dialog::backdrop {
   background: rgb(20 36 58 / 0.42);
