@@ -25,7 +25,7 @@ import { paymentCopy } from "../payments/copy";
 import "./checkout.css";
 import { BackLink } from "../BackLink";
 import { cityLabel } from "../events/venues";
-import { ArrowRightIcon, TicketIcon } from "../icons";
+import { ArrowRightIcon, CheckIcon, TicketIcon } from "../icons";
 
 // Older API builds sent no event_id; tickets of one order share one event.
 const eventOf = (order: Order): string | undefined =>
@@ -214,10 +214,17 @@ function OrderContent({
             />
           )}
           {order.status === "paid" && (
-            <div className="notice" role="status">
-              <p>{paymentCopy[locale].paySuccess}</p>
-              <Link className="action-link ghost" to="/account/tickets">
-                {paymentCopy[locale].myTickets}
+            <div className="order-success" role="status">
+              <span className="order-success-icon" aria-hidden="true">
+                <CheckIcon size={20} />
+              </span>
+              <div>
+                <strong>{paymentCopy[locale].paidTitle}</strong>
+                <p>{paymentCopy[locale].paidHint}</p>
+              </div>
+              <Link className="order-success-link" to="/account/tickets">
+                {paymentCopy[locale].allTickets}
+                <ArrowRightIcon size={16} />
               </Link>
             </div>
           )}

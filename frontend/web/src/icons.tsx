@@ -27,6 +27,11 @@ function Icon({
 
 type P = SVGProps<SVGSVGElement> & { size?: number };
 
+export const CheckIcon = (p: P) => (
+  <Icon {...p}>
+    <path d="M5 12.5l4.5 4.5L19 7.5" />
+  </Icon>
+);
 export const CalendarIcon = (p: P) => (
   <Icon {...p}>
     <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />

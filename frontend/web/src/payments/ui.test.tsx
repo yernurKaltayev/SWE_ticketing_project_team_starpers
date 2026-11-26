@@ -381,7 +381,7 @@ it("sells a paid ticket without activation: checkout, pay once, tickets issued",
   );
   await screen.findByText(/MOCK-TICKET/);
   expect(screen.getByText("Paid", { exact: true })).toBeDefined();
-  expect(screen.getByRole("link", { name: "Open My tickets" })).toBeDefined();
+  expect(screen.getByRole("link", { name: "All my tickets" })).toBeDefined();
 });
 it("renders payout and financial empty states and localized simulation notices", async () => {
   const first = await mount(
