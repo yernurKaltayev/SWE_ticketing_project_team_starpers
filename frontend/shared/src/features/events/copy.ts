@@ -45,6 +45,8 @@ const en = {
   registration_opens_at: "Ticket sales open",
   registration_closes_at: "Ticket sales close",
   salesWindow: "Ticket sales",
+  salesOpens: "Opens",
+  salesCloses: "Closes",
   salesCloseAtStart: "when the event starts",
   salesCloseHint:
     "If no close date is set, ticket sales close when the event starts. Applies to every ticket type.",
@@ -200,6 +202,8 @@ const ru: Copy = {
   registration_opens_at: "Начало продаж билетов",
   registration_closes_at: "Окончание продаж билетов",
   salesWindow: "Продажа билетов",
+  salesOpens: "Начало",
+  salesCloses: "Окончание",
   salesCloseAtStart: "в момент начала события",
   salesCloseHint:
     "Если дата окончания не указана, продажа билетов закрывается в момент начала события. Действует для всех типов билетов.",
@@ -353,6 +357,8 @@ const kk: Copy = {
   registration_opens_at: "Билет сатылымының басталуы",
   registration_closes_at: "Билет сатылымының аяқталуы",
   salesWindow: "Билет сатылымы",
+  salesOpens: "Басталуы",
+  salesCloses: "Аяқталуы",
   salesCloseAtStart: "іс-шара басталғанда",
   salesCloseHint:
     "Аяқталу күні көрсетілмесе, билет сатылымы іс-шара басталғанда жабылады. Барлық билет түріне қолданылады.",

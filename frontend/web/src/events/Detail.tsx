@@ -1,3 +1,4 @@
+import { cityLabel } from "./venues";
 import { CalendarActions } from "../calendar/CalendarActions";
 import { ReportEvent } from "../insights/ReportEvent";
 import { supportLink } from "../support/model";
@@ -143,7 +144,7 @@ function EventContent({
                   </span>
                   <dt>{t.venue_id}</dt>
                   <dd>
-                    {venue.data.name} · {venue.data.address} · {venue.data.city}
+                    {venue.data.name} · {venue.data.address} · {cityLabel(venue.data.city, locale)}
                   </dd>
                 </div>
               )}
@@ -155,7 +156,7 @@ function EventContent({
                   <dt>{t.salesWindow}</dt>
                   {event.registration_opens_at && (
                     <dd>
-                      {t.registration_opens_at}:{" "}
+                      {t.salesOpens}:{" "}
                       {formatEventDateTime(
                         event.registration_opens_at,
                         event.timezone,
@@ -164,7 +165,7 @@ function EventContent({
                     </dd>
                   )}
                   <dd>
-                    {t.registration_closes_at}:{" "}
+                    {t.salesCloses}:{" "}
                     {formatEventDateTime(salesCloseAt, event.timezone, locale)}
                     {!event.registration_closes_at && ` (${t.salesCloseAtStart})`}
                   </dd>
