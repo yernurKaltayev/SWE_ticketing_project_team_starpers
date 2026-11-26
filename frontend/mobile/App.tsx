@@ -149,7 +149,8 @@ export default function App() {
             headerTintColor: color.primary,
             headerStyle: { backgroundColor: color.surface },
             headerShadowVisible: true,
-            headerBackButtonDisplayMode: "generic",
+            // Chevron only: the previous screen is "Tabs", a route name, not something to show.
+            headerBackButtonDisplayMode: "minimal",
             contentStyle: { backgroundColor: color.canvas },
           }}
         >
@@ -441,18 +442,7 @@ function AccountScreen({ locale, tabNav }: { locale: Locale; tabNav: {
     <Screen>
       {user ? (
         <>
-        {user.role !== "volunteer" ? <>
-          <Action title={supportCopy[locale].notifications} onPress={() => openPath("/account/notifications")} />
-          <Action title={commerceCopy[locale].orders} onPress={() => openPath("/account/orders")} />
-          <Action title={supportCopy[locale].title} onPress={() => openPath("/support")} />
-        </> : null}
-        {user.role === "organizer" ? <>
-          <Action title={eventCopy[locale].organizer} onPress={() => openPath("/organizer/events")} />
-          <Action title={authCopy[locale].organizer} onPress={() => openPath("/organizer/profile")} />
-          <Action title={paymentCopy[locale].accounts} onPress={() => openPath("/organizer/payout-accounts")} />
-          <Action title={paymentCopy[locale].payouts} onPress={() => openPath("/organizer/payouts")} />
-        </> : null}
-        {user.role === "platform_admin" ? <Action title={insightLabel(locale, "admin")} onPress={() => openPath("/admin")} /> : null}
+        {/* Notifications, orders, support and the organizer/admin pages live in the ☰ menu. */}
         <Profile key={user.id} locale={locale} user={user}
           onVerifyEmail={() => openAuth("VerifyEmail", { email: user.email, returnTo: "/account" })}
           onLogout={async () => {
