@@ -152,7 +152,7 @@ it("retains draft fields after failed save and allows explicit recovery without 
 });
 it("reports invalid wall-time fields with a focused error on the marked field and sends no create request", async () => {
   const user = userEvent.setup();
-  const { fill } = await editor();
+  await editor();
   let writes = 0;
   server.use(
     http.post("*/api/v1/events", () => {
@@ -160,11 +160,9 @@ it("reports invalid wall-time fields with a focused error on the marked field an
       return HttpResponse.error();
     }),
   );
-  // The picker only offers real zones; a stale or tampered value must still be caught.
-  (screen.getByLabelText("Time zone", { exact: true }) as HTMLSelectElement).add(
-    new Option("Invalid/Zone", "Invalid/Zone"),
-  );
-  fill("Time zone", "Invalid/Zone");
+  // The zone is not editable any more, but a stale or tampered value must still be caught.
+  (document.querySelector('input[name="timezone"]') as HTMLInputElement).value =
+    "Invalid/Zone";
   await user.click(
     screen.getByRole("button", { name: /^Save (draft|changes)$/ }),
   );
