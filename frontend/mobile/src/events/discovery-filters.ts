@@ -1,0 +1,25 @@
+import { isoDay } from "@biletflow/shared/features/events/model";
+
+export const discoveryKeys = ["q", "category", "city", "date_from", "date_to"] as const;
+export type DiscoveryFilters = Record<(typeof discoveryKeys)[number], string>;
+export type DiscoveryParams = Partial<DiscoveryFilters>;
+
+export function discoveryParams(query: URLSearchParams): DiscoveryParams {
+  return Object.fromEntries(discoveryKeys.map((key) => [key, query.get(key) ?? ""]));
+}
+
+export function discoveryFilters(params?: DiscoveryParams): DiscoveryFilters {
+  return {
+    q: typeof params?.q === "string" ? params.q.trim() : "",
+    category: typeof params?.category === "string" ? params.category.trim() : "",
+    city: typeof params?.city === "string" ? params.city.trim() : "",
+    date_from: dateOnly(params?.date_from),
+    date_to: dateOnly(params?.date_to),
+  };
+}
+
+function dateOnly(value?: string): string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return "";
+  const date = new Date(`${value}T12:00:00`);
+  return Number.isFinite(date.getTime()) && isoDay(date) === value ? value : "";
+}

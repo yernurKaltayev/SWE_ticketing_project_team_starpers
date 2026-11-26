@@ -63,3 +63,36 @@ Owner: **Yernur Slyamshaikhov**. Evidence: **19 November 2026**. Branch: `feat/f
 - Screen-reader pass (NVDA or VoiceOver) over checkout, ticket and calendar sections, and a kk/ru copy review by a native speaker.
 - Run the full [demo script](DEMO_RUNBOOK.md#4-demo-script-core-acceptance-journey) end to end from a clean reset with both frontend owners.
 - GA4 (optional) is not implemented. It needs an agreed consent and data policy first.
+
+## Native mobile rebuild
+
+The app now uses native navigation for attendee, organizer, admin, and legacy email routes. The native route test compares the complete route inventory with the website. A second test feeds a concrete URL for each pattern to React Navigation, including wildcard and email redirects.
+
+### Automated evidence
+
+- `npm run check` passes in `frontend/` with 505 tests.
+- `npm run export:mobile` produces Android and iOS bundles.
+- All 523 backend tests passed against isolated PostgreSQL databases, including P4 seat-hold concurrency. The suite exercises ticket availability with seat categories, seat holds, checkout and refunds, check-in rejection rules, event publication, and admin settings.
+
+### Device acceptance
+
+Use a disposable environment with attendee, organizer, check-in, and platform-admin accounts. Open the app in Expo Go on a physical Android phone and iPhone with the same API origin. Record OS and device versions, test accounts or IDs, and the observed outcome for each row.
+
+| Scenario | Expected result | Android | iPhone |
+|---|---|---|---|
+| Free registration | Browse to an event, confirm a free order, open the issued ticket, share the PDF, then scan its QR. | Pending | Pending |
+| Paid assigned seating with a promo | Hold an eligible seat, validate a promo, review the server total, then simulate payment success. The order shows a ticket for the held seat. | Pending | Pending |
+| Refund and check-in | Refund a paid order as the organizer. The attendee sees the new status and the scanner rejects its original QR. | Pending | Pending |
+| Organizer event publication | Create a draft, select or create a venue, set dates and add a ticket type. Publish and find it from a separate attendee account. | Pending | Pending |
+| Admin settings | Change a fee or hold setting in the admin app, confirm before and after values, and refresh to verify the server retained the change. | Pending | Pending |
+| Session recovery | Open a protected link signed out or with an expired session. Sign in and verify the original destination opens. | Pending | Pending |
+| Accessibility and offline use | Check a narrow phone with large text, use the seat-list fallback, retry an offline read, and verify the discard prompt from an edited form. | Pending | Pending |
+| Email and Telegram | Open verification/reset links, verify a phone through Telegram, then return to the Account screen and check the new state. | Pending | Pending |
+
+This workspace supplied no connected Android or iPhone device at verification time. Bundle exports and API tests are recorded separately from device results.
+
+### Verified HTTPS links for signed builds
+
+Expo Go links use `exp://<computer-ip>:8081/--/<path>`. For a signed build, set `EXPO_PUBLIC_WEB_ORIGIN` to the public HTTPS origin and configure `BILETFLOW_IOS_BUNDLE_ID` or `BILETFLOW_ANDROID_PACKAGE` before building. The backend’s `WEB_BASE_URL` should use the same origin for email links.
+
+Serve the matching Apple app-site association file and Android Digital Asset Links file from that origin’s `.well-known` directory. They need the Apple Team ID and app bundle ID, and the Android package name and SHA-256 signing certificate fingerprint, respectively. Verify association and email-link opening with the signed builds. The identifiers, signing, and domain association are deployment inputs.

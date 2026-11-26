@@ -20,6 +20,7 @@ export type Choice = {
   available: number;
   open: boolean;
   limit: number;
+  priceCategory?: string | null;
 };
 export type Availability = { registrationOpen: boolean; choices: Choice[] };
 const record = (v: unknown): v is Record<string, unknown> =>
@@ -104,6 +105,9 @@ export function parseAvailability(value: unknown): Availability {
         available: available as number,
         open,
         limit: Math.min(100, limit as number),
+        ...(row.price_category === null || typeof row.price_category === "string"
+          ? { priceCategory: row.price_category }
+          : {}),
         free: Number(price) === 0 && (!live || row.is_free === true),
         ...(Number(price) === 0
           ? {}
@@ -120,10 +124,11 @@ export function registrationOpen(
   event: Event,
   availability: Availability,
   now = Date.now(),
+  allowAssigned = false,
 ) {
   return (
     event.status === "published" &&
-    event.seating_mode === "general_admission" &&
+    (allowAssigned || event.seating_mode === "general_admission") &&
     availability.registrationOpen &&
     Date.parse(event.starts_at) > now &&
     (!event.registration_opens_at ||

@@ -19,6 +19,8 @@ const en = {
   statusLabel: "Status",
   qrLabel: "Ticket QR code",
   qrFailed: "Could not load the QR code.",
+  sharePdf: "Share ticket PDF",
+  sharingUnavailable: "File sharing is unavailable on this device.",
   invalidTicket:
     "This ticket is not available for admission. Check its current status or contact the organizer.",
   status: commerceCopy.en.states,
@@ -43,6 +45,8 @@ const ru: TicketsCopy = {
   statusLabel: "Статус",
   qrLabel: "QR-код билета",
   qrFailed: "Не удалось загрузить QR-код.",
+  sharePdf: "Поделиться билетом в PDF",
+  sharingUnavailable: "Обмен файлами на этом устройстве недоступен.",
   invalidTicket:
     "Этот билет недоступен для входа. Проверьте статус или свяжитесь с организатором.",
   status: commerceCopy.ru.states,
@@ -65,6 +69,8 @@ const kk: TicketsCopy = {
   statusLabel: "Күйі",
   qrLabel: "Билеттің QR-коды",
   qrFailed: "QR-кодты жүктеу мүмкін болмады.",
+  sharePdf: "Билет PDF файлын бөлісу",
+  sharingUnavailable: "Бұл құрылғыда файлдармен бөлісу қолжетімсіз.",
   invalidTicket:
     "Бұл билетпен кіру қолжетімсіз. Күйін тексеріңіз немесе ұйымдастырушыға хабарласыңыз.",
   status: commerceCopy.kk.states,

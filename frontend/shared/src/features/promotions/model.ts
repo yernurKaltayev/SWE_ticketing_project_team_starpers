@@ -104,7 +104,7 @@ export function parseValidation(v: unknown): Validation {
   return v as Validation;
 }
 export const codeValue = (v: string) => v.trim().toUpperCase();
-export function campaignBody(form: FormData, zone: string): CampaignInput {
+export function campaignBody(form: Pick<FormData, "get" | "getAll">, zone: string): CampaignInput {
   const value = (key: string) => String(form.get(key) ?? "").trim();
   const name = value("name");
   if (!name || name.length > 200) throw new Error("name");
