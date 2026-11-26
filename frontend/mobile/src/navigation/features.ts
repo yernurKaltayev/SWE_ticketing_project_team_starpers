@@ -51,5 +51,15 @@ export function featureParams(params: Record<string, string>, query: URLSearchPa
 export const organizerFeatures = new Set<FeatureName>([
   "OrganizerEvents", "OrganizerProfile", "NewEvent", "EditEvent", "PreviewEvent",
   "SeatingSetup", "Staff", "Campaigns", "Operations", "OperationDetail", "Activation",
-  "Financials", "Accounts", "Payouts", "Analytics", "History", "OrganizerUnavailable",
+  "Financials", "Accounts", "Payouts", "OrganizerUnavailable",
 ]);
+
+/**
+ * Role gate before a screen loads, matching the web routes. Event Analytics and History are
+ * deliberately not role-gated: on the web the server decides (organizer, staff or admin).
+ */
+export function canOpenFeature(name: FeatureName, role: string): boolean {
+  if (organizerFeatures.has(name)) return role === "organizer";
+  if (name === "Admin" || name === "AdminUnavailable") return role === "platform_admin";
+  return true;
+}

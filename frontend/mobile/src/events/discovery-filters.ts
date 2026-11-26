@@ -23,3 +23,8 @@ function dateOnly(value?: string): string {
   const date = new Date(`${value}T12:00:00`);
   return Number.isFinite(date.getTime()) && isoDay(date) === value ? value : "";
 }
+
+/** Filters from the sheet; the search text stays the last one the user actually submitted. */
+export function withSheetValues(current: DiscoveryFilters, values: DiscoveryParams): DiscoveryFilters {
+  return discoveryFilters({ ...values, q: current.q });
+}

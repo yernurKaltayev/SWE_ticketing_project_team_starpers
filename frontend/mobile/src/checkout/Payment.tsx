@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatPrice } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
@@ -11,6 +11,7 @@ import { useWrite } from "../features/use-write";
 import { useSessionSnapshot } from "../session";
 import { Action, Body, Callout, Card, Heading, Muted } from "../ui";
 import { secureStorage } from "./state";
+import { storedPaymentIsStale } from "./payment-state";
 
 export function Payment({ startPath, kind, amount, locale, changed }: {
   startPath: string; kind: PaymentRecord["kind"]; amount?: number; locale: Locale; changed?: () => unknown;
@@ -25,6 +26,13 @@ export function Payment({ startPath, kind, amount, locale, changed }: {
   const path = id ? `/api/v1/payments/${encodeURIComponent(id)}` : "";
   const record = useResource(path, parsePayment, { interval: 5000, key: queryKeys.payments(user?.id, path) });
   const write = useWrite(`payment:${startPath}`);
+  // A remembered id the server refuses, or for another order amount, must not hide "Start payment".
+  const stale = Boolean(id) && storedPaymentIsStale({ kind, amount, error: record.error, data: record.data });
+  useEffect(() => {
+    if (!stale) return;
+    try { secureStorage.removeItem(storageKey); } catch { /* nothing persisted to forget */ }
+    setId("");
+  }, [stale, storageKey]);
   const payment = record.data?.kind === kind && (amount === undefined || record.data.amount === amount) && !record.isError
     ? record.data : undefined;
 

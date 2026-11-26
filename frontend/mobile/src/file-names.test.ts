@@ -21,3 +21,20 @@ describe("mimeFor", () => {
     expect(mimeFor("png")).toBe("image/png");
   });
 });
+
+describe("downloadProblem", () => {
+  it("asks for sign-in when the API is set up but nobody is signed in", async () => {
+    const { downloadProblem } = await import("./file-names");
+    expect(downloadProblem({ configured: true, signedIn: false, publicFile: false })).toBe("session_expired");
+    expect(downloadProblem({ configured: false, signedIn: false, publicFile: false })).toBe("not_configured");
+    expect(downloadProblem({ configured: true, signedIn: true, publicFile: false })).toBeNull();
+    expect(downloadProblem({ configured: true, signedIn: false, publicFile: true })).toBeNull();
+  });
+});
+
+describe("oldShareFolders", () => {
+  it("picks only earlier share folders for cleanup", async () => {
+    const { oldShareFolders } = await import("./file-names");
+    expect(oldShareFolders(["share-1-a", "ExponentAsset-x", "share-2-b", "notes"])).toEqual(["share-1-a", "share-2-b"]);
+  });
+});

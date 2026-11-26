@@ -3,7 +3,7 @@ import * as Sharing from "expo-sharing";
 import { ApiError } from "@biletflow/shared";
 import { api, session } from "./session";
 import { blobToDataUri } from "./tickets/model";
-import { mimeFor, safeFileName, utis } from "./file-names";
+import { downloadProblem, mimeFor, oldShareFolders, safeFileName, utis } from "./file-names";
 import type { ShareExtension } from "./file-names";
 
 /**
@@ -17,7 +17,11 @@ export async function downloadAndShare(
   signal?: AbortSignal,
   publicFile = false,
 ): Promise<"shared" | "unavailable" | "cancelled"> {
-  const transport = session?.getSnapshot().user ? session : publicFile ? api : null;
+  const signedIn = Boolean(session?.getSnapshot().user);
+  const problem = downloadProblem({ configured: Boolean(session ?? api), signedIn, publicFile });
+  if (problem === "not_configured") throw new ApiError(0, problem, "EXPO_PUBLIC_API_ORIGIN is not set.");
+  if (problem === "session_expired") throw new ApiError(401, problem, "Sign in again to download this file.");
+  const transport = signedIn ? session : api;
   if (!transport) throw new ApiError(0, "not_configured", "EXPO_PUBLIC_API_ORIGIN is not set.");
   const owner = session?.getSnapshot().user?.id;
   if (!(await Sharing.isAvailableAsync())) return "unavailable";
@@ -42,8 +46,21 @@ export async function shareCsv(base: string, content: string) {
   await shareContent(base, "csv", content, false);
 }
 
+/** Earlier shares are finished by now; remove their copies (attendee CSVs hold personal data). */
+function removeOldShares() {
+  try {
+    const cache = new Directory(Paths.cache);
+    const old = new Set(oldShareFolders(cache.list().map((entry) => entry.name)));
+    for (const entry of cache.list()) if (entry instanceof Directory && old.has(entry.name)) entry.delete();
+  } catch {
+    // Best effort: the OS also evicts the cache.
+  }
+}
+
 async function shareContent(base: string, extension: ShareExtension, content: string, base64: boolean) {
-  // The receiving app can read the file asynchronously. Keep it in the OS-managed cache.
+  // The receiving app can read the file asynchronously, so this share's copy stays until the
+  // next share, which removes it. Keep it in the OS-managed cache.
+  removeOldShares();
   const folder = new Directory(Paths.cache, `share-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   const file = new File(folder, safeFileName(base, extension));
   folder.create();
