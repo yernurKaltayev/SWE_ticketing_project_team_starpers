@@ -172,18 +172,6 @@ function Application() {
           BiletFlow
         </Link>
         <CityPicker locale={locale} />
-        <nav className="site-nav" aria-label="BiletFlow">
-          <NavLink to="/events">{eventCopy[locale].navEvents}</NavLink>
-          {user ? (
-            <NavLink to="/support">{supportCopy[locale].title}</NavLink>
-          ) : null}
-          {isOrganizer && (
-            <NavLink to="/organizer">{eventCopy[locale].organizer}</NavLink>
-          )}
-          {hasRole(user, ["platform_admin"]) && (
-            <NavLink to="/admin">{insightLabel(locale, "admin")}</NavLink>
-          )}
-        </nav>
         <div className="account-nav">
           <LanguagePicker locale={locale} onChange={setLocale} />
           {user ? (
@@ -203,6 +191,15 @@ function Application() {
                         },
                       ]
                     : []),
+                  ...(hasRole(user, ["platform_admin"])
+                    ? [
+                        {
+                          to: "/admin",
+                          label: insightLabel(locale, "admin"),
+                          kind: "admin" as const,
+                        },
+                      ]
+                    : []),
                   {
                     to: "/account/tickets",
                     label: commerceNavigation[locale].tickets,
@@ -214,6 +211,11 @@ function Application() {
                     kind: "orders",
                   },
                   { to: "/account", label: t.account, kind: "account" },
+                  {
+                    to: "/support",
+                    label: supportCopy[locale].title,
+                    kind: "support",
+                  },
                 ]}
                 logoutLabel={loggingOut ? t.working : t.logout}
                 busy={loggingOut}

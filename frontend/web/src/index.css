@@ -1974,11 +1974,6 @@ button.link-button:hover {
     display: none !important;
   }
 }
-@media (min-width: 761px) {
-  .account-panel li:has(a[href="/organizer/events"]) {
-    display: none;
-  }
-}
 @media (max-width: 440px) {
   .site-header {
     column-gap: 0.5rem;
