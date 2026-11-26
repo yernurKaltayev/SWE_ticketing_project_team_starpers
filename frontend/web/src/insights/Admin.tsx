@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { retryRead, readDelay, useVisible } from "../support/data";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { formatMoney } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
@@ -99,7 +99,18 @@ function Search({
   const parse = useMemo(() => parseAdminPage(section), [section]);
   const query = useLiveQuery(filter.query ? `${adminPath(section)}?${filter.query}` : "", parse, 30000);
   const data = query.isError ? undefined : query.data;
-  const row = data?.items.find(r => String(r.id ?? r.campaign_id) === selected);
+  // A soft-deleted event is stored as cancelled; show it as deleted.
+  const rows = data?.items.map(r => section === "events" && r.deleted_at ? { ...r, status: "deleted" } : r);
+  const row = rows?.find(r => String(r.id ?? r.campaign_id) === selected);
+  // The details card renders under the table; bring it into view when a row is opened.
+  const detailsRef = useRef<HTMLElement>(null);
+  const rowKey = row ? String(row.id ?? row.campaign_id) : null;
+  useEffect(() => {
+    const card = detailsRef.current;
+    if (!rowKey || !card) return;
+    card.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    card.focus({ preventScroll: true });
+  }, [rowKey]);
   const write = useWriteScope(`admin:${section}`),
     [checked, setChecked] = useState(false);
   type Action = {
@@ -128,6 +139,22 @@ function Search({
       parse: v => {
         const result = parseRow(sales ? "activations" : section, v);
         if (result[sales ? "event_id" : "id"] !== id) throw new Error("response_target");
+        return result;
+      }
+    });
+  }
+  function remove(r: Row) {
+    const id = String(r.id);
+    setReason("");
+    setAction({
+      path: `/api/v1/admin/events/${encodeURIComponent(id)}/delete`,
+      body: {},
+      reason: true,
+      title: `${t("deleteEvent")} · ${String(r.title ?? id)}`,
+      hint: "deleteHint",
+      parse: v => {
+        const result = parseRow("events", v);
+        if (result.id !== id) throw new Error("response_target");
         return result;
       }
     });
@@ -242,7 +269,7 @@ function Search({
     {t("loading")}
   </p>}
   {data && <>
-    <DataTable section={section} rows={data.items} locale={locale} select={r => setSelected(String(r.id ?? r.campaign_id))} />
+    <DataTable section={section} rows={rows ?? []} locale={locale} selected={selected} select={r => setSelected(String(r.id ?? r.campaign_id))} />
     <Pager offset={offset} total={data.total} locale={locale} onChange={n => {
         setSelected(null);
         const p = new URLSearchParams(params);
@@ -250,7 +277,7 @@ function Search({
         setParams(p);
       }} />
   </>}
-  {row && <article className="insights-card">
+  {row && <article className="insights-card admin-details" ref={detailsRef} tabIndex={-1}>
     <h3>
       {t("details")}
     </h3>
@@ -271,6 +298,12 @@ function Search({
         </button>}
         {["active", "suspended"].includes(String(row.paid_sales_status)) && <button disabled={write.busy || write.uncertain || row.status === "suspended"} onClick={() => suspend(row, true)}>
           {t(row.paid_sales_status === "suspended" ? "resumeSales" : "suspendSales")}
+        </button>}
+        {!["deleted", "cancelled"].includes(String(row.status)) && <Link className="action-link ghost" to={`/organizer/events/${row.id}/edit`}>
+          {t("editEvent")}
+        </Link>}
+        {row.status !== "deleted" && <button className="danger" disabled={write.busy || write.uncertain} onClick={() => remove(row)}>
+          {t("deleteEvent")}
         </button>}
         <Link className="action-link ghost" to={`/organizer/events/${row.id}/analytics`}>
           {t("analytics")}
@@ -335,12 +368,14 @@ function DataTable({
   section,
   rows,
   locale,
-  select
+  select,
+  selected
 }: {
   section: AdminSection;
   rows: Row[];
   locale: Locale;
   select?: (r: Row) => void;
+  selected?: string | null;
 }) {
   const t = (s: string) => label(locale, s);
   if (!rows.length) return <p>
@@ -362,7 +397,7 @@ function DataTable({
       </tr>
     </thead>
     <tbody>
-      {rows.map(r => <tr key={String(r.id ?? r.campaign_id)}>
+      {rows.map(r => <tr key={String(r.id ?? r.campaign_id)} aria-selected={select ? String(r.id ?? r.campaign_id) === selected : undefined}>
         {columns[section].map((c, i) => i === 0 ? <th scope="row" key={c}>
           {c === "event_id" && typeof r[c] === "string" ? <EventName id={r[c]} /> : <Cell field={c} value={r[c]} locale={locale} />}
         </th> : <td key={c}>

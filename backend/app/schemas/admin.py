@@ -58,6 +58,13 @@ class AdminEventOut(OrmModel):
     paid_sales_status: str
     starts_at: datetime
     created_at: datetime
+    deleted_at: datetime | None = None
+
+
+class DeleteEventIn(BaseModel):
+    """Soft delete: orders are settled (refunded) first; the reason goes to the audit log."""
+
+    reason: str = Field(min_length=1, max_length=500)
 
 
 class AdminOrderOut(OrmModel):

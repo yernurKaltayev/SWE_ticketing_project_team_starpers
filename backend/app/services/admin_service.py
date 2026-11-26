@@ -303,6 +303,50 @@ async def set_event_suspension(
     return event
 
 
+async def delete_event(db: AsyncSession, admin: User, event_id: uuid.UUID, reason: str) -> Event:
+    """Soft delete: settle every order (refund paid, cancel free, release pending) like a
+    cancellation, then hide the event everywhere. Rows and the audit trail stay in the DB."""
+    from app.services import refund_service  # deferred, as in event_service.cancel_event
+
+    event = await _locked_event(db, event_id)
+    if event.deleted_at is not None:
+        raise ConflictError("The event is already deleted.", code="event_deleted")
+    now = datetime.now(UTC)
+    settled = {"released": 0, "cancelled": 0, "refunded": 0}
+    if event.status != EventStatus.cancelled:
+        if await db.scalar(select(Order.id).where(Order.event_id == event.id).limit(1)):
+            settled = await refund_service.cancel_event_orders(db, event, admin)
+        event.status = EventStatus.cancelled
+        event.cancelled_at = now
+        event.paid_sales_status = PaidSalesStatus.disabled
+    event.deleted_at = now
+    audit(
+        db,
+        action_type="event.deleted",
+        entity_type="event",
+        entity_id=event.id,
+        event_id=event.id,
+        actor=admin,
+        description="Event deleted by an admin; orders settled",
+        metadata={"reason": reason, **settled},
+    )
+    organizer = await _organizer_user(db, event)
+    if organizer is not None:
+        await notify(
+            db,
+            NotificationType.event_update,
+            organizer,
+            {
+                "event_id": str(event.id),
+                "message": f'A platform admin deleted the event "{event.title}". '
+                f"Orders were cancelled and refunded. Reason: {reason}",
+            },
+        )
+    await db.commit()
+    await db.refresh(event)
+    return event
+
+
 async def set_paid_sales_suspension(
     db: AsyncSession, admin: User, event_id: uuid.UUID, suspended: bool, reason: str
 ) -> PaidSalesActivation:

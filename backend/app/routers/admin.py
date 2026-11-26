@@ -24,6 +24,7 @@ from app.schemas.admin import (
     AdminRefundOut,
     AdminSupportCaseOut,
     AdminUserOut,
+    DeleteEventIn,
     DisputesOut,
     EventReportOut,
     EventReportUpdate,
@@ -87,6 +88,13 @@ async def suspend_event(
     return await admin_service.set_event_suspension(
         db, admin, event_id, payload.suspended, payload.reason
     )
+
+
+@router.post("/events/{event_id}/delete", response_model=AdminEventOut)
+async def delete_event(
+    event_id: uuid.UUID, payload: DeleteEventIn, admin: Admin, db: DbSession
+) -> Event:
+    return await admin_service.delete_event(db, admin, event_id, payload.reason)
 
 
 @router.post("/events/{event_id}/paid-sales/suspend", response_model=AdminActivationOut)

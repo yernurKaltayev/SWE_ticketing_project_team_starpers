@@ -1691,6 +1691,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/events/{event_id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Soft-delete an event (settles and refunds its orders, then hides it everywhere)
+         * @description Owner: P11. Access: platform_admin. Records stay in the database; the reason is recorded in the audit log.
+         */
+        post: operations["post_admin_events_event_id_delete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/events/{event_id}/paid-sales/suspend": {
         parameters: {
             query?: never;
@@ -3460,6 +3480,14 @@ export interface components {
             created_at: string;
         };
         /**
+         * DeleteEventIn
+         * @description Soft delete. Orders are settled (refunded) first; the reason goes to the audit log.
+         */
+        DeleteEventIn: {
+            /** Reason */
+            reason: string;
+        };
+        /**
          * SuspendIn
          * @description `suspended=true` suspends, `false` lifts it. A reason is always recorded in the audit log.
          */
@@ -3810,6 +3838,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Deleted At */
+            deleted_at?: string | null;
         };
         /** AdminOrderOut */
         AdminOrderOut: {
@@ -6784,6 +6814,37 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["SuspendIn"];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminEventOut"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    post_admin_events_event_id_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteEventIn"];
             };
         };
         responses: {

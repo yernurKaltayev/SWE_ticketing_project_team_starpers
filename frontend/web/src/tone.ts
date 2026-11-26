@@ -24,6 +24,7 @@ const tones: Record<string, "success" | "warning" | "danger" | "neutral"> = {
   refunded: "danger",
   expired: "danger",
   suspended: "danger",
+  deleted: "danger",
   rejected: "danger",
   soldOut: "danger",
   sold_out: "danger",
