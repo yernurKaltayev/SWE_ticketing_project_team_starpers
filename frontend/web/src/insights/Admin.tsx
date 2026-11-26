@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { retryRead, readDelay, useVisible } from "../support/data";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { formatMoney } from "@biletflow/shared";
 import type { Locale } from "@biletflow/shared";
@@ -100,6 +100,15 @@ function Search({
   const query = useLiveQuery(filter.query ? `${adminPath(section)}?${filter.query}` : "", parse, 30000);
   const data = query.isError ? undefined : query.data;
   const row = data?.items.find(r => String(r.id ?? r.campaign_id) === selected);
+  // The details card renders under the table; bring it into view when a row is opened.
+  const detailsRef = useRef<HTMLElement>(null);
+  const rowKey = row ? String(row.id ?? row.campaign_id) : null;
+  useEffect(() => {
+    const card = detailsRef.current;
+    if (!rowKey || !card) return;
+    card.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    card.focus({ preventScroll: true });
+  }, [rowKey]);
   const write = useWriteScope(`admin:${section}`),
     [checked, setChecked] = useState(false);
   type Action = {
@@ -242,7 +251,7 @@ function Search({
     {t("loading")}
   </p>}
   {data && <>
-    <DataTable section={section} rows={data.items} locale={locale} select={r => setSelected(String(r.id ?? r.campaign_id))} />
+    <DataTable section={section} rows={data.items} locale={locale} selected={selected} select={r => setSelected(String(r.id ?? r.campaign_id))} />
     <Pager offset={offset} total={data.total} locale={locale} onChange={n => {
         setSelected(null);
         const p = new URLSearchParams(params);
@@ -250,7 +259,7 @@ function Search({
         setParams(p);
       }} />
   </>}
-  {row && <article className="insights-card">
+  {row && <article className="insights-card admin-details" ref={detailsRef} tabIndex={-1}>
     <h3>
       {t("details")}
     </h3>
@@ -335,12 +344,14 @@ function DataTable({
   section,
   rows,
   locale,
-  select
+  select,
+  selected
 }: {
   section: AdminSection;
   rows: Row[];
   locale: Locale;
   select?: (r: Row) => void;
+  selected?: string | null;
 }) {
   const t = (s: string) => label(locale, s);
   if (!rows.length) return <p>
@@ -362,7 +373,7 @@ function DataTable({
       </tr>
     </thead>
     <tbody>
-      {rows.map(r => <tr key={String(r.id ?? r.campaign_id)}>
+      {rows.map(r => <tr key={String(r.id ?? r.campaign_id)} aria-selected={select ? String(r.id ?? r.campaign_id) === selected : undefined}>
         {columns[section].map((c, i) => i === 0 ? <th scope="row" key={c}>
           {c === "event_id" && typeof r[c] === "string" ? <EventName id={r[c]} /> : <Cell field={c} value={r[c]} locale={locale} />}
         </th> : <td key={c}>

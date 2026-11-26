@@ -3116,3 +3116,13 @@ button.danger-text {
     min-height: 200px;
   }
 }
+
+/* Admin: the opened row stays highlighted; its details card scrolls into view. */
+.table-scroll tr[aria-selected="true"] > * {
+  background: var(--color-primary-soft);
+}
+.admin-details {
+  scroll-margin-top: calc(var(--header-offset, 4.5rem) + 1rem);
+  outline: none;
+  border-color: var(--color-primary);
+}
