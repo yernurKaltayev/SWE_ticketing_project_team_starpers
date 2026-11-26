@@ -728,3 +728,10 @@
   gap: 0.6rem;
   margin-top: 0.75rem;
 }
+/* With no form, the state card and the event card share one height. */
+.checkout-layout:has(> .checkout-state) {
+  align-items: stretch;
+}
+.checkout-layout:has(> .checkout-state) > .checkout-context {
+  position: static;
+}
