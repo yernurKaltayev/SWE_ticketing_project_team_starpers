@@ -3,6 +3,7 @@ import type { Locale } from "@biletflow/shared";
 const en = {
   choose: "Choose…",
   close: "Close",
+  menu: "Menu",
   done: "Done",
   cancel: "Cancel",
   pickDate: "Choose date and time",
@@ -27,6 +28,7 @@ export type KitCopy = typeof en;
 const ru: KitCopy = {
   choose: "Выбрать…",
   close: "Закрыть",
+  menu: "Меню",
   done: "Готово",
   cancel: "Отмена",
   pickDate: "Выберите дату и время",
@@ -49,6 +51,7 @@ const ru: KitCopy = {
 const kk: KitCopy = {
   choose: "Таңдау…",
   close: "Жабу",
+  menu: "Мәзір",
   done: "Дайын",
   cancel: "Бас тарту",
   pickDate: "Күн мен уақытты таңдаңыз",
