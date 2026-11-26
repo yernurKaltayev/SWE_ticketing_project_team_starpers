@@ -128,6 +128,21 @@ npm.cmd run export:mobile
 
 The mobile skeleton has native Home → Connection navigation, theme/safe-area handling, locale controls and a real health check. In development, **SecureStore · F0** probes set/read/delete using a separate temporary key, without replacing session credentials. This verifies secure-storage availability only; integrated login/refresh/logout and actual Android/iPhone evidence remain pending even though P1 now implements the backend endpoints. Access tokens stay in memory; the native session adapter persists only refresh credentials. P1 rotates refresh tokens and revokes refresh sessions on reuse, so F1 must coordinate refresh requests and avoid parallel or blindly retried refreshes.
 
+## Shared feature logic (F11 · F0.1)
+
+DOM-free logic and kk/ru/en copy for every web area live in `shared/src/features/<area>/<file>.ts` and are imported as `@biletflow/shared/features/<area>/<file>` by both the web and the mobile app. The old `web/src/<area>/<file>.ts` paths are one-line re-exports kept for existing imports; edit the shared file, never the stub. Nothing in `shared/src` may use browser or React APIs: `shared/tests/features.test.ts` enforces it. Logic tests for moved modules live in `shared/tests/features/<area>/`.
+
+Data loading (F0.2): mobile screens use `useAuthedQuery(key, path)` / `useAuthedMutation` from `mobile/src/data.ts` with keys from `@biletflow/shared/features/query-keys` (the same arrays the web builds). The mobile query cache is cleared on every sign-out and session expiry and refetches when the app returns to the foreground. Storage that shared logic needs is passed in as a `KeyValueStore` (`localStorage` on web, `createSecureKeyValueStore(SecureStore)` on mobile). Metro must keep package exports enabled (the SDK default) for `@biletflow/shared/features/*` to resolve.
+
+## Adding a native mobile screen (F11)
+
+The BiletFlow web tab shows every page that has no native screen yet. To replace a page:
+
+1. Build the screen in `mobile/src/<area>/` from the kit (`mobile/src/kit`: form fields, select, date/time in the event zone, KZT money, cover image, confirm sheet, list/empty/error states, `downloadAndShare`), the shared logic (`@biletflow/shared/features/...`) and `useAuthedQuery`. Try kit pieces on a phone via Settings → UI kit (development builds only).
+2. Add `{ pattern, to }` to `nativeRoutes` in `mobile/src/navigation/routes.ts`. Copy `pattern` exactly from `web/src/App.tsx` (a test fails otherwise) and extend `NativeTarget`.
+3. Handle the new target in `goNative` (`mobile/App.tsx`); if the screen is a tab, add it to `tabScreens` in `mobile/src/navigation/linking.ts`.
+4. Check it: tap the matching link inside the web tab, and open `exp://<computer-ip>:8081/--/<path>` on the phone (deep link in Expo Go).
+
 ## Tooling
 
 Application workspaces use template-compatible TypeScript 6. Root code generation uses TypeScript 5.9 because the current `openapi-typescript` peer range requires TypeScript 5; npm resolves these through one lockfile. Review dependency advisories with `npm audit` rather than forcing breaking Expo/schema-tool changes.

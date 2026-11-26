@@ -7,9 +7,7 @@ import { parseEvent } from "./contracts";
 import { useEventRequest } from "./data";
 import type { Event } from "./model";
 import { EventError } from "./ui";
-
-const MAX_BYTES = 5 * 1024 * 1024;
-const TYPES = ["image/jpeg", "image/png", "image/webp"];
+import { coverProblem, coverRules } from "@biletflow/shared/features/events/cover";
 
 /** One cover image per event: pick or drop a file, replace or remove it. */
 export function CoverEditor({
@@ -44,8 +42,9 @@ export function CoverEditor({
   function upload(file: File | undefined) {
     setProblem("");
     if (!file || busy) return;
-    if (!TYPES.includes(file.type)) return setProblem(t.coverType);
-    if (file.size > MAX_BYTES) return setProblem(t.coverSize);
+    const problem = coverProblem(file);
+    if (problem === "type") return setProblem(t.coverType);
+    if (problem === "size") return setProblem(t.coverSize);
     const body = new FormData();
     body.append("file", file);
     send(`/api/v1/events/${event.id}/images`, { method: "POST", body });
@@ -65,7 +64,7 @@ export function CoverEditor({
         ref={input}
         id="cover-file"
         type="file"
-        accept={TYPES.join(",")}
+        accept={coverRules.types.join(",")}
         className="visually-hidden"
         tabIndex={-1}
         onChange={(e) => {

@@ -30,7 +30,18 @@
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
+      ],
+      "expo-sharing",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "BiletFlow uses your photos to set an event cover image.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
       ]
-    ]
+    ],
+    "scheme": "biletflow"
   }
 }
