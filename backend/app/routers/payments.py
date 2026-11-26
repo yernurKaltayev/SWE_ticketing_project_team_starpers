@@ -4,9 +4,9 @@ Every payment, verification and payout here is SIMULATED (`is_simulated: true`).
 """
 
 import uuid
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Header, Request, Response, status
+from fastapi import APIRouter, Depends, Header, Query, Request, Response, status
 
 from app.core.deps import CurrentUser, DbSession, require_event_access, require_role
 from app.core.pagination import Page, Pagination
@@ -16,6 +16,8 @@ from app.schemas.payment import (
     ActivationOut,
     ActivationUpdate,
     FinancialSummaryOut,
+    HalykSessionOut,
+    PaymentConfigOut,
     PaymentOut,
     PayoutAccountIn,
     PayoutAccountOut,
@@ -23,7 +25,7 @@ from app.schemas.payment import (
     SimulatePaymentIn,
 )
 from app.services.payments import activation as activation_service
-from app.services.payments import payment_service
+from app.services.payments import get_provider, payment_service, ticket_provider_name
 from app.services.payments import payout as payout_service
 from app.services.payments.sandbox import SIGNATURE_HEADER
 
@@ -31,6 +33,12 @@ router = APIRouter(tags=["payments"])
 
 Organizer = Annotated[User, Depends(require_role(UserRole.organizer))]
 ManagedEvent = Annotated[Event, Depends(require_event_access(StaffRole.manager))]
+
+
+@router.get("/payments/config", response_model=PaymentConfigOut)
+async def payment_config() -> PaymentConfigOut:
+    # Declared before /payments/{payment_id} so "config" is not parsed as a payment ID.
+    return PaymentConfigOut(ticket_provider=ticket_provider_name().value, is_simulated=True)  # type: ignore[arg-type]
 
 
 @router.post(
@@ -58,6 +66,22 @@ async def simulate_payment(
     )
 
 
+@router.post("/payments/{payment_id}/halyk-session", response_model=HalykSessionOut)
+async def halyk_session(
+    payment_id: uuid.UUID,
+    user: CurrentUser,
+    db: DbSession,
+    locale: Annotated[Literal["en", "ru", "kk"], Query()] = "ru",
+    client: Annotated[Literal["web", "app"], Query()] = "web",
+) -> HalykSessionOut:
+    return await payment_service.halyk_session(db, user, payment_id, locale=locale, client=client)
+
+
+@router.post("/payments/{payment_id}/sync", response_model=PaymentOut)
+async def sync_payment(payment_id: uuid.UUID, user: CurrentUser, db: DbSession) -> PaymentOut:
+    return await payment_service.sync_payment(db, user, payment_id)
+
+
 @router.post(
     "/payments/webhooks/{provider}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -69,8 +93,13 @@ async def payment_webhook(
     db: DbSession,
     signature: Annotated[str, Header(alias=SIGNATURE_HEADER)] = "",
 ) -> Response:
+    body = await request.body()
     try:
-        await payment_service.process_provider_event(db, provider, await request.body(), signature)
+        if get_provider(provider).supports_pull:
+            # Unsigned callback: it only triggers a server-to-server status check.
+            await payment_service.handle_pull_callback(db, provider, body)
+        else:
+            await payment_service.process_provider_event(db, provider, body, signature)
     except Exception:
         await db.rollback()
         raise

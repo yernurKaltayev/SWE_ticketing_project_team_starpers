@@ -915,6 +915,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/payments/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Which provider takes ticket payments (sandbox or Halyk test environment)
+         * @description Owner: P6. Access: public. Lets clients show the internal demo card form (sandbox) or the Halyk ePay test checkout (halyk). Both are simulated.
+         */
+        get: operations["get_payments_config"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/{payment_id}/halyk-session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * HALYK TEST: payment object for halyk.pay()
+         * @description Owner: P6. Access: order buyer. For a pending Halyk ePay (test environment) ticket payment, requests a short-lived invoice-bound token from Halyk and returns the object the browser passes to halyk.pay(). Never contains the client secret. client=app makes the return page hand back to the mobile app.
+         */
+        post: operations["post_payments_payment_id_halyk_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/{payment_id}/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Re-check a pull provider's payment status (Halyk check-status)
+         * @description Owner: P6. Access: order buyer or event staff (support) for ticket payments; event owner, platform admin, or staff (manager) for activation fees. Asks the provider server-to-server and settles the payment if final; idempotent. A no-op for sandbox payments.
+         */
+        post: operations["post_payments_payment_id_sync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/payments/webhooks/{provider}": {
         parameters: {
             query?: never;
@@ -926,7 +986,7 @@ export interface paths {
         put?: never;
         /**
          * Provider callback; idempotent per provider_ref
-         * @description Owner: P6. Access: provider signature.
+         * @description Owner: P6. Access: provider signature (sandbox). Halyk callbacks are unsigned: only their invoiceId is read, and the payment is settled from Halyk check-status.
          */
         post: operations["post_payments_webhooks_provider"];
         delete?: never;
@@ -2996,6 +3056,13 @@ export interface components {
              * @enum {string}
              */
             kind: "ticket" | "activation_fee";
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "sandbox" | "halyk";
+            /** Order Id */
+            order_id: string | null;
             /** Status */
             status: string;
             /** Amount */
@@ -3010,6 +3077,43 @@ export interface components {
             checkout_url: string | null;
             /** Failure Reason */
             failure_reason: string | null;
+        };
+        /**
+         * PaymentConfigOut
+         * @description Which provider takes ticket payments, so clients show the right checkout.
+         */
+        PaymentConfigOut: {
+            /**
+             * Ticket Provider
+             * @enum {string}
+             */
+            ticket_provider: "sandbox" | "halyk";
+            /** Is Simulated */
+            is_simulated: boolean;
+        };
+        /**
+         * HalykSessionOut
+         * @description What the web page needs to open Halyk's TEST payment form. No client secret inside.
+         */
+        HalykSessionOut: {
+            /**
+             * Payment Id
+             * Format: uuid
+             */
+            payment_id: string;
+            /**
+             * Order Id
+             * Format: uuid
+             */
+            order_id: string;
+            /** Script Url */
+            script_url: string;
+            /** Payment Object */
+            payment_object: {
+                [key: string]: unknown;
+            };
+            /** Is Simulated */
+            is_simulated: boolean;
         };
         /** PayoutAccountIn */
         PayoutAccountIn: {
@@ -5571,6 +5675,83 @@ export interface operations {
             404: components["responses"]["Error"];
             409: components["responses"]["Error"];
             422: components["responses"]["Error"];
+        };
+    };
+    get_payments_config: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentConfigOut"];
+                };
+            };
+        };
+    };
+    post_payments_payment_id_halyk_session: {
+        parameters: {
+            query?: {
+                locale?: "en" | "ru" | "kk";
+                client?: "web" | "app";
+            };
+            header?: never;
+            path: {
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HalykSessionOut"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+            503: components["responses"]["Error"];
+        };
+    };
+    post_payments_payment_id_sync: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payment_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentOut"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            503: components["responses"]["Error"];
         };
     };
     post_payments_webhooks_provider: {

@@ -35,8 +35,15 @@ class ProviderRefund:
     failure_reason: str | None = None
 
 
+class ProviderUnavailableError(Exception):
+    """The provider could not be reached or answered with something unusable. Retry later."""
+
+
 class PaymentProvider(ABC):
     name: PaymentProviderName
+    # True when the provider's own status API is the source of truth (callbacks are unsigned),
+    # so payments are settled by pulling `fetch_status` rather than by trusting a webhook body.
+    supports_pull: bool = False
 
     @abstractmethod
     async def create_intent(
@@ -51,3 +58,7 @@ class PaymentProvider(ABC):
     @abstractmethod
     async def refund(self, provider_ref: str, amount: Money) -> ProviderRefund:
         """Refund a succeeded payment."""
+
+    async def fetch_status(self, provider_ref: str) -> ProviderEvent:
+        """Ask the provider for the payment's current status. `pending` means "not final yet"."""
+        raise NotImplementedError(f"{self.name} does not support status polling")

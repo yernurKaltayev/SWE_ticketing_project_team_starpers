@@ -82,6 +82,8 @@ function start(
     id,
     amount,
     kind,
+    provider: "sandbox",
+    order_id: kind === "ticket" ? reference : null,
     fee_amount: kind === "ticket" ? Math.round(amount * 0.03) : 0,
     currency: "KZT",
     status: "pending",
@@ -93,6 +95,10 @@ function start(
   return response(payment, 201);
 }
 export const paymentHandlers = [
+  // Before /payments/:id, which would otherwise match "config".
+  http.get("*/api/v1/payments/config", () =>
+    HttpResponse.json({ ticket_provider: "sandbox", is_simulated: true }),
+  ),
   http.get("*/api/v1/events/:id/activation", ({ request, params }) => {
     const user = organizer(request, String(params.id));
     return user instanceof Response
