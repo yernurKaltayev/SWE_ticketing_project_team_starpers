@@ -149,7 +149,8 @@ export default function App() {
             headerTintColor: color.primary,
             headerStyle: { backgroundColor: color.surface },
             headerShadowVisible: true,
-            headerBackButtonDisplayMode: "generic",
+            // Chevron only: the previous screen is "Tabs", a route name, not something to show.
+            headerBackButtonDisplayMode: "minimal",
             contentStyle: { backgroundColor: color.canvas },
           }}
         >
