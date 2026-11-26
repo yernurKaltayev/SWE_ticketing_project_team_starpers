@@ -80,4 +80,6 @@ class Event(UUIDPrimaryKey, Timestamps, Base):
     )
     refund_policy: Mapped[JsonObject]
     cancelled_at: Mapped[datetime | None]
+    # Set when a platform admin deletes the event: hidden everywhere, records kept (P11).
+    deleted_at: Mapped[datetime | None]
     duplicated_from_id: Mapped[uuid.UUID | None] = fk("events.id")

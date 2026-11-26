@@ -18,7 +18,7 @@ from app.core.pagination import Page, PageParams, paginate
 from app.models.event import Event, EventStatus, EventVisibility, PaidSalesStatus
 from app.models.order import Order
 from app.models.ticket_type import TicketType
-from app.models.user import OrganizerProfile, User
+from app.models.user import OrganizerProfile, User, UserRole
 from app.models.venue import Venue, VenueLayout
 from app.schemas.event import EventCreate, EventOut, EventUpdate
 from app.services import storage_service
@@ -147,6 +147,7 @@ async def public_events(
     stmt = select(Event).where(
         Event.status == EventStatus.published,
         Event.visibility == EventVisibility.public,
+        Event.deleted_at.is_(None),
     )
     if q:
         text = f"%{q.strip()}%"
@@ -173,7 +174,7 @@ async def own_events(db: AsyncSession, user: User, params: PageParams) -> Page[E
     page = await paginate(
         db,
         select(Event)
-        .where(Event.organizer_id == profile.id)
+        .where(Event.organizer_id == profile.id, Event.deleted_at.is_(None))
         .order_by(Event.created_at.desc(), Event.id),
         params,
     )
@@ -187,7 +188,9 @@ async def own_events(db: AsyncSession, user: User, params: PageParams) -> Page[E
 
 async def event_details(db: AsyncSession, event_id: uuid.UUID, user: User | None) -> EventOut:
     event = await db.get(Event, event_id)
-    if event is None:
+    if event is None or (
+        event.deleted_at is not None and (user is None or user.role != UserRole.platform_admin)
+    ):
         raise NotFoundError("The event was not found.", code="event_not_found")
     if event.status == EventStatus.published and event.visibility == EventVisibility.public:
         # A public read never exposes its token (even if the caller happens to be the organizer).
@@ -205,7 +208,7 @@ async def event_details(db: AsyncSession, event_id: uuid.UUID, user: User | None
 
 async def event_by_token(db: AsyncSession, token: str) -> EventOut:
     event = await db.scalar(select(Event).where(Event.share_token == token))
-    if event is None or event.status != EventStatus.published:
+    if event is None or event.status != EventStatus.published or event.deleted_at is not None:
         raise NotFoundError("The event was not found.", code="event_not_found")
     return _out(event, reveal_token=True)
 

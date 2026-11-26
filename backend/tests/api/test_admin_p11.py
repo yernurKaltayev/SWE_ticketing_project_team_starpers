@@ -18,6 +18,7 @@ from app.models import (
     SupportCase,
 )
 from app.models.event import EventStatus, PaidSalesStatus
+from app.models.order import OrderStatus
 from app.models.payment import ActivationStatus, PaymentKind, PaymentProviderName, PaymentStatus
 from app.models.refund import RefundStatus
 from app.models.support import SupportAudience, SupportCategory
@@ -284,6 +285,53 @@ async def test_paid_sales_can_be_suspended_on_their_own(client, db):
         headers=auth_header(admin),
     )
     assert again.status_code == 409
+
+
+# ---------------------------------------------------------------- event delete
+
+
+async def test_deleting_an_event_settles_orders_and_hides_it_everywhere(client, db):
+    admin = await _admin(db)
+    owner, profile = await make_organizer(db)
+    event = await make_event(db, profile, status=EventStatus.published)
+    order = await make_order(db, event)
+    assert (await client.get(f"{PREFIX}/events/{event.id}")).status_code == 200
+
+    response = await client.post(
+        f"{ADMIN}/events/{event.id}/delete", json={"reason": "fraud"}, headers=auth_header(admin)
+    )
+    body = response.json()
+    assert response.status_code == 200
+    assert body["status"] == "cancelled" and body["deleted_at"] is not None
+    await db.refresh(order)
+    assert order.status != OrderStatus.pending
+    [entry] = await _actions(db, "event.deleted")
+    assert entry.meta["reason"] == "fraud"
+
+    assert (await client.get(f"{PREFIX}/events/{event.id}")).status_code == 404
+    owner_headers = auth_header(owner)
+    assert (
+        await client.get(f"{PREFIX}/events/{event.id}", headers=owner_headers)
+    ).status_code == 404
+    mine = await client.get(f"{PREFIX}/organizers/me/events", headers=owner_headers)
+    assert str(event.id) not in {e["id"] for e in mine.json()["items"]}
+    # Admins still see it, and a second delete is refused.
+    admin_view = await client.get(f"{PREFIX}/events/{event.id}", headers=auth_header(admin))
+    assert admin_view.status_code == 200
+    again = await client.post(
+        f"{ADMIN}/events/{event.id}/delete", json={"reason": "x"}, headers=auth_header(admin)
+    )
+    assert again.status_code == 409
+
+
+async def test_only_admins_can_delete_events_and_need_a_reason(client, db):
+    admin, attendee = await _admin(db), await make_user(db)
+    event = await _published_event(db)
+    url = f"{ADMIN}/events/{event.id}/delete"
+    denied = await client.post(url, json={"reason": "x"}, headers=auth_header(attendee))
+    assert denied.status_code == 403
+    empty = await client.post(url, json={"reason": ""}, headers=auth_header(admin))
+    assert empty.status_code == 422
 
 
 # --------------------------------------------------------------------- reports

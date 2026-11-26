@@ -121,6 +121,9 @@ async def check_event_access(
 
     if user.role == UserRole.platform_admin:
         return event
+    # Deleted by an admin: gone for organizers and staff too.
+    if event.deleted_at is not None:
+        raise NotFoundError("The event was not found.", code="event_not_found")
 
     owner_user_id = await db.scalar(
         select(OrganizerProfile.user_id).where(OrganizerProfile.id == event.organizer_id)

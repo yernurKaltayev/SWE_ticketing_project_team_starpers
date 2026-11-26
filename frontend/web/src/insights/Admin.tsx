@@ -99,7 +99,9 @@ function Search({
   const parse = useMemo(() => parseAdminPage(section), [section]);
   const query = useLiveQuery(filter.query ? `${adminPath(section)}?${filter.query}` : "", parse, 30000);
   const data = query.isError ? undefined : query.data;
-  const row = data?.items.find(r => String(r.id ?? r.campaign_id) === selected);
+  // A soft-deleted event is stored as cancelled; show it as deleted.
+  const rows = data?.items.map(r => section === "events" && r.deleted_at ? { ...r, status: "deleted" } : r);
+  const row = rows?.find(r => String(r.id ?? r.campaign_id) === selected);
   // The details card renders under the table; bring it into view when a row is opened.
   const detailsRef = useRef<HTMLElement>(null);
   const rowKey = row ? String(row.id ?? row.campaign_id) : null;
@@ -137,6 +139,22 @@ function Search({
       parse: v => {
         const result = parseRow(sales ? "activations" : section, v);
         if (result[sales ? "event_id" : "id"] !== id) throw new Error("response_target");
+        return result;
+      }
+    });
+  }
+  function remove(r: Row) {
+    const id = String(r.id);
+    setReason("");
+    setAction({
+      path: `/api/v1/admin/events/${encodeURIComponent(id)}/delete`,
+      body: {},
+      reason: true,
+      title: `${t("deleteEvent")} · ${String(r.title ?? id)}`,
+      hint: "deleteHint",
+      parse: v => {
+        const result = parseRow("events", v);
+        if (result.id !== id) throw new Error("response_target");
         return result;
       }
     });
@@ -251,7 +269,7 @@ function Search({
     {t("loading")}
   </p>}
   {data && <>
-    <DataTable section={section} rows={data.items} locale={locale} selected={selected} select={r => setSelected(String(r.id ?? r.campaign_id))} />
+    <DataTable section={section} rows={rows ?? []} locale={locale} selected={selected} select={r => setSelected(String(r.id ?? r.campaign_id))} />
     <Pager offset={offset} total={data.total} locale={locale} onChange={n => {
         setSelected(null);
         const p = new URLSearchParams(params);
@@ -280,6 +298,9 @@ function Search({
         </button>}
         {["active", "suspended"].includes(String(row.paid_sales_status)) && <button disabled={write.busy || write.uncertain || row.status === "suspended"} onClick={() => suspend(row, true)}>
           {t(row.paid_sales_status === "suspended" ? "resumeSales" : "suspendSales")}
+        </button>}
+        {row.status !== "deleted" && <button className="danger" disabled={write.busy || write.uncertain} onClick={() => remove(row)}>
+          {t("deleteEvent")}
         </button>}
         <Link className="action-link ghost" to={`/organizer/events/${row.id}/analytics`}>
           {t("analytics")}

@@ -3238,6 +3238,44 @@ paths:
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
+  /admin/events/{event_id}/delete:
+    post:
+      tags:
+      - admin
+      summary: Soft-delete an event (settles and refunds its orders, then hides it everywhere)
+      description: 'Owner: P11. Access: platform_admin. Records stay in the database; the reason
+        is recorded in the audit log.'
+      operationId: post_admin_events_event_id_delete
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema: *id002
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteEventIn'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminEventOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
   /admin/events/{event_id}/paid-sales/suspend:
     post:
       tags:
@@ -6328,6 +6366,18 @@ components:
       - created_at
       title: SupportMessageOut
       type: object
+    DeleteEventIn:
+      description: Soft delete. Orders are settled (refunded) first; the reason goes to the audit log.
+      properties:
+        reason:
+          maxLength: 500
+          minLength: 1
+          title: Reason
+          type: string
+      required:
+      - reason
+      title: DeleteEventIn
+      type: object
     SuspendIn:
       description: '`suspended=true` suspends, `false` lifts it. A reason is always recorded in the audit log.'
       properties:
@@ -6850,6 +6900,12 @@ components:
           format: date-time
           title: Created At
           type: string
+        deleted_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Deleted At
       required:
       - id
       - organizer_id
