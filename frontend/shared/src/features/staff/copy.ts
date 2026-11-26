@@ -45,6 +45,39 @@ const en = {
   denied: "Only the organizer or a manager of this event can manage staff.",
   error: "The request could not be completed. Try again.",
   retry: "Retry",
+  volunteers: {
+    title: "Volunteers",
+    intro:
+      "Create a sign-in for someone helping at the door. A volunteer can only scan tickets for this event in the Event Admin app, and the account is deleted automatically after the event.",
+    name: "Volunteer's name",
+    create: "Create volunteer",
+    created: "Volunteer account created.",
+    credentialsTitle: (name: string) => `Sign-in details for ${name}`,
+    credentialsHint:
+      "Give these to the volunteer now. The password is shown only once; you can issue a new one later.",
+    login: "Login",
+    password: "Password",
+    copy: "Copy",
+    copied: "Copied",
+    done: "Done",
+    expires: (when: string) => `Deleted automatically on ${when}.`,
+    listTitle: "Volunteer accounts",
+    empty: "No volunteers yet.",
+    lastLogin: "Last sign-in",
+    never: "Never",
+    reset: "New password",
+    resetDone: "New password issued. The volunteer was signed out of other devices.",
+    remove: "Delete",
+    confirmRemove: (name: string) =>
+      `Delete ${name}'s volunteer account? They are signed out and can no longer scan tickets.`,
+    confirm: "Delete account",
+    removed: "Volunteer account deleted.",
+    nameRequired: "Enter the volunteer's name.",
+    eventEnded: "This event is over or cancelled, so volunteers can no longer be added.",
+    limit: "This event already has the maximum number of volunteers.",
+    signedInNotice:
+      "You are signed in as a volunteer. Open the BiletFlow Event Admin app with this login to scan tickets for your event.",
+  },
 };
 
 type StaffCopy = typeof en;
@@ -89,6 +122,39 @@ const kk: StaffCopy = {
   denied: "Қызметкерлерді тек ұйымдастырушы немесе осы іс-шараның менеджері басқара алады.",
   error: "Сұрауды орындау мүмкін болмады. Қайталап көріңіз.",
   retry: "Қайталау",
+  volunteers: {
+    title: "Еріктілер",
+    intro:
+      "Кіреберісте көмектесетін адамға кіру деректерін жасаңыз. Ерікті Event Admin қолданбасында тек осы іс-шараның билеттерін сканерлей алады, ал аккаунт іс-шарадан кейін автоматты түрде жойылады.",
+    name: "Еріктінің аты",
+    create: "Ерікті жасау",
+    created: "Ерікті аккаунты жасалды.",
+    credentialsTitle: (name: string) => `${name} үшін кіру деректері`,
+    credentialsHint:
+      "Бұларды еріктіге қазір беріңіз. Құпиясөз тек бір рет көрсетіледі; кейін жаңасын шығаруға болады.",
+    login: "Логин",
+    password: "Құпиясөз",
+    copy: "Көшіру",
+    copied: "Көшірілді",
+    done: "Дайын",
+    expires: (when: string) => `${when} автоматты түрде жойылады.`,
+    listTitle: "Ерікті аккаунттары",
+    empty: "Әзірге еріктілер жоқ.",
+    lastLogin: "Соңғы кіру",
+    never: "Ешқашан",
+    reset: "Жаңа құпиясөз",
+    resetDone: "Жаңа құпиясөз шығарылды. Ерікті басқа құрылғылардан шығарылды.",
+    remove: "Жою",
+    confirmRemove: (name: string) =>
+      `${name} ерікті аккаунты жойылсын ба? Ол жүйеден шығарылады және билеттерді сканерлей алмайды.`,
+    confirm: "Аккаунтты жою",
+    removed: "Ерікті аккаунты жойылды.",
+    nameRequired: "Еріктінің атын енгізіңіз.",
+    eventEnded: "Іс-шара аяқталды немесе тоқтатылды, сондықтан еріктілерді қосу мүмкін емес.",
+    limit: "Бұл іс-шарада еріктілердің ең көп саны бар.",
+    signedInNotice:
+      "Сіз ерікті ретінде кірдіңіз. Іс-шараңыздың билеттерін сканерлеу үшін осы логинмен BiletFlow Event Admin қолданбасын ашыңыз.",
+  },
 };
 
 const ru: StaffCopy = {
@@ -131,6 +197,39 @@ const ru: StaffCopy = {
   denied: "Управлять персоналом может только организатор или менеджер этого мероприятия.",
   error: "Не удалось выполнить запрос. Попробуйте ещё раз.",
   retry: "Повторить",
+  volunteers: {
+    title: "Волонтёры",
+    intro:
+      "Создайте вход для человека, который помогает на входе. Волонтёр может сканировать билеты только этого мероприятия в приложении Event Admin, а аккаунт удаляется автоматически после мероприятия.",
+    name: "Имя волонтёра",
+    create: "Создать волонтёра",
+    created: "Аккаунт волонтёра создан.",
+    credentialsTitle: (name: string) => `Данные для входа: ${name}`,
+    credentialsHint:
+      "Передайте их волонтёру сейчас. Пароль показывается только один раз; позже можно выдать новый.",
+    login: "Логин",
+    password: "Пароль",
+    copy: "Копировать",
+    copied: "Скопировано",
+    done: "Готово",
+    expires: (when: string) => `Удалится автоматически ${when}.`,
+    listTitle: "Аккаунты волонтёров",
+    empty: "Волонтёров пока нет.",
+    lastLogin: "Последний вход",
+    never: "Никогда",
+    reset: "Новый пароль",
+    resetDone: "Новый пароль выдан. Волонтёр вышел на других устройствах.",
+    remove: "Удалить",
+    confirmRemove: (name: string) =>
+      `Удалить аккаунт волонтёра ${name}? Он выйдет из системы и больше не сможет сканировать билеты.`,
+    confirm: "Удалить аккаунт",
+    removed: "Аккаунт волонтёра удалён.",
+    nameRequired: "Введите имя волонтёра.",
+    eventEnded: "Мероприятие завершено или отменено, добавлять волонтёров больше нельзя.",
+    limit: "У этого мероприятия уже максимальное число волонтёров.",
+    signedInNotice:
+      "Вы вошли как волонтёр. Откройте приложение BiletFlow Event Admin с этим логином, чтобы сканировать билеты своего мероприятия.",
+  },
 };
 
 export const staffCopy: Record<Locale, StaffCopy> = { en, kk, ru };

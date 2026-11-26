@@ -472,6 +472,153 @@ paths:
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
+  /events/{event_id}/volunteers:
+    get:
+      tags:
+      - users
+      summary: List an event's volunteer check-in accounts
+      description: 'Owner: P1. Access: event owner, platform admin, or staff (manager). Passwords are never listed.'
+      operationId: get_events_event_id_volunteers
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VolunteerOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+    post:
+      tags:
+      - users
+      summary: Create a volunteer check-in account for this event
+      description: 'Owner: P1. Access: event owner, platform admin, or staff (manager). The server generates the login and password and
+        returns them once. The account can only check in this event''s tickets and is
+        anonymized volunteer_grace_hours after the event ends (or when the event is
+        cancelled). 409 event_ended, volunteer_limit_reached.'
+      operationId: post_events_event_id_volunteers
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VolunteerCreate'
+      responses:
+        '201':
+          description: Created. Show the credentials to the organizer once.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolunteerCredentialsOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/volunteers/{user_id}/reset-password:
+    post:
+      tags:
+      - users
+      summary: Issue a new password for a volunteer
+      description: 'Owner: P1. Access: event owner, platform admin, or staff (manager). Signs the volunteer out of every device. 409 event_ended.'
+      operationId: post_events_event_id_volunteers_user_id_reset_password
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VolunteerCredentialsOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+  /events/{event_id}/volunteers/{user_id}:
+    delete:
+      tags:
+      - users
+      summary: Remove a volunteer now (anonymizes the account)
+      description: 'Owner: P1. Access: event owner, platform admin, or staff (manager). The account can no longer sign in; its check-in
+        history is kept under "Former volunteer".'
+      operationId: delete_events_event_id_volunteers_user_id
+      parameters:
+      - name: event_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Done
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
   /events:
     get:
       tags:
@@ -6024,6 +6171,81 @@ components:
       - role
       - can_check_in
       title: StaffEventOut
+      type: object
+    VolunteerCreate:
+      properties:
+        full_name:
+          maxLength: 200
+          minLength: 1
+          title: Full Name
+          type: string
+      required:
+      - full_name
+      title: VolunteerCreate
+      type: object
+    VolunteerOut:
+      description: A volunteer check-in account on an event. The password is never listed.
+      properties:
+        user_id:
+          format: uuid
+          title: User Id
+          type: string
+        full_name:
+          title: Full Name
+          type: string
+        login:
+          title: Login
+          type: string
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        last_login_at:
+          anyOf:
+          - format: date-time
+            type: string
+          - type: 'null'
+          title: Last Login At
+        expires_at:
+          format: date-time
+          title: Expires At
+          type: string
+      required:
+      - user_id
+      - full_name
+      - login
+      - created_at
+      - last_login_at
+      - expires_at
+      title: VolunteerOut
+      type: object
+    VolunteerCredentialsOut:
+      description: 'Returned once, on creation or password reset: pass these to the volunteer.'
+      properties:
+        user_id:
+          format: uuid
+          title: User Id
+          type: string
+        full_name:
+          title: Full Name
+          type: string
+        login:
+          title: Login
+          type: string
+        password:
+          title: Password
+          type: string
+        expires_at:
+          format: date-time
+          title: Expires At
+          type: string
+      required:
+      - user_id
+      - full_name
+      - login
+      - password
+      - expires_at
+      title: VolunteerCredentialsOut
       type: object
     StaffMemberOut:
       properties:

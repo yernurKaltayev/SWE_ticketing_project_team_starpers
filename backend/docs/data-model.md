@@ -35,6 +35,7 @@ implementation had to settle something the plan left open or stated in two ways.
 |---|---|---|
 | Entity count | 32 tables | The plan says 24 entities but lists 25. Appendix B adds token, layout, payout, activation, settings and report tables. Appendix B was followed. |
 | `organizer_staff` role | Not a value of `users.role` | P1 lists it as a role, Appendix B does not. Staff are ordinary users with a `staff_assignments` row, which is per event. |
+| `volunteer` role | A value of `users.role`, plus `users.deleted_at` | An organizer creates a volunteer from the event's staff page. The account gets generated credentials and one `staff_assignments` row (`checkin`). `get_current_user` limits it to check-in routes (`VOLUNTEER_ROUTES`). `volunteer_grace_hours` after the event ends, or once it is cancelled, the worker anonymizes it: assignment and tokens removed, email/name/password scrubbed, `is_suspended` and `deleted_at` set. The row is kept because `checkin_records` and the append-only `audit_logs` reference it. |
 | `partially_refunded` | Included in `order_status` | In Appendix B, not in P5. Refunds are full-only for now (P7). |
 | Seat hold index | `WHERE status = 'held'` | P4 also mentions `'sold'`; Appendix B moves sold seats to the `tickets` index. |
 | `orders.expires_at` | Nullable | Free orders confirm immediately and have nothing to expire. |

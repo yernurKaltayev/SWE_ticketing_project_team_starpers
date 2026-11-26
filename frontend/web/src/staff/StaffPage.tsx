@@ -19,6 +19,7 @@ import {
 import type { StaffMember, StaffRole } from "./model";
 import { BackLink } from "../BackLink";
 import { eventCopy } from "../events/copy";
+import { VolunteersPanel } from "./VolunteersPanel";
 
 export default function StaffPage({ locale }: { locale: Locale }) {
   const { eventId = "" } = useParams();
@@ -219,6 +220,9 @@ function StaffContent({ eventId, locale }: { eventId: string; locale: Locale }) 
           </table>
         </div>
       ) : null}
+
+      {/* Same access as the staff list: shown once the server has confirmed the manager. */}
+      {staff.data ? <VolunteersPanel eventId={eventId} locale={locale} /> : null}
     </section>
   );
 }

@@ -27,7 +27,8 @@ export function useUnreadCount() {
   return useQuery({
     queryKey: queryKeys.support(user?.id, unreadPath),
     queryFn: async ({ signal }) => parseNotices(await request(unreadPath, { signal })),
-    enabled: Boolean(user),
+    // Volunteer accounts have no notifications; the API refuses them.
+    enabled: Boolean(user) && user?.role !== "volunteer",
     refetchInterval: 15000,
   }).data?.total ?? 0;
 }

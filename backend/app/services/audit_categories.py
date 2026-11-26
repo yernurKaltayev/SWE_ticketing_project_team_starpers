@@ -16,7 +16,13 @@ NAMES: dict[str, tuple[str, ...]] = {
         "event_cancelled",
     ),
     "ticket_type": ("ticket_type_created", "ticket_type_updated"),
-    "staff": ("staff_assigned", "staff_removed"),
+    "staff": (
+        "staff_assigned",
+        "staff_removed",
+        "volunteer_created",
+        "volunteer_password_reset",
+        "volunteer_removed",
+    ),
     "refund": ("refund_policy.updated",),
 }
 

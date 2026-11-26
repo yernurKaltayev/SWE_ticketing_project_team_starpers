@@ -82,6 +82,13 @@ class Settings(BaseSettings):
     def telegram_enabled(self) -> bool:
         return bool(self.telegram_bot_token and self.telegram_bot_username)
 
+    # Volunteer check-in accounts. Logins are generated as v-xxxx@{domain}; it must be a normal
+    # domain (not .local/.test), because sign-in validates the login as an email address.
+    volunteer_email_domain: str = "volunteers.biletflow.kz"
+    # Volunteer accounts are anonymized this long after their event ends.
+    volunteer_grace_hours: int = 12
+    volunteers_per_event_max: int = 50
+
     s3_endpoint_url: str = "http://localhost:9000"
     s3_access_key: str = "biletflow"
     s3_secret_key: SecretStr = SecretStr("biletflow-dev")

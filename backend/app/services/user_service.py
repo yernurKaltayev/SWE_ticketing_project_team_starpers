@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ConflictError, NotFoundError
 from app.models.event import Event, EventStatus
-from app.models.user import OrganizerProfile, StaffAssignment, StaffRole, User
+from app.models.user import OrganizerProfile, StaffAssignment, StaffRole, User, UserRole
 from app.models.venue import Venue
 from app.schemas.user import (
     OrganizerProfileUpdate,
@@ -18,6 +18,7 @@ from app.schemas.user import (
     UserUpdate,
 )
 from app.services.audit_service import audit
+from app.services.volunteer_service import purge_volunteer
 
 
 async def update_user(db: AsyncSession, user: User, data: UserUpdate) -> User:
@@ -56,8 +57,14 @@ async def assign_staff(
     else:
         # users.email is citext, so this match ignores case.
         target = await db.scalar(select(User).where(User.email == data.email))
-    if target is None:
+    if target is None or target.deleted_at is not None:
         raise NotFoundError("The user was not found.", code="user_not_found")
+    if target.role == UserRole.volunteer:
+        # A volunteer account belongs to the one event it was created for.
+        raise ConflictError(
+            "Volunteer accounts cannot be added to other events.",
+            code="volunteer_not_assignable",
+        )
 
     assignment = StaffAssignment(
         event_id=event.id, user_id=target.id, role=StaffRole(data.role), assigned_by=actor.id
@@ -93,6 +100,13 @@ async def remove_staff(db: AsyncSession, event: Event, actor: User, user_id: uui
     if assignment is None:
         raise NotFoundError("This user is not on the event's staff.", code="staff_not_found")
 
+    target = await db.get_one(User, user_id)
+    if target.role == UserRole.volunteer:
+        # Removing a volunteer from their only event ends the account.
+        await purge_volunteer(db, target, actor=actor, reason="removed_by_organizer")
+        await db.commit()
+        return
+
     await db.delete(assignment)
     audit(
         db,
@@ -110,7 +124,8 @@ async def list_staff(db: AsyncSession, event: Event) -> list[StaffMemberOut]:
     rows = await db.execute(
         select(StaffAssignment, User)
         .join(User, User.id == StaffAssignment.user_id)
-        .where(StaffAssignment.event_id == event.id)
+        # Volunteers have their own list: GET /events/{id}/volunteers.
+        .where(StaffAssignment.event_id == event.id, User.role != UserRole.volunteer)
         .order_by(StaffAssignment.created_at, StaffAssignment.id)
     )
     return [
