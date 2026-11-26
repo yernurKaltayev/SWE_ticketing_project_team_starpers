@@ -2,7 +2,8 @@ export const featurePaths = {
   Event: ["/events/:eventId"],
   Seats: ["/events/:eventId/seats"],
   Checkout: ["/events/:eventId/checkout"],
-  Orders: ["/account/orders"],
+  // Halyk test checkout pages are web-only; in the app the in-app browser runs them.
+  Orders: ["/account/orders", "/checkout/pay/:paymentId", "/checkout/pay/:paymentId/return"],
   Order: ["/account/orders/:orderId", "/orders/:orderId", "/orders/:orderId/status"],
   Notifications: ["/account/notifications"],
   Support: ["/support"],

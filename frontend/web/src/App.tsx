@@ -14,6 +14,7 @@ import {
   Route,
   Routes,
   useLocation,
+  useSearchParams,
 } from "react-router-dom";
 import type { Locale } from "@biletflow/shared";
 import { config } from "./config";
@@ -93,6 +94,12 @@ const Payouts = lazy(() =>
 const Staff = lazy(() => import("./staff/StaffPage"));
 
 const Checkout = lazy(() => import("./checkout/CheckoutPage"));
+const HalykCheckout = lazy(() =>
+  import("./payments/HalykPayment").then((m) => ({ default: m.HalykCheckout })),
+);
+const HalykReturn = lazy(() =>
+  import("./payments/HalykPayment").then((m) => ({ default: m.HalykReturn })),
+);
 const Orders = lazy(() => import("./checkout/Orders"));
 const OrderDetail = lazy(() =>
   import("./checkout/Orders").then((m) => ({ default: m.OrderDetail })),
@@ -406,6 +413,26 @@ function Application() {
                     <Checkout key={user?.id} locale={locale} />
                   </Suspense>
                 </RequireSession>
+              }
+            />
+            <Route
+              path="/checkout/pay/:paymentId"
+              element={
+                <HalykGate locale={locale}>
+                  <Suspense fallback={<Status>{t.loading}</Status>}>
+                    <HalykCheckout key={user?.id} locale={locale} />
+                  </Suspense>
+                </HalykGate>
+              }
+            />
+            <Route
+              path="/checkout/pay/:paymentId/return"
+              element={
+                <HalykGate locale={locale}>
+                  <Suspense fallback={<Status>{t.loading}</Status>}>
+                    <HalykReturn key={user?.id} locale={locale} />
+                  </Suspense>
+                </HalykGate>
               }
             />
             <Route
@@ -725,6 +752,20 @@ function OrganizerNav({
       </div>
     </nav>
   );
+}
+
+/** Halyk checkout pages need a web session, except in app mode (?app=1), where the mobile app
+ * passes everything in the URL fragment and confirms the payment with its own session. */
+function HalykGate({
+  locale,
+  children,
+}: {
+  locale: Locale;
+  children: ReactNode;
+}) {
+  const [params] = useSearchParams();
+  if (params.get("app") === "1") return <>{children}</>;
+  return <RequireSession locale={locale}>{children}</RequireSession>;
 }
 
 function RequireSession({

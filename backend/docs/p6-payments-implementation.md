@@ -26,6 +26,47 @@ it through the same code as `POST /payments/webhooks/sandbox` (header `X-Sandbox
   **voided** at the provider: payment `cancelled`, reason `order_no_longer_payable_voided`,
   reservation released, no tickets.
 
+## Halyk ePay test environment (`PAYMENT_PROVIDER=halyk`)
+
+Buyers' ticket payments can go through Halyk Bank's public TEST environment instead of the internal
+sandbox. Nothing real is charged: it is a shared test merchant with published test cards. Activation
+fees always stay on the sandbox. Organizers need no activation step (`PAID_SALES_REQUIRE_ACTIVATION`
+stays `false`): a published event with a paid ticket type sells right away.
+
+Setup: `PAYMENT_PROVIDER=halyk` and `HALYK_CLIENT_SECRET=<test ClientSecret from
+https://epayment.kz/en-US/docs, "Test credentials">`. Host defaults point at the live test hosts,
+which moved from homebank.kz to epayment.kz (checked 2026-11-27):
+
+| Purpose | URL |
+|---|---|
+| OAuth token | `https://test-epay-oauth.epayment.kz/oauth2/token` |
+| API (check-status, refund, cancel) | `https://test-epay-api.epayment.kz` |
+| Payform script | `https://test-epay.epayment.kz/payform/payment-api.js` |
+
+Flow:
+1. `POST /orders/{id}/payments` → `provider: "halyk"`; `provider_ref` is a random 15-digit invoice
+   ID (the merchant is shared with every other team, so IDs must not be guessable or sequential).
+2. Web `/checkout/pay/{payment_id}` → `POST /payments/{id}/halyk-session` returns the `halyk.pay()`
+   object with a ~20 min invoice-bound token. The client secret never leaves the backend.
+3. Buyer pays on Halyk's page with the test card `4405 6397 0401 5096`, 01/27, CVC 321.
+4. Halyk redirects to `/checkout/pay/{id}/return` → `POST /payments/{id}/sync` → backend calls
+   check-status and settles through the same locked, idempotent path as sandbox webhooks.
+5. postLink (`POST /payments/webhooks/halyk`, public) is **unsigned**: only its `invoiceId` is read,
+   and it just triggers the same check-status pull. A forged "ok" body changes nothing.
+6. Worker `sync_payments_job` (every 60 s) settles payments whose buyer never came back, and after
+   3 h gives up on ones whose order expired (`checkout_abandoned`).
+
+Status mapping (check-status): `CHARGE`/`AUTH` → succeeded; `REJECT` (code 101), `CANCEL`,
+`CANCEL_OLD`, `REFUND`, `FAILED` → failed; code 102 (not found yet) and anything unknown → pending.
+Refunds call `/operation/{transaction_id}/refund` for `CHARGE` and `/cancel` for `AUTH`.
+
+Mobile: the app requests the session itself and opens the web checkout page in an in-app browser
+(`expo-web-browser`) with `?app=1` and the session in the URL fragment, so no web login is needed.
+The return page hands back to `biletflow://payments/{id}` and the app calls `/sync`.
+
+Local postLink testing is optional (`cloudflared tunnel --url http://localhost:8000`, then set
+`PUBLIC_BASE_URL`): without it, the return page and the worker confirm payments anyway.
+
 ## Fees
 
 - Processing fee: `processing_fee_percent` (default 3 %) of each ticket payment, stored in

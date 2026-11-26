@@ -20,6 +20,7 @@ import { demoEventId, resetEventMocks, mockPaidSales } from "../mocks/events";
 import { resetOrderMocks } from "../mocks/orders";
 import { resetPaymentMocks } from "../mocks/payments";
 import { OrderDetail } from "../checkout/Orders";
+import { HalykCheckout, HalykReturn } from "./HalykPayment";
 import CheckoutPage from "../checkout/CheckoutPage";
 import ActivationPage, {
   AccountsPage,
@@ -83,6 +84,14 @@ async function mount(
               path="/events/:eventId/checkout"
               element={<CheckoutPage locale={locale} />}
             />
+            <Route
+              path="/checkout/pay/:paymentId"
+              element={<HalykCheckout locale={locale} />}
+            />
+            <Route
+              path="/checkout/pay/:paymentId/return"
+              element={<HalykReturn locale={locale} />}
+            />
           </Routes>
         </MemoryRouter>
       </SessionContext.Provider>
@@ -108,6 +117,8 @@ function paymentFixture(loseResponse = false) {
   const payment: Payment = {
     id: "payment-1",
     kind: "ticket",
+    provider: "sandbox",
+    order_id: value.id,
     status: "pending",
     amount: 250000,
     fee_amount: 7500,
@@ -435,4 +446,71 @@ it("shows scheduled and paid payout records and retrieves the next page", async 
     (screen.getByRole("button", { name: "Next" }) as HTMLButtonElement)
       .disabled,
   ).toBe(true);
+});
+
+function halykFixture() {
+  const fixture = paymentFixture();
+  fixture.payment.provider = "halyk";
+  fixture.payment.checkout_url = "https://untrusted.example/checkout";
+  const sessions: URL[] = [];
+  let syncs = 0;
+  server.use(
+    http.get("*/api/v1/payments/config", () =>
+      HttpResponse.json({ ticket_provider: "halyk", is_simulated: true }),
+    ),
+    http.post("*/api/v1/payments/payment-1/halyk-session", ({ request }) => {
+      sessions.push(new URL(request.url));
+      return HttpResponse.json({
+        payment_id: "payment-1",
+        order_id: fixture.value.id,
+        script_url: "https://test-epay.epayment.kz/payform/payment-api.js",
+        is_simulated: true,
+        payment_object: {
+          invoiceId: "123456789012345",
+          terminal: "terminal",
+          backLink: "http://localhost/checkout/pay/payment-1/return",
+          failureBackLink: "http://localhost/checkout/pay/payment-1/return?failed=1",
+          amount: 2500,
+          currency: "KZT",
+          auth: { access_token: "tok" },
+        },
+      });
+    }),
+    http.post("*/api/v1/payments/payment-1/sync", () => {
+      syncs++;
+      if (syncs >= 2) fixture.payment.status = "succeeded";
+      return HttpResponse.json(fixture.payment);
+    }),
+  );
+  return { ...fixture, sessions, syncs: () => syncs };
+}
+it("Halyk test mode: shows the test card, starts the payment and opens our own checkout page", async () => {
+  const fixture = halykFixture();
+  await mount("/account/orders/paid-order", "attendee@example.com");
+  const go = await screen.findByRole("button", {
+    name: /Go to the bank's payment page/,
+  });
+  expect(screen.queryByLabelText("Card number")).toBeNull();
+  expect(screen.getByText("4405 6397 0401 5096")).toBeTruthy();
+  await userEvent.click(go);
+  // The untrusted checkout_url is ignored; the app route asks for the Halyk session.
+  await screen.findByText(/Opening Halyk's test payment form/);
+  await waitFor(() => expect(fixture.sessions).toHaveLength(1));
+  expect(fixture.sessions[0].searchParams.get("client")).toBe("web");
+  expect(fixture.starts()).toBe(1);
+  expect(
+    document.querySelector(
+      'script[src="https://test-epay.epayment.kz/payform/payment-api.js"]',
+    ),
+  ).toBeTruthy();
+});
+it("Halyk return page confirms with the API, never with the URL", async () => {
+  const fixture = halykFixture();
+  // ?failed is only a hint from the bank page: the API's answer decides.
+  await mount("/checkout/pay/payment-1/return?failed=1", "attendee@example.com");
+  await screen.findByText(/Payment confirmed/, undefined, { timeout: 6000 });
+  expect(fixture.syncs()).toBe(2);
+  expect(
+    screen.getByRole("link", { name: "View order" }).getAttribute("href"),
+  ).toBe(`/account/orders/${fixture.value.id}`);
 });

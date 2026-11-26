@@ -30,6 +30,7 @@ class PaymentKind(enum.StrEnum):
 
 class PaymentProviderName(enum.StrEnum):
     sandbox = "sandbox"
+    halyk = "halyk"  # Halyk ePay TEST environment
 
 
 class PaymentStatus(enum.StrEnum):

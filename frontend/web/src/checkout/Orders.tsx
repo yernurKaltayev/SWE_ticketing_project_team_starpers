@@ -20,7 +20,7 @@ import {
 } from "./data";
 import { parseVenue } from "./model";
 import type { Order } from "./model";
-import { DemoCardPayment } from "../payments/DemoCardPayment";
+import { OrderPayment } from "../payments/HalykPayment";
 import { paymentCopy } from "../payments/copy";
 import "./checkout.css";
 import { BackLink } from "../BackLink";
@@ -248,7 +248,7 @@ function OrderContent({
             </p>
           )}
           {order.status === "pending" && order.total > 0 && (
-            <DemoCardPayment
+            <OrderPayment
               orderId={orderId}
               total={order.total}
               locale={locale}

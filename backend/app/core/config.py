@@ -64,6 +64,20 @@ class Settings(BaseSettings):
     # Demo checkout: paid tickets sell as soon as the event is published. Set true to require the
     # per-event paid-sales activation checklist first. A suspended event never sells either way.
     paid_sales_require_activation: bool = False
+    # Who takes buyers' ticket payments: "sandbox" (internal simulation, the default for tests and
+    # offline demos) or "halyk" (Halyk ePay's public TEST environment). Activation fees always use
+    # the sandbox. Neither moves real money.
+    payment_provider: Literal["sandbox", "halyk"] = "sandbox"
+    # Halyk ePay TEST merchant. These are the shared credentials published in Halyk's docs
+    # (https://epayment.kz/en-US/docs, "Test credentials"), not secrets of ours.
+    halyk_client_id: str = "test"
+    halyk_client_secret: SecretStr | None = None
+    halyk_terminal_id: str = "67e34d63-102f-4bd1-898e-370781d0074d"
+    # Halyk moved its test hosts from homebank.kz to epayment.kz (checked 2026-11-27).
+    halyk_oauth_url: str = "https://test-epay-oauth.epayment.kz/oauth2/token"
+    halyk_api_url: str = "https://test-epay-api.epayment.kz"
+    halyk_payform_js_url: str = "https://test-epay.epayment.kz/payform/payment-api.js"
+    halyk_timeout_seconds: float = 15.0
 
     smtp_host: str = "localhost"
     smtp_port: int = 1025
@@ -105,6 +119,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _no_dev_secrets_in_production(self) -> "Settings":
+        if self.payment_provider == "halyk" and not self.halyk_client_secret:
+            raise ValueError("payment_provider=halyk needs HALYK_CLIENT_SECRET")
         if self.is_production:
             for name in ("jwt_secret", "ticket_signing_secret"):
                 if getattr(self, name).get_secret_value().startswith(DEV_SECRET_PREFIX):

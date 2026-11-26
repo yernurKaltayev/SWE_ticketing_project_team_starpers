@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
@@ -8,6 +8,9 @@ from pydantic import BaseModel, Field, field_validator
 class PaymentOut(BaseModel):
     id: UUID
     kind: Literal["ticket", "activation_fee"]
+    # sandbox: finish via /payments/{id}/simulate. halyk: open checkout_url (Halyk test form).
+    provider: Literal["sandbox", "halyk"]
+    order_id: UUID | None
     status: str
     amount: int
     fee_amount: int
@@ -15,6 +18,25 @@ class PaymentOut(BaseModel):
     is_simulated: bool
     checkout_url: str | None
     failure_reason: str | None
+
+
+class PaymentConfigOut(BaseModel):
+    """Which provider takes ticket payments, so clients show the right checkout."""
+
+    ticket_provider: Literal["sandbox", "halyk"]
+    is_simulated: bool
+
+
+class HalykSessionOut(BaseModel):
+    """What the web page needs to open Halyk's TEST payment form. No client secret inside."""
+
+    payment_id: UUID
+    order_id: UUID
+    script_url: str
+    # Passed as-is to `halyk.pay()`: invoiceId, amount (KZT), terminal, links and a short-lived,
+    # invoice-bound `auth` token.
+    payment_object: dict[str, Any]
+    is_simulated: bool
 
 
 class ActivationOut(BaseModel):

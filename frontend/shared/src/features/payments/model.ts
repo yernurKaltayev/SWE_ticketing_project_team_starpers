@@ -7,6 +7,16 @@ export type Activation = components["schemas"]["ActivationOut"];
 export type Account = components["schemas"]["PayoutAccountOut"];
 export type Payout = components["schemas"]["PayoutOut"];
 export type Financials = components["schemas"]["FinancialSummaryOut"];
+export type PaymentConfig = components["schemas"]["PaymentConfigOut"];
+export type HalykSession = components["schemas"]["HalykSessionOut"];
+/** Halyk ePay's published TEST card (https://epayment.kz/en-US/docs, "Test credentials").
+ * It works only on Halyk's test payment form; nothing real is charged. */
+export const HALYK_TEST_CARD = {
+  number: "4405 6397 0401 5096",
+  expiry: "01/27",
+  cvc: "321",
+} as const;
+const PROVIDERS = ["sandbox", "halyk"];
 const record = (v: unknown): v is Record<string, unknown> =>
   !!v && typeof v === "object" && !Array.isArray(v);
 const text = (v: unknown) => typeof v === "string" && !!v;
@@ -28,10 +38,58 @@ export function parsePayment(v: unknown): Payment {
     v.currency !== "KZT" ||
     typeof v.is_simulated !== "boolean" ||
     !(v.checkout_url === null || text(v.checkout_url)) ||
-    !(v.failure_reason === null || typeof v.failure_reason === "string")
+    !(v.failure_reason === null || typeof v.failure_reason === "string") ||
+    !(v.provider === undefined || PROVIDERS.includes(String(v.provider))) ||
+    !(v.order_id === undefined || v.order_id === null || text(v.order_id))
   )
     return invalidResponse();
-  return v as Payment;
+  // Older API builds sent no provider or order_id: they only had the sandbox.
+  return {
+    ...v,
+    provider: v.provider ?? "sandbox",
+    order_id: v.order_id ?? null,
+  } as Payment;
+}
+export function parsePaymentConfig(v: unknown): PaymentConfig {
+  if (
+    !record(v) ||
+    !PROVIDERS.includes(String(v.ticket_provider)) ||
+    typeof v.is_simulated !== "boolean"
+  )
+    return invalidResponse();
+  return v as PaymentConfig;
+}
+/** The app passes its Halyk session to the web checkout page in the URL fragment (never sent to
+ * a server), so the in-app browser needs no web session. */
+export function encodeAppSession(session: HalykSession): string {
+  return encodeURIComponent(JSON.stringify(session));
+}
+export function decodeAppSession(hash: string): unknown {
+  const raw = hash.startsWith("#") ? hash.slice(1) : hash;
+  if (!raw) return null;
+  try {
+    return JSON.parse(decodeURIComponent(raw));
+  } catch {
+    return null;
+  }
+}
+const HALYK_FIELDS = ["invoiceId", "terminal", "backLink", "failureBackLink"];
+export function parseHalykSession(v: unknown): HalykSession {
+  if (
+    !record(v) ||
+    !text(v.payment_id) ||
+    !text(v.order_id) ||
+    !text(v.script_url) ||
+    !String(v.script_url).startsWith("https://") ||
+    typeof v.is_simulated !== "boolean" ||
+    !record(v.payment_object) ||
+    !HALYK_FIELDS.every((k) => text((v.payment_object as Record<string, unknown>)[k])) ||
+    typeof v.payment_object.amount !== "number" ||
+    !record(v.payment_object.auth) ||
+    !text(v.payment_object.auth.access_token)
+  )
+    return invalidResponse();
+  return v as HalykSession;
 }
 export function parseActivation(v: unknown): Activation {
   if (

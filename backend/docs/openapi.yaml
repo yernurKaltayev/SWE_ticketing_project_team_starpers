@@ -1747,12 +1747,120 @@ paths:
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
+  /payments/config:
+    get:
+      tags:
+      - payments
+      summary: Which provider takes ticket payments (sandbox or Halyk test environment)
+      description: 'Owner: P6. Access: public. Lets clients show the internal demo card form
+        (sandbox) or the Halyk ePay test checkout (halyk). Both are simulated.'
+      operationId: get_payments_config
+      security: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentConfigOut'
+  /payments/{payment_id}/halyk-session:
+    post:
+      tags:
+      - payments
+      summary: 'HALYK TEST: payment object for halyk.pay()'
+      description: 'Owner: P6. Access: order buyer. For a pending Halyk ePay (test environment)
+        ticket payment, requests a short-lived invoice-bound token from Halyk and returns the object
+        the browser passes to halyk.pay(). Never contains the client secret. client=app makes the
+        return page hand back to the mobile app.'
+      operationId: post_payments_payment_id_halyk_session
+      parameters:
+      - name: payment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: locale
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - en
+          - ru
+          - kk
+          default: ru
+      - name: client
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - web
+          - app
+          default: web
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HalykSessionOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+        '503':
+          $ref: '#/components/responses/Error'
+  /payments/{payment_id}/sync:
+    post:
+      tags:
+      - payments
+      summary: Re-check a pull provider's payment status (Halyk check-status)
+      description: 'Owner: P6. Access: order buyer or event staff (support) for ticket payments;
+        event owner, platform admin, or staff (manager) for activation fees. Asks the provider
+        server-to-server and settles the payment if final; idempotent. A no-op for sandbox
+        payments.'
+      operationId: post_payments_payment_id_sync
+      parameters:
+      - name: payment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '503':
+          $ref: '#/components/responses/Error'
   /payments/webhooks/{provider}:
     post:
       tags:
       - payments
       summary: Provider callback; idempotent per provider_ref
-      description: 'Owner: P6. Access: provider signature.'
+      description: 'Owner: P6. Access: provider signature (sandbox). Halyk callbacks are unsigned:
+        only their invoiceId is read, and the payment is settled from Halyk check-status.'
       operationId: post_payments_webhooks_provider
       parameters:
       - name: provider
@@ -5591,6 +5699,18 @@ components:
           - activation_fee
           title: Kind
           type: string
+        provider:
+          enum:
+          - sandbox
+          - halyk
+          title: Provider
+          type: string
+        order_id:
+          anyOf:
+          - format: uuid
+            type: string
+          - type: 'null'
+          title: Order Id
         status:
           title: Status
           type: string
@@ -5619,6 +5739,8 @@ components:
       required:
       - id
       - kind
+      - provider
+      - order_id
       - status
       - amount
       - fee_amount
@@ -5627,6 +5749,53 @@ components:
       - checkout_url
       - failure_reason
       title: PaymentOut
+      type: object
+    PaymentConfigOut:
+      description: Which provider takes ticket payments, so clients show the right checkout.
+      properties:
+        ticket_provider:
+          enum:
+          - sandbox
+          - halyk
+          title: Ticket Provider
+          type: string
+        is_simulated:
+          title: Is Simulated
+          type: boolean
+      required:
+      - ticket_provider
+      - is_simulated
+      title: PaymentConfigOut
+      type: object
+    HalykSessionOut:
+      description: What the web page needs to open Halyk's TEST payment form. No client secret
+        inside.
+      properties:
+        payment_id:
+          format: uuid
+          title: Payment Id
+          type: string
+        order_id:
+          format: uuid
+          title: Order Id
+          type: string
+        script_url:
+          title: Script Url
+          type: string
+        payment_object:
+          additionalProperties: true
+          title: Payment Object
+          type: object
+        is_simulated:
+          title: Is Simulated
+          type: boolean
+      required:
+      - payment_id
+      - order_id
+      - script_url
+      - payment_object
+      - is_simulated
+      title: HalykSessionOut
       type: object
     PayoutAccountIn:
       properties:

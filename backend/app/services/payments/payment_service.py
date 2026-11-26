@@ -3,12 +3,20 @@
 Everything here is a simulation (`is_simulated=True`); no card data is accepted or stored.
 Webhooks are idempotent per (provider, provider_ref): the payment row is locked and only a
 `pending` payment is ever transitioned, so a repeated callback changes nothing.
+
+Pull providers (Halyk ePay test environment) send unsigned callbacks, so their payments settle
+only from the provider's own status API (`sync_payment`). The callback, the buyer's return page and
+the worker sweep all just trigger that pull.
 """
 
 from __future__ import annotations
 
+import json
+import logging
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from typing import Any, Literal
+from urllib.parse import parse_qs
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +28,7 @@ from app.core.errors import (
     ConflictError,
     ForbiddenError,
     NotFoundError,
+    ServiceUnavailableError,
     UnprocessableError,
 )
 from app.core.money import Money
@@ -34,32 +43,55 @@ from app.models.payment import (
     PaymentStatus,
 )
 from app.models.user import StaffRole, User
-from app.schemas.payment import PaymentOut
+from app.schemas.payment import HalykSessionOut, PaymentOut
 from app.services import order_service
 from app.services.audit_service import audit
 from app.services.inventory_service import release_inventory
 from app.services.notification_service import notify
-from app.services.payments import DEFAULT_PROVIDER, get_provider
+from app.services.payments import DEFAULT_PROVIDER, get_provider, ticket_provider_name
+from app.services.payments.base import ProviderEvent, ProviderUnavailableError
 from app.services.payments.fees import processing_fee
 from app.services.payments.sandbox import InvalidWebhookError, SandboxProvider, checkout_url_for
 from app.services.ticket_type_service import _paid_sales_active
 
+logger = logging.getLogger(__name__)
+
 VOIDED_REASON = "order_no_longer_payable_voided"
+ABANDONED_REASON = "checkout_abandoned"
+# A pull-provider payment whose order is gone is given up only after this long, so a buyer still
+# on the bank's page (its widget token lives ~20 min) can finish and be voided instead of kept.
+ABANDON_AFTER = timedelta(hours=3)
+# The worker stops polling a payment after this long.
+SYNC_WINDOW = timedelta(hours=24)
+
+
+def halyk_checkout_url(payment_id: uuid.UUID) -> str:
+    """The web page that opens Halyk's payment form for this payment."""
+    return f"{get_settings().web_base_url.rstrip('/')}/checkout/pay/{payment_id}"
+
+
+def _checkout_url(payment: Payment) -> str | None:
+    if payment.status != PaymentStatus.pending:
+        return None
+    if payment.provider == PaymentProviderName.sandbox:
+        return checkout_url_for(payment.provider_ref)
+    if payment.provider == PaymentProviderName.halyk:
+        return halyk_checkout_url(payment.id)
+    return None
 
 
 def to_payment_out(payment: Payment) -> PaymentOut:
-    pending = payment.status == PaymentStatus.pending
     return PaymentOut(
         id=payment.id,
         kind=payment.kind.value,  # type: ignore[arg-type]  # enum values match the Literal
+        provider=payment.provider.value,  # type: ignore[arg-type]  # values match the Literal
+        order_id=payment.order_id,
         status=payment.status.value,
         amount=payment.amount,
         fee_amount=payment.fee_amount,
         currency=payment.currency,
         is_simulated=payment.is_simulated,
-        checkout_url=checkout_url_for(payment.provider_ref)
-        if pending and payment.provider == PaymentProviderName.sandbox
-        else None,
+        checkout_url=_checkout_url(payment),
         failure_reason=payment.failure_reason,
     )
 
@@ -84,9 +116,10 @@ async def create_payment(
     order_id: uuid.UUID | None = None,
     activation_id: uuid.UUID | None = None,
     fee: Money | None = None,
+    provider_name: PaymentProviderName = DEFAULT_PROVIDER,
 ) -> Payment:
     """Open a provider intent and persist the pending payment. Does not commit."""
-    provider = get_provider(DEFAULT_PROVIDER)
+    provider = get_provider(provider_name)
     intent = await provider.create_intent(amount, reference=str(reference))
     payment = Payment(
         order_id=order_id,
@@ -146,6 +179,7 @@ async def start_order_payment(
         reference=order.id,
         order_id=order.id,
         fee=await processing_fee(db, amount),
+        provider_name=ticket_provider_name(),
     )
     audit(
         db,
@@ -154,8 +188,13 @@ async def start_order_payment(
         entity_id=payment.id,
         event_id=order.event_id,
         actor=user,
-        description="Started simulated ticket payment",
-        metadata={"order_id": str(order.id), "amount_tiyn": payment.amount, "simulated": True},
+        description=f"Started simulated ticket payment ({payment.provider.value})",
+        metadata={
+            "order_id": str(order.id),
+            "amount_tiyn": payment.amount,
+            "provider": payment.provider.value,
+            "simulated": True,
+        },
     )
     await db.commit()
     return to_payment_out(payment)
@@ -243,13 +282,27 @@ async def process_provider_event(
         raise UnprocessableError(
             "The webhook signature or body is invalid.", code="invalid_webhook"
         ) from exc
+    payment = await _apply_provider_event(db, provider.name, event, now)
+    await db.commit()
+    return payment
 
-    payment = await db.scalar(
+
+async def _lock_payment(
+    db: AsyncSession, provider: PaymentProviderName, provider_ref: str
+) -> Payment | None:
+    return await db.scalar(
         select(Payment)
-        .where(Payment.provider == provider.name, Payment.provider_ref == event.provider_ref)
+        .where(Payment.provider == provider, Payment.provider_ref == provider_ref)
         .with_for_update()
         .execution_options(populate_existing=True)
     )
+
+
+async def _apply_provider_event(
+    db: AsyncSession, provider: PaymentProviderName, event: ProviderEvent, now: datetime
+) -> Payment:
+    """Apply a verified, final provider event exactly once. Does not commit."""
+    payment = await _lock_payment(db, provider, event.provider_ref)
     if payment is None:
         raise NotFoundError("Payment not found.", code="payment_not_found")
     if payment.status != PaymentStatus.pending:
@@ -285,7 +338,6 @@ async def process_provider_event(
             "simulated": payment.is_simulated,
         },
     )
-    await db.commit()
     return payment
 
 
@@ -325,3 +377,199 @@ async def simulate_payment(
         await db.rollback()
         raise
     return to_payment_out(settled)
+
+
+# ---------------------------------------------------------------------------------------------
+# Pull providers (Halyk ePay test environment)
+# ---------------------------------------------------------------------------------------------
+
+
+async def _abandon_if_orphaned(db: AsyncSession, payment: Payment, now: datetime) -> bool:
+    """Give up on a pending pull payment whose order can no longer be paid. Does not commit."""
+    if payment.created_at is None or now - payment.created_at < ABANDON_AFTER:
+        return False
+    order = await db.get(Order, payment.order_id) if payment.order_id else None
+    if order is not None and order.status == OrderStatus.pending:
+        return False
+    locked = await _lock_payment(db, payment.provider, payment.provider_ref)
+    if locked is None or locked.status != PaymentStatus.pending:
+        return False
+    locked.status = PaymentStatus.cancelled
+    locked.failure_reason = ABANDONED_REASON
+    audit(
+        db,
+        action_type="payment.cancelled",
+        entity_type="payment",
+        entity_id=locked.id,
+        event_id=order.event_id if order else None,
+        description="Simulated ticket payment abandoned (never completed at the provider)",
+        metadata={"provider_ref": locked.provider_ref, "simulated": True},
+    )
+    return True
+
+
+async def _sync(db: AsyncSession, payment: Payment, now: datetime) -> Payment:
+    """Pull the provider's status and apply it if final. Commits when something changed."""
+    provider = get_provider(payment.provider)
+    if not provider.supports_pull or payment.status != PaymentStatus.pending:
+        return payment
+    payment_id, provider_ref = payment.id, payment.provider_ref
+    # The network call runs before any row lock is taken; `_apply_provider_event` re-checks
+    # `pending` under the lock, so concurrent syncs settle the payment once.
+    try:
+        event = await provider.fetch_status(provider_ref)
+    except ProviderUnavailableError as exc:
+        raise ServiceUnavailableError(
+            "The payment provider is not reachable right now. Try again shortly.",
+            code="payment_provider_unavailable",
+        ) from exc
+    if event.status == PaymentStatus.pending:
+        if await _abandon_if_orphaned(db, payment, now):
+            await db.commit()
+        return payment
+    try:
+        settled = await _apply_provider_event(db, payment.provider, event, now)
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
+    refreshed = await db.get(Payment, payment_id, populate_existing=True)
+    return refreshed or settled
+
+
+async def sync_payment(
+    db: AsyncSession, user: User, payment_id: uuid.UUID, now: datetime | None = None
+) -> PaymentOut:
+    """Buyer's return page: ask the provider whether the payment went through."""
+    payment = await db.get(Payment, payment_id)
+    if payment is None:
+        raise NotFoundError("Payment not found.", code="payment_not_found")
+    await _authorize_payment(db, user, payment)
+    return to_payment_out(await _sync(db, payment, now or datetime.now(UTC)))
+
+
+async def halyk_session(
+    db: AsyncSession,
+    user: User,
+    payment_id: uuid.UUID,
+    *,
+    locale: str = "ru",
+    client: Literal["web", "app"] = "web",
+    now: datetime | None = None,
+) -> HalykSessionOut:
+    """Everything the browser needs for `halyk.pay()`. Buyer only, pending payments only."""
+    from app.services.payments.halyk import HalykProvider
+
+    now = now or datetime.now(UTC)
+    payment = await db.get(Payment, payment_id)
+    if payment is None or payment.kind != PaymentKind.ticket or payment.order_id is None:
+        raise NotFoundError("Payment not found.", code="payment_not_found")
+    order = await db.get(Order, payment.order_id)
+    if order is None or order.buyer_user_id != user.id:
+        raise ForbiddenError("Only the buyer can pay for this order.", code="order_access_denied")
+    if payment.provider != PaymentProviderName.halyk:
+        raise ConflictError("This payment does not use Halyk ePay.", code="not_halyk_payment")
+    if payment.status != PaymentStatus.pending:
+        raise ConflictError("This payment is already settled.", code="payment_not_pending")
+    if order.status != OrderStatus.pending:
+        raise ConflictError("Order is not awaiting payment.", code="order_not_pending")
+    if order.expires_at is not None and order.expires_at <= now:
+        raise ConflictError("Checkout reservation has expired.", code="order_expired")
+
+    settings = get_settings()
+    provider = get_provider(PaymentProviderName.halyk)
+    assert isinstance(provider, HalykProvider)  # noqa: S101 - registry invariant
+    return_url = f"{halyk_checkout_url(payment.id)}/return"
+    suffix = "?app=1" if client == "app" else ""
+    sep = "&" if suffix else "?"
+    post_link = (
+        f"{settings.public_base_url.rstrip('/')}{settings.api_v1_prefix}/payments/webhooks/halyk"
+    )
+    try:
+        payment_object = await provider.payment_session(
+            invoice_id=payment.provider_ref,
+            amount=Money(payment.amount, payment.currency),
+            description=f"BiletFlow order {order.order_number}",
+            locale=locale,
+            back_link=f"{return_url}{suffix}",
+            failure_back_link=f"{return_url}{suffix}{sep}failed=1",
+            post_link=post_link,
+        )
+    except ProviderUnavailableError as exc:
+        raise ServiceUnavailableError(
+            "The payment provider is not reachable right now. Try again shortly.",
+            code="payment_provider_unavailable",
+        ) from exc
+    return HalykSessionOut(
+        payment_id=payment.id,
+        order_id=order.id,
+        script_url=settings.halyk_payform_js_url,
+        payment_object=payment_object,
+        is_simulated=True,
+    )
+
+
+def _callback_invoice_id(payload: bytes) -> str | None:
+    """postLink bodies are JSON in Halyk's examples; accept a form body too. Only the invoice ID
+    is read: the body is unsigned, so its `code`/`amount` are never trusted."""
+    text = payload.decode(errors="replace")
+    data: Any
+    try:
+        data = json.loads(text)
+    except ValueError:
+        data = {key: values[0] for key, values in parse_qs(text).items() if values}
+    if not isinstance(data, dict):
+        return None
+    value = data.get("invoiceId") or data.get("invoiceID")
+    return str(value) if value is not None else None
+
+
+async def handle_pull_callback(
+    db: AsyncSession, provider_name: str, payload: bytes, now: datetime | None = None
+) -> None:
+    """Provider callback for a pull provider: look up the payment and re-check its status."""
+    provider = get_provider(provider_name)
+    invoice_id = _callback_invoice_id(payload)
+    if invoice_id is None:
+        raise UnprocessableError("The callback has no invoice ID.", code="invalid_webhook")
+    payment = await db.scalar(
+        select(Payment).where(Payment.provider == provider.name, Payment.provider_ref == invoice_id)
+    )
+    if payment is None:
+        # The test merchant is shared by everyone: callbacks for other teams' invoices are normal.
+        logger.info("callback for an unknown invoice", extra={"provider": provider.name.value})
+        return
+    await _sync(db, payment, now or datetime.now(UTC))
+
+
+async def sync_pending_payments(
+    db: AsyncSession, limit: int = 50, now: datetime | None = None
+) -> int:
+    """Worker sweep: settle pull-provider payments whose buyer never came back. Returns how many
+    changed state."""
+    now = now or datetime.now(UTC)
+    pull = [name for name in PaymentProviderName if get_provider(name).supports_pull]
+    if not pull:
+        return 0
+    rows = (
+        await db.scalars(
+            select(Payment)
+            .where(
+                Payment.status == PaymentStatus.pending,
+                Payment.provider.in_(pull),
+                Payment.created_at >= now - SYNC_WINDOW,
+            )
+            .order_by(Payment.created_at)
+            .limit(limit)
+        )
+    ).all()
+    changed = 0
+    for payment in rows:
+        try:
+            after = await _sync(db, payment, now)
+        except ServiceUnavailableError:
+            logger.warning("payment provider unavailable during sweep")
+            break  # the provider is down: try the rest on the next run
+        if after.status != PaymentStatus.pending:
+            changed += 1
+    return changed

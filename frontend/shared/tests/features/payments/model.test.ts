@@ -1,7 +1,11 @@
 import { expect, it } from "vitest";
 import {
+  decodeAppSession,
+  encodeAppSession,
   normalizeIban,
+  parseHalykSession,
   parsePayment,
+  parsePaymentConfig,
   parseFinancials,
   parseAccounts,
 } from "@biletflow/shared/features/payments/model";
@@ -67,4 +71,45 @@ it("preserves P3 persisted tiyn values and allows paid orders only with active s
       true,
     ),
   ).toThrow();
+});
+
+it("defaults older payments to the sandbox and validates Halyk sessions", () => {
+  const p = {
+    id: "payment",
+    kind: "ticket",
+    status: "pending",
+    amount: 250000,
+    fee_amount: 7500,
+    currency: "KZT",
+    is_simulated: true,
+    checkout_url: null,
+    failure_reason: null,
+  };
+  expect(parsePayment(p).provider).toBe("sandbox");
+  expect(parsePayment(p).order_id).toBeNull();
+  expect(parsePayment({ ...p, provider: "halyk", order_id: "o" }).provider).toBe("halyk");
+  expect(() => parsePayment({ ...p, provider: "stripe" })).toThrow();
+  expect(parsePaymentConfig({ ticket_provider: "halyk", is_simulated: true }).ticket_provider).toBe("halyk");
+  expect(() => parsePaymentConfig({ ticket_provider: "real", is_simulated: false })).toThrow();
+
+  const session = {
+    payment_id: "payment",
+    order_id: "order",
+    script_url: "https://test-epay.epayment.kz/payform/payment-api.js",
+    is_simulated: true,
+    payment_object: {
+      invoiceId: "123456789012345",
+      terminal: "t",
+      backLink: "https://web/return?app=1",
+      failureBackLink: "https://web/return?app=1&failed=1",
+      amount: 2500,
+      description: "BiletFlow order #1 & co",
+      auth: { access_token: "tok" },
+    },
+  };
+  expect(parseHalykSession(decodeAppSession(`#${encodeAppSession(session)}`))).toEqual(session);
+  expect(() => parseHalykSession({ ...session, script_url: "http://evil/x.js" })).toThrow();
+  expect(() => parseHalykSession({ ...session, payment_object: { ...session.payment_object, auth: {} } })).toThrow();
+  expect(decodeAppSession("#%E0%A4%A")).toBeNull();
+  expect(decodeAppSession("")).toBeNull();
 });
