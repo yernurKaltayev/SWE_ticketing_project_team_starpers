@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterAll, afterEach, beforeAll, beforeEach, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
 import {
   cleanup,
   fireEvent,
@@ -21,6 +21,7 @@ import { resetOrderMocks } from "../mocks/orders";
 import { resetPaymentMocks } from "../mocks/payments";
 import { OrderDetail } from "../checkout/Orders";
 import { HalykCheckout, HalykReturn } from "./HalykPayment";
+import { halykStepStates } from "./halykStages";
 import CheckoutPage from "../checkout/CheckoutPage";
 import ActivationPage, {
   AccountsPage,
@@ -513,4 +514,74 @@ it("Halyk return page confirms with the API, never with the URL", async () => {
   expect(
     screen.getByRole("link", { name: "View order" }).getAttribute("href"),
   ).toBe(`/account/orders/${fixture.value.id}`);
+});
+
+const stepItem = (name: RegExp) =>
+  screen.getByRole("button", { name }).closest("li") as HTMLLIElement;
+
+it("Halyk step states follow the flow and finish with every step done", () => {
+  expect(halykStepStates("token", { idle: true })).toEqual({
+    order: "done",
+    token: "next",
+    form: "upcoming",
+    confirm: "upcoming",
+    tickets: "upcoming",
+  });
+  expect(halykStepStates("confirm", { failed: true }).confirm).toBe("failed");
+  expect(Object.values(halykStepStates("tickets"))).toEqual(
+    Array(5).fill("done"),
+  );
+});
+it("Halyk order panel: step tracker explains each step and copies the test card", async () => {
+  halykFixture();
+  const writeText = vi.fn(() => Promise.resolve());
+  Object.defineProperty(navigator, "clipboard", {
+    value: { writeText },
+    configurable: true,
+  });
+  try {
+    await mount("/account/orders/paid-order", "attendee@example.com");
+    await screen.findByRole("navigation", { name: "Payment progress" });
+    expect(stepItem(/Order reserved/).dataset.state).toBe("done");
+    const token = stepItem(/Secure payment link/);
+    expect(token.dataset.state).toBe("next");
+    expect(token.getAttribute("aria-current")).toBe("step");
+    expect(screen.getByText(/one-time token/).hidden).toBe(false);
+    // Any step opens on demand; only one explanation shows at a time.
+    const form = screen.getByRole("button", { name: /Pay on Halyk's test page/ });
+    expect(form.getAttribute("aria-expanded")).toBe("false");
+    await userEvent.click(form);
+    expect(form.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByText(/Enter the test card/).hidden).toBe(false);
+    expect(screen.getByText(/one-time token/).hidden).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Copy: Number" }));
+    await screen.findByText("Number: Copied");
+    expect(writeText).toHaveBeenCalledWith("4405639704015096");
+  } finally {
+    delete (navigator as { clipboard?: unknown }).clipboard;
+  }
+});
+it("Halyk return page: tracker completes on a confirmed payment", async () => {
+  halykFixture();
+  await mount("/checkout/pay/payment-1/return", "attendee@example.com");
+  await screen.findByText(/Payment confirmed/, undefined, { timeout: 6000 });
+  const steps = screen
+    .getByRole("navigation", { name: "Payment progress" })
+    .querySelectorAll("li");
+  expect(Array.from(steps, (li) => li.dataset.state)).toEqual(
+    Array(5).fill("done"),
+  );
+});
+it("Halyk return page: a declined payment marks the bank confirmation step", async () => {
+  const fixture = halykFixture();
+  server.use(
+    http.post("*/api/v1/payments/payment-1/sync", () => {
+      fixture.payment.status = "failed";
+      return HttpResponse.json(fixture.payment);
+    }),
+  );
+  await mount("/checkout/pay/payment-1/return", "attendee@example.com");
+  await screen.findByText(/did not go through/);
+  expect(stepItem(/Bank confirmation/).dataset.state).toBe("failed");
+  expect(stepItem(/Tickets issued/).dataset.state).toBe("upcoming");
 });

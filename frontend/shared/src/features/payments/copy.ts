@@ -17,6 +17,30 @@ const en = {
   halykScriptFailed: "Halyk's payment form did not load. Check your connection and try again.",
   viewOrder: "View order",
   backToApp: "Return to the BiletFlow app",
+  halykTestBadge: "Test mode",
+  halykCopy: "Copy",
+  halykCopied: "Copied",
+  halykProgress: "Payment progress",
+  halykStateDone: "Done",
+  halykStateCurrent: "In progress",
+  halykStateNext: "Next step",
+  halykStateFailed: "Needs attention",
+  halykStateUpcoming: "Not started",
+  halykStepOrder: "Order reserved",
+  halykStepOrderDetail:
+    "Your tickets are held while you pay. The order stays pending until Halyk confirms the payment.",
+  halykStepToken: "Secure payment link",
+  halykStepTokenDetail:
+    "BiletFlow asks Halyk for a one-time token for this exact amount. The bank's secret key never reaches your browser.",
+  halykStepForm: "Pay on Halyk's test page",
+  halykStepFormDetail:
+    "Enter the test card on the bank's form. This is Halyk's test environment, so no real money is charged.",
+  halykStepConfirm: "Bank confirmation",
+  halykStepConfirmDetail:
+    "BiletFlow checks the payment with Halyk server to server. Returning to this page alone never marks an order as paid.",
+  halykStepTickets: "Tickets issued",
+  halykStepTicketsDetail:
+    "Once Halyk confirms the payment, your tickets appear in the order and in your account.",
   activation: "Paid sales",
   finances: "Finances and payouts",
   eventFinances: "Event revenue",
@@ -154,6 +178,30 @@ const ru: Copy = {
   halykScriptFailed: "Форма оплаты Halyk не загрузилась. Проверьте соединение и повторите.",
   viewOrder: "Открыть заказ",
   backToApp: "Вернуться в приложение BiletFlow",
+  halykTestBadge: "Тестовый режим",
+  halykCopy: "Копировать",
+  halykCopied: "Скопировано",
+  halykProgress: "Ход оплаты",
+  halykStateDone: "Готово",
+  halykStateCurrent: "Выполняется",
+  halykStateNext: "Следующий шаг",
+  halykStateFailed: "Требует внимания",
+  halykStateUpcoming: "Ещё не начато",
+  halykStepOrder: "Заказ забронирован",
+  halykStepOrderDetail:
+    "Билеты закреплены за вами, пока вы оплачиваете. Заказ ждёт, пока Halyk не подтвердит оплату.",
+  halykStepToken: "Защищённая ссылка на оплату",
+  halykStepTokenDetail:
+    "BiletFlow запрашивает у Halyk одноразовый токен ровно на эту сумму. Секретный ключ банка не попадает в браузер.",
+  halykStepForm: "Оплата на тестовой странице Halyk",
+  halykStepFormDetail:
+    "Введите тестовую карту в форме банка. Это тестовая среда Halyk, реальные деньги не списываются.",
+  halykStepConfirm: "Подтверждение банка",
+  halykStepConfirmDetail:
+    "BiletFlow проверяет оплату напрямую на сервере Halyk. Само возвращение на эту страницу не отмечает заказ оплаченным.",
+  halykStepTickets: "Билеты выпущены",
+  halykStepTicketsDetail:
+    "Когда Halyk подтвердит оплату, билеты появятся в заказе и в вашем аккаунте.",
   activation: "Платные продажи",
   finances: "Финансы и выплаты",
   eventFinances: "Доходы мероприятия",
@@ -282,6 +330,30 @@ const kk: Copy = {
   halykScriptFailed: "Halyk төлем формасы жүктелмеді. Байланысты тексеріп, қайталаңыз.",
   viewOrder: "Тапсырысты ашу",
   backToApp: "BiletFlow қосымшасына оралу",
+  halykTestBadge: "Тест режимі",
+  halykCopy: "Көшіру",
+  halykCopied: "Көшірілді",
+  halykProgress: "Төлем барысы",
+  halykStateDone: "Дайын",
+  halykStateCurrent: "Орындалуда",
+  halykStateNext: "Келесі қадам",
+  halykStateFailed: "Назар қажет",
+  halykStateUpcoming: "Әлі басталмады",
+  halykStepOrder: "Тапсырыс брондалды",
+  halykStepOrderDetail:
+    "Төлеп жатқанда билеттер сізге сақталады. Halyk төлемді растағанша тапсырыс күту күйінде тұрады.",
+  halykStepToken: "Қорғалған төлем сілтемесі",
+  halykStepTokenDetail:
+    "BiletFlow Halyk-тен дәл осы сомаға бір реттік токен сұрайды. Банктің құпия кілті браузерге жетпейді.",
+  halykStepForm: "Halyk тест бетінде төлеу",
+  halykStepFormDetail:
+    "Банк формасына тест картасын енгізіңіз. Бұл Halyk-тің тест ортасы, нақты ақша алынбайды.",
+  halykStepConfirm: "Банк растауы",
+  halykStepConfirmDetail:
+    "BiletFlow төлемді Halyk серверімен тікелей тексереді. Бұл бетке оралу ғана тапсырысты төленген деп белгілемейді.",
+  halykStepTickets: "Билеттер берілді",
+  halykStepTicketsDetail:
+    "Halyk төлемді растағаннан кейін билеттер тапсырыста және аккаунтыңызда пайда болады.",
   activation: "Ақылы сату",
   finances: "Қаржы және төлемдер",
   eventFinances: "Іс-шара табысы",
