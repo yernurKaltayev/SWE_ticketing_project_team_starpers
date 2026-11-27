@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError, formatPrice } from "@biletflow/shared";
@@ -17,6 +18,8 @@ import type { Payment } from "./model";
 import { usePaymentQuery } from "./data";
 import { DemoCardPayment } from "./DemoCardPayment";
 import { PaymentError } from "./ui";
+import { HalykSteps } from "./HalykSteps";
+import type { HalykStage } from "./halykStages";
 import "./payments.css";
 
 /* Halyk ePay TEST environment checkout.
@@ -65,23 +68,101 @@ export function OrderPayment({
   return <DemoCardPayment orderId={orderId} total={total} locale={locale} />;
 }
 
+function CopyValue({
+  value,
+  label,
+  locale,
+}: {
+  value: string;
+  label: string;
+  locale: Locale;
+}) {
+  const t = paymentCopy[locale];
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const timer = window.setTimeout(() => setCopied(false), 2000);
+    return () => window.clearTimeout(timer);
+  }, [copied]);
+  // Without a clipboard (insecure origin, old browser) the value stays readable and selectable.
+  if (typeof navigator === "undefined" || !navigator.clipboard) return null;
+  return (
+    <>
+      <button
+        type="button"
+        className="secondary halyk-copy"
+        aria-label={`${t.halykCopy}: ${label}`}
+        data-copied={copied || undefined}
+        onClick={() => {
+          void navigator.clipboard
+            .writeText(value)
+            .then(() => setCopied(true))
+            .catch(() => undefined);
+        }}
+      >
+        {copied ? t.halykCopied : t.halykCopy}
+      </button>
+      <span className="visually-hidden" role="status">
+        {copied ? `${label}: ${t.halykCopied}` : ""}
+      </span>
+    </>
+  );
+}
+
 export function HalykTestCard({ locale }: { locale: Locale }) {
   const t = paymentCopy[locale];
+  const fields = [
+    // The bank's form takes the number without spaces.
+    [t.halykCardNumber, HALYK_TEST_CARD.number, HALYK_TEST_CARD.number.replace(/\s/g, "")],
+    [t.halykCardExpiry, HALYK_TEST_CARD.expiry, HALYK_TEST_CARD.expiry],
+    [t.halykCardCvc, HALYK_TEST_CARD.cvc, HALYK_TEST_CARD.cvc],
+  ] as const;
   return (
-    <dl className="halyk-test-card" aria-label={t.halykTestCard}>
-      <div>
-        <dt>{t.halykCardNumber}</dt>
-        <dd translate="no">{HALYK_TEST_CARD.number}</dd>
+    <figure className="halyk-test-card">
+      <figcaption>{t.halykTestCard}</figcaption>
+      <dl>
+        {fields.map(([label, shown, copied]) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>
+              <span translate="no">{shown}</span>
+              <CopyValue value={copied} label={label} locale={locale} />
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </figure>
+  );
+}
+
+/** Panel shell shared by the order page and the checkout pages: action column + step tracker. */
+function HalykPanel({
+  heading: Heading,
+  stage,
+  failed,
+  idle,
+  locale,
+  children,
+}: {
+  heading: "h1" | "h2";
+  stage: HalykStage;
+  failed?: boolean;
+  idle?: boolean;
+  locale: Locale;
+  children: ReactNode;
+}) {
+  const t = paymentCopy[locale];
+  return (
+    <section className="payment-panel halyk-payment" aria-label={t.payment}>
+      <div className="halyk-layout">
+        <div className="halyk-main">
+          <p className="halyk-badge">{t.halykTestBadge}</p>
+          <Heading>{t.halykTitle}</Heading>
+          {children}
+        </div>
+        <HalykSteps stage={stage} failed={failed} idle={idle} locale={locale} />
       </div>
-      <div>
-        <dt>{t.halykCardExpiry}</dt>
-        <dd translate="no">{HALYK_TEST_CARD.expiry}</dd>
-      </div>
-      <div>
-        <dt>{t.halykCardCvc}</dt>
-        <dd translate="no">{HALYK_TEST_CARD.cvc}</dd>
-      </div>
-    </dl>
+    </section>
   );
 }
 
@@ -129,17 +210,27 @@ function HalykStart({
   }
 
   return (
-    <section className="payment-panel halyk-payment" aria-label={t.payment}>
-      <h2>{t.halykTitle}</h2>
+    <HalykPanel
+      heading="h2"
+      stage="token"
+      failed={!!error}
+      idle={!busy}
+      locale={locale}
+    >
       <p className="notice">{t.halykNotice}</p>
       <HalykTestCard locale={locale} />
       <PaymentError error={error} locale={locale} />
       <div className="controls">
-        <button type="button" disabled={busy} onClick={() => void start()}>
+        <button
+          type="button"
+          disabled={busy}
+          aria-busy={busy || undefined}
+          onClick={() => void start()}
+        >
           {busy ? t.working : `${t.halykGo} · ${formatPrice(total, locale)}`}
         </button>
       </div>
-    </section>
+    </HalykPanel>
   );
 }
 
@@ -170,6 +261,7 @@ export function HalykCheckout({ locale }: { locale: Locale }) {
   const t = paymentCopy[locale];
   const [error, setError] = useState<unknown>(null);
   const [scriptFailed, setScriptFailed] = useState(false);
+  const [stage, setStage] = useState<HalykStage>("token");
   const started = useRef(false);
 
   useEffect(() => {
@@ -190,6 +282,7 @@ export function HalykCheckout({ locale }: { locale: Locale }) {
           throw new ApiError(200, "invalid_response", "Unexpected payment.");
         // Drop the token from the address bar and history once read.
         if (app) window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        setStage("form");
         try {
           await loadScript(session.script_url);
         } catch {
@@ -215,8 +308,12 @@ export function HalykCheckout({ locale }: { locale: Locale }) {
 
   return (
     <main className="page halyk-checkout">
-      <section className="payment-panel halyk-payment" aria-label={t.payment}>
-        <h1>{t.halykTitle}</h1>
+      <HalykPanel
+        heading="h1"
+        stage={stage}
+        failed={!!error || scriptFailed}
+        locale={locale}
+      >
         <p className="notice">{t.halykNotice}</p>
         <HalykTestCard locale={locale} />
         {error ? (
@@ -225,13 +322,16 @@ export function HalykCheckout({ locale }: { locale: Locale }) {
             <ReturnLinks paymentId={paymentId} locale={locale} />
           </>
         ) : scriptFailed ? (
-          <p className="notice" role="alert">
-            {t.halykScriptFailed}
-          </p>
+          <>
+            <p className="notice" role="alert">
+              {t.halykScriptFailed}
+            </p>
+            <ReturnLinks paymentId={paymentId} locale={locale} />
+          </>
         ) : (
           <Status>{t.halykOpening}</Status>
         )}
-      </section>
+      </HalykPanel>
     </main>
   );
 }
@@ -324,11 +424,18 @@ export function HalykReturn({ locale }: { locale: Locale }) {
   if (payment?.status === "succeeded") message = t.halykPaid;
   else if (payment && payment.status !== "pending") message = t.halykFailed;
   else if (syncs >= MAX_SYNCS) message = t.halykWaiting;
+  const paid = payment?.status === "succeeded";
 
   return (
     <main className="page halyk-checkout">
-      <section className="payment-panel halyk-payment" aria-label={t.payment}>
-        <h1>{t.halykTitle}</h1>
+      <HalykPanel
+        heading="h1"
+        stage={paid ? "tickets" : "confirm"}
+        failed={!!settled && !paid}
+        // Paused polling and app mode wait on the buyer, so the step is "next", not running.
+        idle={app || (syncs >= MAX_SYNCS && !settled)}
+        locale={locale}
+      >
         <p className="notice" role="status">
           {message}
         </p>
@@ -351,7 +458,7 @@ export function HalykReturn({ locale }: { locale: Locale }) {
           locale={locale}
           app={app}
         />
-      </section>
+      </HalykPanel>
     </main>
   );
 }
