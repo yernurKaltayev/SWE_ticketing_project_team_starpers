@@ -25,6 +25,10 @@ import {
 import type { Event, Page, Ticket, Venue } from "./model";
 import { EventError, SelectField, TextArea } from "./ui";
 import { ArrowLeftIcon } from "../icons";
+import { hallCategories } from "@biletflow/shared/features/seating/booking";
+import { parseSeatMap } from "../seating/model";
+import { seatingCopy } from "../seating/copy";
+import { categoryLabelOf } from "../seating/categories";
 import { cityLabel, knownCities } from "./venues";
 import {
   parseEvent,
@@ -525,6 +529,13 @@ function TicketEditor({
     parseTicketTypes,
   );
   const [selected, select] = useState<Ticket | null | undefined>();
+  // Numbered seating: each ticket type sells the seats of one price category of the hall.
+  const seated = event.seating_mode === "assigned";
+  const seatMap = useResource(
+    seated ? `/api/v1/events/${event.id}/seat-map` : "",
+    parseSeatMap,
+  );
+  const seatCategories = seatMap.data ? hallCategories(seatMap.data.seats) : [];
   const [error, setError] = useState<unknown>();
   const [pending, setPending] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -633,7 +644,10 @@ function TicketEditor({
             setError(undefined);
             let body;
             try {
-              body = ticketBody(new FormData(e.currentTarget));
+              const form = new FormData(e.currentTarget);
+              body = ticketBody(form);
+              if (seated)
+                body = { ...body, price_category: String(form.get("price_category") ?? "") || null };
             } catch (err) {
               setError(err);
               return;
@@ -643,13 +657,14 @@ function TicketEditor({
               `/api/v1/events/${event.id}/ticket-types${selected ? `/${selected.id}` : ""}`,
               {
                 method: selected ? "PATCH" : "POST",
-                body: selected
-                  ? Object.fromEntries(
-                      Object.entries(body).filter(
-                        ([key]) => key !== "price_category",
-                      ),
-                    )
-                  : body,
+                body:
+                  selected && !seated
+                    ? Object.fromEntries(
+                        Object.entries(body).filter(
+                          ([key]) => key !== "price_category",
+                        ),
+                      )
+                    : body,
               },
             )
               .then(() => {
@@ -700,6 +715,20 @@ function TicketEditor({
                 defaultValue={selected?.max_per_order ?? 10}
               />
             </div>
+            {seated && (
+              <SelectField
+                key={seatCategories.join("|")}
+                name="price_category"
+                label={seatingCopy[locale].category}
+                defaultValue={selected?.price_category ?? seatCategories[0] ?? ""}
+              >
+                {seatCategories.map((category) => (
+                  <option key={category ?? ""} value={category ?? ""}>
+                    {categoryLabelOf(category, locale)}
+                  </option>
+                ))}
+              </SelectField>
+            )}
             <label className="checkbox-field">
               <input
                 name="is_hidden"

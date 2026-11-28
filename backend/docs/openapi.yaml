@@ -1155,6 +1155,47 @@ paths:
           $ref: '#/components/responses/Error'
         '422':
           $ref: '#/components/responses/Error'
+    post:
+      tags:
+      - venues
+      summary: Build a hall layout from sections
+      description: 'Owner: P4. Access: organizer or platform admin. Each section has a name, a
+        price category and rows x seats per row; rows are numbered 1..N from the stage back
+        across the whole hall. At most 8 sections and 2000 seats. A second layout with the same
+        name at this venue returns 409 layout_exists.'
+      operationId: post_venues_venue_id_layouts
+      parameters:
+      - name: venue_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LayoutCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LayoutOut'
+        '401':
+          $ref: '#/components/responses/Error'
+        '403':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+        '409':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
   /events/{event_id}/seat-map:
     get:
       tags:
@@ -5101,6 +5142,46 @@ components:
       - expires_at
       title: HoldOut
       type: object
+    LayoutSectionIn:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        price_category:
+          type: string
+          minLength: 1
+          maxLength: 40
+        rows:
+          type: integer
+          minimum: 1
+          maximum: 30
+        seats_per_row:
+          type: integer
+          minimum: 1
+          maximum: 50
+      required:
+      - name
+      - price_category
+      - rows
+      - seats_per_row
+    LayoutCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        sections:
+          type: array
+          minItems: 1
+          maxItems: 8
+          items:
+            $ref: '#/components/schemas/LayoutSectionIn'
+      required:
+      - name
+      - sections
     LayoutOut:
       properties:
         id:

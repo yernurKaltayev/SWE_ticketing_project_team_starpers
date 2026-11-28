@@ -56,3 +56,56 @@ class HoldResponseP4(BaseModel):
     seat_ids: list[UUID]
     status: Literal["held", "released", "expired", "sold"]
     expires_at: datetime
+
+
+class LayoutSectionIn(BaseModel):
+    """One block of the hall: the same number of seats in each of its rows."""
+
+    name: str = Field(min_length=1, max_length=60)
+    price_category: str = Field(min_length=1, max_length=40)
+    rows: int = Field(ge=1, le=30)
+    seats_per_row: int = Field(ge=1, le=50)
+
+    @field_validator("name")
+    @classmethod
+    def strip_name(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("name is required")
+        return value
+
+    @field_validator("price_category")
+    @classmethod
+    def normalise_category(cls, value: str) -> str:
+        value = value.strip().lower()
+        if not value:
+            raise ValueError("price_category is required")
+        return value
+
+
+class LayoutCreateP4(BaseModel):
+    """A hall plan built from sections; rows are numbered 1..N from the stage back."""
+
+    name: str = Field(min_length=1, max_length=80)
+    sections: list[LayoutSectionIn] = Field(min_length=1, max_length=8)
+
+    @field_validator("name")
+    @classmethod
+    def strip_name(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("name is required")
+        return value
+
+    @field_validator("sections")
+    @classmethod
+    def check_sections(cls, sections: list[LayoutSectionIn]) -> list[LayoutSectionIn]:
+        names = [s.name.lower() for s in sections]
+        if len(names) != len(set(names)):
+            raise ValueError("section names must be distinct")
+        if sum(s.rows * s.seats_per_row for s in sections) > MAX_LAYOUT_SEATS:
+            raise ValueError(f"a layout holds at most {MAX_LAYOUT_SEATS} seats")
+        return sections
+
+
+MAX_LAYOUT_SEATS = 2000

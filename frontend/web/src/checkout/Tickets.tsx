@@ -1,3 +1,4 @@
+import { seatLabel } from "../seating/categories";
 import { CalendarActions } from "../calendar/CalendarActions";
 import { SupportLink } from "../support/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -100,7 +101,8 @@ export default function Tickets({ locale }: { locale: Locale }) {
                     </Link>
                   )}
                   <p>
-                    {ticket.ticket_type} · {ticket.attendee_name}
+                    {ticket.ticket_type}
+                    {ticket.seat ? ` · ${seatLabel(ticket.seat, locale)}` : ""} · {ticket.attendee_name}
                   </p>
                   <p>
                     {t.ticketNumber}:{" "}
@@ -282,8 +284,7 @@ function TicketContent({
                 <div>
                   <dt>{t.seat}</dt>
                   <dd>
-                    {ticket.seat.section_name} · {ticket.seat.row_label} ·{" "}
-                    {ticket.seat.seat_number}
+                    {ticket.seat.section_name}, {seatLabel(ticket.seat, locale)}
                   </dd>
                 </div>
               )}

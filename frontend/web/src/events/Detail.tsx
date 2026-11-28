@@ -88,6 +88,11 @@ function EventContent({
     parsePublicAvailability,
   );
   const offer = tickets.data ? offerSummary(tickets.data) : null;
+  // Numbered seats are chosen on the hall plan first; checkout then takes the held seats.
+  const seated = event.seating_mode === "assigned";
+  const buyLink = seated
+    ? `/events/${encodeURIComponent(event.id)}/seats`
+    : checkoutLink(event.id, location.search);
   // One sales window for the whole event. Without a close date, sales stop when the event
   // starts (the backend enforces the same rule).
   const salesCloseAt = event.registration_closes_at ?? event.starts_at;
@@ -212,24 +217,12 @@ function EventContent({
               })}
             </ul>
             {!preview && event.status === "published" && (
-              <Link
-                className="action-link"
-                to={checkoutLink(event.id, location.search)}
-              >
-                <TicketIcon />
-                {commerceAction(locale, offer?.allFree)}
+              <Link className="action-link" to={buyLink}>
+                {seated ? <SeatIcon /> : <TicketIcon />}
+                {seated ? seatingCopy[locale].chooseSeats : commerceAction(locale, offer?.allFree)}
               </Link>
             )}
           </div>
-          {event.seating_mode === "assigned" && !preview && (
-            <Link
-              className="action-link ghost"
-              to={`/events/${event.id}/seats`}
-            >
-              <SeatIcon />
-              {seatingCopy[locale].title}
-            </Link>
-          )}
           {!preview && (
             <CalendarActions event={event} venue={venue.data} locale={locale} />
           )}
@@ -259,12 +252,9 @@ function EventContent({
         createPortal(
         <div className="mobile-cta">
           {offer && <span className="price">{offerLabel(offer, locale)}</span>}
-          <Link
-            className="action-link"
-            to={checkoutLink(event.id, location.search)}
-          >
-            <TicketIcon />
-            {commerceAction(locale, offer?.allFree)}
+          <Link className="action-link" to={buyLink}>
+            {seated ? <SeatIcon /> : <TicketIcon />}
+            {seated ? seatingCopy[locale].chooseSeats : commerceAction(locale, offer?.allFree)}
           </Link>
         </div>,
         document.body,

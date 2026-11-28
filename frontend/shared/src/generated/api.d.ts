@@ -584,7 +584,11 @@ export interface paths {
          */
         get: operations["get_venues_venue_id_layouts"];
         put?: never;
-        post?: never;
+        /**
+         * Build a hall layout from sections
+         * @description Owner: P4. Access: organizer or platform admin. Each section has a name, a price category and rows x seats per row; rows are numbered 1..N from the stage back across the whole hall. At most 8 sections and 2000 seats. A second layout with the same name at this venue returns 409 layout_exists.
+         */
+        post: operations["post_venues_venue_id_layouts"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2756,6 +2760,16 @@ export interface components {
              * Format: date-time
              */
             expires_at: string;
+        };
+        LayoutSectionIn: {
+            name: string;
+            price_category: string;
+            rows: number;
+            seats_per_row: number;
+        };
+        LayoutCreate: {
+            name: string;
+            sections: components["schemas"]["LayoutSectionIn"][];
         };
         /** LayoutOut */
         LayoutOut: {
@@ -5199,6 +5213,37 @@ export interface operations {
                 };
             };
             404: components["responses"]["Error"];
+            422: components["responses"]["Error"];
+        };
+    };
+    post_venues_venue_id_layouts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                venue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LayoutCreate"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LayoutOut"];
+                };
+            };
+            401: components["responses"]["Error"];
+            403: components["responses"]["Error"];
+            404: components["responses"]["Error"];
+            409: components["responses"]["Error"];
             422: components["responses"]["Error"];
         };
     };

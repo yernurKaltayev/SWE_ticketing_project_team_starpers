@@ -1,5 +1,6 @@
 import { CalendarActions } from "../calendar/CalendarActions";
 import { SupportLink } from "../support/ui";
+import { seatLabel } from "../seating/categories";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { formatEventDateTime, formatPrice } from "@biletflow/shared";
@@ -339,7 +340,8 @@ function OrderContent({
                     {ticket.attendee_name}
                   </Link>
                   <p>
-                    {ticket.ticket_type} · {t.ticketNumber}:{" "}
+                    {ticket.ticket_type}
+                    {ticket.seat ? ` · ${seatLabel(ticket.seat, locale)}` : ""} · {t.ticketNumber}:{" "}
                     <span className="commerce-identifier">{ticket.ticket_number}</span>
                   </p>
                 </div>

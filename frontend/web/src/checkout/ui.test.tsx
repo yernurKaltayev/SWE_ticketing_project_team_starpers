@@ -235,7 +235,10 @@ it("never confirms an assigned-seat checkout as a general-admission registration
     ),
   );
   await app();
-  await screen.findByText(/requires seat selection/);
+  await screen.findByText(/numbered seats/);
+  expect(screen.getByRole("link", { name: "Choose seats" }).getAttribute("href")).toBe(
+    `/events/${demoEventId}/seats`,
+  );
   expect(screen.queryByRole("spinbutton")).toBeNull();
 });
 

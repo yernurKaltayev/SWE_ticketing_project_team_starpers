@@ -1,28 +1,16 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import type { Locale } from "@biletflow/shared";
 import { useEventRequest, useResource } from "../events/data";
 import { parseEvent, parseTicketTypes } from "../events/contracts";
 import { seatingCopy } from "./copy";
 import { parseLayouts } from "./model";
-import { SeatPicker } from "./SeatPicker";
+import { SeatBooking } from "./SeatBooking";
+import { LayoutBuilder } from "./LayoutBuilder";
 import { BackLink } from "../BackLink";
 export function SeatPage({ locale }: { locale: Locale }) {
   const { eventId = "" } = useParams();
-  const request = useEventRequest();
-  return (
-    <>
-      <Link to={`/events/${encodeURIComponent(eventId)}`}>
-        {seatingCopy[locale].back}
-      </Link>
-      <SeatPicker
-        key={eventId}
-        eventId={eventId}
-        request={request}
-        locale={locale}
-      />
-    </>
-  );
+  return <SeatBooking key={eventId} eventId={eventId} locale={locale} />;
 }
 export function SeatingSetup({ locale }: { locale: Locale }) {
   const { eventId = "" } = useParams();
@@ -68,7 +56,8 @@ function SetupForm({
   const [layout, setLayout] = useState(event.layout_id ?? "");
   const [assigned, setAssigned] = useState(event.seating_mode === "assigned");
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<"saved" | "error" | null>(null);
+  const [result, setResult] = useState<"saved" | "error" | "layoutCreated" | null>(null);
+  const [building, setBuilding] = useState(false);
   const draft = event.status === "draft";
   return (
     <div className="seating">
@@ -150,7 +139,26 @@ function SetupForm({
           <button onClick={layouts.reload}>{t.refresh}</button>
         </p>
       )}
-      {layouts.data?.length === 0 && <p>{t.empty}</p>}
+      {layouts.data?.length === 0 && !building && <p>{t.empty}</p>}
+      {draft &&
+        (building ? (
+          <LayoutBuilder
+            venueId={event.venue_id}
+            locale={locale}
+            onCancel={() => setBuilding(false)}
+            onCreated={(created) => {
+              setBuilding(false);
+              setAssigned(true);
+              setLayout(created.id);
+              setResult("layoutCreated");
+              layouts.reload();
+            }}
+          />
+        ) : (
+          <button type="button" className="secondary seat-builder-open" onClick={() => setBuilding(true)}>
+            + {t.build}
+          </button>
+        ))}
       {result && (
         <p role={result === "error" ? "alert" : "status"}>{t[result]}</p>
       )}

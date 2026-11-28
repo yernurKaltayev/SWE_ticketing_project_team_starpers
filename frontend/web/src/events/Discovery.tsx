@@ -18,6 +18,7 @@ import { categoryTone, offerSummary, searchQuery } from "./model";
 import type { Availability, Event, Page } from "./model";
 import { CoverArt, EventError, Image } from "./ui";
 import { commerceAction } from "../checkout/navigation";
+import { seatingCopy } from "../seating/copy";
 import { parseEvents, parsePublicAvailability } from "./contracts";
 import { cityLabel, parseVenueRefs } from "./venues";
 import type { VenueRef } from "./venues";
@@ -380,8 +381,13 @@ function PublicEventCard({
           )}
         </div>
         {event.status === "published" && !offer?.soldOut && (
-          <Link className="card-cta" to={`/events/${event.id}/checkout`}>
-            {commerceAction(locale, offer?.allFree)}
+          <Link
+            className="card-cta"
+            to={`/events/${event.id}/${event.seating_mode === "assigned" ? "seats" : "checkout"}`}
+          >
+            {event.seating_mode === "assigned"
+              ? seatingCopy[locale].chooseSeats
+              : commerceAction(locale, offer?.allFree)}
             <ArrowRightIcon className="card-arrow" size={16} />
           </Link>
         )}

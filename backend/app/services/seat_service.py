@@ -16,16 +16,17 @@ from datetime import datetime
 from importlib import import_module
 from uuid import UUID, uuid4
 
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ConflictError, NotFoundError, UnprocessableError
 from app.models.event import Event, EventStatus, EventVisibility
 from app.models.ticket_type import TicketType
-from app.models.venue import Venue, VenueLayout
+from app.models.venue import Seat, Venue, VenueLayout, VenueRow, VenueSection
 from app.schemas.seat_p4 import (
     HoldCreateP4,
     HoldResponseP4,
+    LayoutCreateP4,
     LayoutSummaryP4,
     SeatMapP4,
     SeatP4,
@@ -119,6 +120,41 @@ async def list_layouts(db: AsyncSession, venue_id: UUID) -> list[LayoutSummaryP4
     ]
 
 
+async def create_layout(db: AsyncSession, venue_id: UUID, data: LayoutCreateP4) -> LayoutSummaryP4:
+    """Build a hall plan from sections. Rows are numbered 1..N across the whole hall, from the
+    stage back, so their position also fixes the order of the sections."""
+    await get_venue(db, venue_id)
+    taken = await db.scalar(
+        select(VenueLayout.id).where(
+            VenueLayout.venue_id == venue_id,
+            func.lower(VenueLayout.name) == data.name.lower(),
+        )
+    )
+    if taken is not None:
+        raise ConflictError("This venue already has a layout with that name.", code="layout_exists")
+    layout = VenueLayout(venue_id=venue_id, name=data.name)
+    db.add(layout)
+    await db.flush()
+    position = 0
+    for block in data.sections:
+        section = VenueSection(
+            layout_id=layout.id, name=block.name, price_category=block.price_category
+        )
+        db.add(section)
+        await db.flush()
+        for _ in range(block.rows):
+            position += 1
+            row = VenueRow(section_id=section.id, label=str(position), position=position)
+            db.add(row)
+            await db.flush()
+            db.add_all(
+                Seat(row_id=row.id, number=number, price_category=block.price_category)
+                for number in range(1, block.seats_per_row + 1)
+            )
+    await db.commit()
+    return LayoutSummaryP4(id=layout.id, venue_id=layout.venue_id, name=layout.name)
+
+
 async def _published_event(db: AsyncSession, event_id: UUID, *, lock: bool = False) -> Event:
     stmt = select(Event).where(Event.id == event_id)
     if lock:
@@ -145,9 +181,22 @@ async def _layout_seats(db: AsyncSession, layout_id: UUID):
         .join(row, seat.row_id == row.id)
         .join(section, row.section_id == section.id)
         .where(section.layout_id == layout_id)
-        .order_by(section.id, row.id, seat.id)
     )
-    return (await db.execute(stmt)).all()
+    found = (await db.execute(stmt)).all()
+    # Sections in hall order (their front row first), rows from the stage back, seats by number.
+    front: dict[UUID, tuple[int, str]] = {}
+    for _seat, r, sec in found:
+        key = (_value(r, "position", default=0), str(_value(sec, "name", default="")))
+        front[sec.id] = min(front.get(sec.id, key), key)
+    return sorted(
+        found,
+        key=lambda x: (
+            front[x[2].id],
+            x[2].id,
+            _value(x[1], "position", default=0),
+            _value(x[0], "number", default=0),
+        ),
+    )
 
 
 async def _seat_status(db: AsyncSession, event_id: UUID, now: datetime) -> dict[UUID, str]:
