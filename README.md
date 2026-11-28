@@ -45,7 +45,7 @@ and account layer. Everything else is planned in `PROJECT_PLAN.md` §7.
 │   └── docker-compose.yml
 ├── reports/             # Biweekly team progress reports
 ├── web/                 # React + TS web app (Vite, Tailwind) — see web/README.md
-└── mobile/              # Planned — not yet created
+└── frontend/mobile/     # Expo (React Native) app — Android APK, see "Android app" below
 ```
 
 ## Technology stack
@@ -56,9 +56,29 @@ and account layer. Everything else is planned in `PROJECT_PLAN.md` §7.
 | Database | PostgreSQL 17 |
 | Auth | JWT access tokens + opaque, revocable refresh tokens; bcrypt password hashing |
 | Web frontend | React 19 + TypeScript, Vite, Tailwind CSS 4, TanStack Query |
-| Mobile | React Native — Event Admin check-in app *(planned)* |
+| Mobile | Expo (React Native) — attendee, organizer and check-in app, shipped as an Android APK |
 | Payments | Sandbox or internal simulation, KZT — never real money |
 | Tooling | uv, ruff, pytest, Docker Compose |
+
+## Android app
+
+**Install:** on an Android phone, open the latest
+[GitHub Release](https://github.com/yernurKaltayev/SWE_ticketing_project_team_starpers/releases/latest),
+download `biletflow.apk`, tap it, and allow "Install unknown apps" for your browser when asked.
+The app connects to the deployed server (`https://130-162-184-12.sslip.io`). iPhones can't install
+APKs; use the web site there.
+
+**Build a new APK** (EAS cloud build, Expo project `@biletflow-team/biletflow`):
+
+```bash
+cd frontend/mobile
+npx eas-cli login                                   # once; needs access to the biletflow-team account
+npx eas-cli build -p android --profile apk          # ~10–20 min; prints a download link
+```
+
+The `apk` profile in `frontend/mobile/eas.json` sets the package name (`kz.biletflow.app`), the
+server URLs, and bumps `versionCode` automatically so new APKs install over old ones. The signing
+key is stored by EAS; don't replace it, or existing installs can't update.
 
 ## Quick start (backend)
 
