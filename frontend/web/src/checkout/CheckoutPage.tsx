@@ -23,6 +23,10 @@ import {
 import { makeOrderBody, parseVenue, registrationOpen } from "./model";
 import type { Attendee, Availability, Event, OrderBody } from "./model";
 import "./checkout.css";
+import { withSeats } from "@biletflow/shared/features/seating/booking";
+import type { SeatCart } from "@biletflow/shared/features/seating/booking";
+import { clearSeatCart, loadSeatCart } from "../seating/cart";
+import { seatingCopy } from "../seating/copy";
 import { BackLink } from "../BackLink";
 import { eventCopy } from "../events/copy";
 import { paidSalesOpen } from "../events/model";
@@ -32,6 +36,8 @@ export default function CheckoutPage({ locale }: { locale: Locale }) {
   const { user } = useSession();
   const t = commerceCopy[locale];
   const [cartSlot, setCartSlot] = useState<HTMLDivElement | null>(null);
+  // Numbered seats arrive already held from the hall plan (/events/:id/seats).
+  const [seats] = useState(() => loadSeatCart(eventId));
   const event = useCommerceQuery(eventPath(eventId), parseEvent);
   const availability = useCommerceQuery(
     `/api/v1/events/${encodeURIComponent(eventId)}/availability`,
@@ -57,7 +63,19 @@ export default function CheckoutPage({ locale }: { locale: Locale }) {
       {(event.isPending || availability.isPending) && (
         <Status>{t.loading}</Status>
       )}
-      {event.data && availability.data && user && (
+      {event.data?.seating_mode === "assigned" && !seats && availability.data && (
+        <div className="checkout-form checkout-state" role="status">
+          <h2>{seatingCopy[locale].pickTitle}</h2>
+          <p>{seatingCopy[locale].pickFirst}</p>
+          <div className="checkout-state-actions">
+            <Link className="action-link" to={`/events/${encodeURIComponent(eventId)}/seats`}>
+              {seatingCopy[locale].chooseSeats}
+            </Link>
+          </div>
+        </div>
+      )}
+      {event.data && availability.data && user &&
+        (event.data.seating_mode !== "assigned" || seats) && (
         <div className="checkout-layout">
           <aside className="checkout-context" aria-label={t.event}>
             <h2>{event.data.title}</h2>
@@ -86,6 +104,7 @@ export default function CheckoutPage({ locale }: { locale: Locale }) {
             <div ref={setCartSlot} />
           </aside>
           <CheckoutForm
+            seats={event.data.seating_mode === "assigned" ? seats : null}
             cartSlot={cartSlot}
             key={`${user.id}:${eventId}`}
             event={event.data}
@@ -108,7 +127,9 @@ function CheckoutForm({
   locale,
   reload,
   cartSlot,
+  seats,
 }: {
+  seats: SeatCart | null;
   cartSlot: HTMLElement | null;
   event: Event;
   availability: Availability;
@@ -132,10 +153,12 @@ function CheckoutForm({
         c.available > 0 &&
         (c.free || (paidSalesOpen(event) && !!c.price)),
     );
-    return !initial && open.length === 1 ? open[0].id : null;
+    return !initial && !seats && open.length === 1 ? open[0].id : null;
   });
   const [quantities, setQuantities] = useState<Record<string, number>>(() =>
-    single
+    seats
+      ? Object.fromEntries(seats.items.map((i) => [i.ticket_type_id, i.quantity]))
+      : single
       ? { [single]: 1 }
       : Object.fromEntries(
           initial?.items.map((i) => [i.ticket_type_id, i.quantity]) ?? [],
@@ -144,7 +167,12 @@ function CheckoutForm({
   const [attendees, setAttendees] = useState<Attendee[]>(
     () =>
       initial?.attendees ??
-      (single
+      (seats
+        ? seats.seats.map((_, i) => ({
+            full_name: i === 0 ? (user?.full_name ?? "") : "",
+            email: i === 0 ? (user?.email ?? "") : "",
+          }))
+        : single
         ? [{ full_name: user?.full_name ?? "", email: user?.email ?? "" }]
         : []),
   );
@@ -189,9 +217,29 @@ function CheckoutForm({
   );
   const p = paymentCopy[locale];
   const count = choices.reduce((sum, c) => sum + (quantities[c.id] ?? 0), 0);
-  const labels = choices.flatMap((c) =>
-    Array.from({ length: Math.min(100, quantities[c.id] ?? 0) }, () => c.name),
-  );
+  const st = seatingCopy[locale];
+  const seatName = (s: SeatCart["seats"][number]) => `${st.row} ${s.row}, ${st.seat} ${s.label}`;
+  // With numbered seats each attendee is named per seat, in the order the items list them.
+  const labels = seats
+    ? seats.items.flatMap((i) =>
+        i.seat_ids.map((id) => {
+          const seat = seats.seats.find((s) => s.id === id);
+          return seat ? seatName(seat) : (choices.find((c) => c.id === i.ticket_type_id)?.name ?? "");
+        }),
+      )
+    : choices.flatMap((c) =>
+        Array.from({ length: Math.min(100, quantities[c.id] ?? 0) }, () => c.name),
+      );
+  const holdLeft = useHoldCountdown(seats?.expiresAt);
+  // Our own hold already counts as reserved, so availability is short by exactly those seats.
+  const withHeld = (list: typeof choices) =>
+    seats
+      ? list.map((c) => ({
+          ...c,
+          available:
+            c.available + (seats.items.find((i) => i.ticket_type_id === c.id)?.quantity ?? 0),
+        }))
+      : list;
 
   function quantity(id: string, value: number) {
     const next = { ...quantities, [id]: value };
@@ -223,7 +271,7 @@ function CheckoutForm({
           ),
         ]);
         const latest = parseAvailability(raw);
-        if (!registrationOpen(latestEvent, latest))
+        if (!registrationOpen(latestEvent, latest, Date.now(), !!seats))
           throw new ApiError(
             409,
             "registration_closed",
@@ -241,13 +289,14 @@ function CheckoutForm({
         const promoCode = body.promo_code;
         body = makeOrderBody(
           event.id,
-          selected.filter((c) => c !== undefined),
+          withHeld(selected.filter((c) => c !== undefined)),
           Object.fromEntries(
             body.items.map((i) => [i.ticket_type_id, i.quantity]),
           ),
           body.attendees,
           paidSalesOpen(latestEvent),
         );
+        if (seats) body = withSeats(body, seats);
         if (promoCode) {
           const ids = body.items.flatMap((i) =>
             Array<string>(i.quantity).fill(i.ticket_type_id),
@@ -286,6 +335,7 @@ function CheckoutForm({
         }
       }
       const order = await coordinator.submit(body);
+      if (seats) clearSeatCart(event.id);
       if (active.current)
         navigate(`/account/orders/${encodeURIComponent(order.id)}`, {
           replace: true,
@@ -368,7 +418,7 @@ function CheckoutForm({
       </div>
     );
 
-  if (!recovery && !registrationOpen(event, availability))
+  if (!recovery && !registrationOpen(event, availability, undefined, !!seats))
     return (
       <Status>
         {event.seating_mode === "assigned" ? t.assigned : t.unavailable}
@@ -457,6 +507,7 @@ function CheckoutForm({
             {review.attendees.map((a, i) => (
               <li key={i}>
                 <strong>{a.full_name}</strong>
+                {seats && labels[i] && <span>{labels[i]}</span>}
                 <span>{a.email}</span>
               </li>
             ))}
@@ -551,13 +602,14 @@ function CheckoutForm({
                   ? promotion.result.discount_amount
                   : null,
               );
-              const orderBody = makeOrderBody(
+              let orderBody = makeOrderBody(
                 event.id,
-                availability.choices,
+                withHeld(availability.choices),
                 quantities,
                 attendees,
                 paidActive,
               );
+              if (seats) orderBody = withSeats(orderBody, seats);
               setReview({ ...orderBody, promo_code: promotion.code || null });
             } catch (caught) {
               setError(caught);
@@ -565,6 +617,9 @@ function CheckoutForm({
           }}
           noValidate
         >
+          {seats ? (
+            <SeatHoldBlock seats={seats} seatName={seatName} left={holdLeft} eventId={event.id} locale={locale} />
+          ) : (<>
           <h2>{t.select}</h2>
           {!choices.some((c) => canChoose(c) && c.open && c.available > 0) && (
             <Status>{p.noTickets}</Status>
@@ -635,6 +690,7 @@ function CheckoutForm({
               );
             })}
           </div>
+          </>)}
           {count > 0 && (
             <>
               <h2>{t.details}</h2>
@@ -691,12 +747,65 @@ function CheckoutForm({
             disabled={busy || !!recovery}
           />
           <div className="controls">
-            <button disabled={!count || count > 100 || promotion.blocked}>
+            <button disabled={!count || count > 100 || promotion.blocked || (!!seats && holdLeft === 0)}>
               {t.review}
             </button>
           </div>
         </form>
       )}
     </div>
+  );
+}
+
+/** Seconds left on the seat hold, ticking each second; null when there is no hold. */
+function useHoldCountdown(expiresAt: string | undefined) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!expiresAt) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [expiresAt]);
+  return expiresAt ? Math.max(0, Math.ceil((Date.parse(expiresAt) - now) / 1000)) : null;
+}
+
+function SeatHoldBlock({
+  seats,
+  seatName,
+  left,
+  eventId,
+  locale,
+}: {
+  seats: SeatCart;
+  seatName: (s: SeatCart["seats"][number]) => string;
+  left: number | null;
+  eventId: string;
+  locale: Locale;
+}) {
+  const st = seatingCopy[locale];
+  const seatsLink = `/events/${encodeURIComponent(eventId)}/seats`;
+  const clock = left === null ? "" : `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
+  return (
+    <section className="seat-hold" aria-labelledby="seat-hold-title">
+      <div className="seat-hold-head">
+        <h2 id="seat-hold-title">{st.yourSeats}</h2>
+        <Link className="action-link ghost" to={seatsLink}>{st.changeSeats}</Link>
+      </div>
+      <ul className="seat-hold-list">
+        {seats.seats.map((s) => (
+          <li key={s.id}>
+            <strong>{seatName(s)}</strong>
+            <span>{s.section}</span>
+          </li>
+        ))}
+      </ul>
+      {left === 0 ? (
+        <p className="form-error" role="alert">{st.holdExpired}</p>
+      ) : (
+        <p className="seat-hold-timer" role="timer" aria-live="off">
+          {st.heldFor} <strong>{clock}</strong>
+          <span>{st.heldHint}</span>
+        </p>
+      )}
+    </section>
   );
 }

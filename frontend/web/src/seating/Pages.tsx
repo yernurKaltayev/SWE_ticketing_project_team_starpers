@@ -1,28 +1,15 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import type { Locale } from "@biletflow/shared";
 import { useEventRequest, useResource } from "../events/data";
 import { parseEvent, parseTicketTypes } from "../events/contracts";
 import { seatingCopy } from "./copy";
 import { parseLayouts } from "./model";
-import { SeatPicker } from "./SeatPicker";
+import { SeatBooking } from "./SeatBooking";
 import { BackLink } from "../BackLink";
 export function SeatPage({ locale }: { locale: Locale }) {
   const { eventId = "" } = useParams();
-  const request = useEventRequest();
-  return (
-    <>
-      <Link to={`/events/${encodeURIComponent(eventId)}`}>
-        {seatingCopy[locale].back}
-      </Link>
-      <SeatPicker
-        key={eventId}
-        eventId={eventId}
-        request={request}
-        locale={locale}
-      />
-    </>
-  );
+  return <SeatBooking key={eventId} eventId={eventId} locale={locale} />;
 }
 export function SeatingSetup({ locale }: { locale: Locale }) {
   const { eventId = "" } = useParams();
