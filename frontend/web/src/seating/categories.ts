@@ -1,9 +1,15 @@
 import type { Locale } from "@biletflow/shared";
 
 const known: Record<string, Record<Locale, string>> = {
+  economy: { en: "Economy", ru: "Эконом", kk: "Эконом" },
   standard: { en: "Standard", ru: "Стандарт", kk: "Стандарт" },
+  comfort: { en: "Comfort", ru: "Комфорт", kk: "Комфорт" },
+  premium: { en: "Premium", ru: "Премиум", kk: "Премиум" },
   vip: { en: "VIP", ru: "VIP", kk: "VIP" },
 };
+
+/** Price categories the hall builder offers, cheapest first. */
+export const knownCategories = Object.keys(known);
 
 /** A seat price category as buyers read it ("vip" → "VIP"); unknown ones are capitalised. */
 export function categoryLabelOf(category: string | null, locale: Locale) {

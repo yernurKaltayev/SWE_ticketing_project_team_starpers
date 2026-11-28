@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Response, status
 from app.core.deps import DbSession, require_role
 from app.models.user import User, UserRole
 from app.models.venue import Venue
-from app.schemas.seat_p4 import LayoutSummaryP4, VenueSummaryP4
+from app.schemas.seat_p4 import LayoutCreateP4, LayoutSummaryP4, VenueSummaryP4
 from app.schemas.venue import VenueCreate, VenueOut
 from app.services import seat_service, venue_service
 
@@ -40,3 +40,13 @@ async def get_venue(venue_id: UUID, db: DbSession):
 @router.get("/venues/{venue_id}/layouts", response_model=list[LayoutSummaryP4])
 async def list_layouts(venue_id: UUID, db: DbSession):
     return await seat_service.list_layouts(db, venue_id)
+
+
+@router.post(
+    "/venues/{venue_id}/layouts",
+    response_model=LayoutSummaryP4,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_layout(venue_id: UUID, data: LayoutCreateP4, _user: VenueAuthor, db: DbSession):
+    """Organizers build a hall plan from sections (rows x seats); it joins the venue's layouts."""
+    return await seat_service.create_layout(db, venue_id, data)
